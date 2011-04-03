@@ -722,8 +722,14 @@ void Adcab::event(BelleEvent* evptr, int* status)
     nTuple_->column( "l1_pcm"  , eventCandidate.l1().pCm().vect().mag() );
     nTuple_->column( "l0_plab" , eventCandidate.l0().p().vect().mag() );
     nTuple_->column( "l1_plab" , eventCandidate.l1().p().vect().mag() );
-    nTuple_->column( "l0_ptran", eventCandidate.l0().p().vect().perp() );
-    nTuple_->column( "l1_ptran", eventCandidate.l1().p().vect().perp() );
+    nTuple_->column( "l0_cme"  , eventCandidate.l0().pCm().e() );
+    nTuple_->column( "l0_cme"  , eventCandidate.l0().pCm().e() );
+    nTuple_->column( "l0_cmpx" , eventCandidate.l0().pCm().px() );
+    nTuple_->column( "l0_cmpx" , eventCandidate.l0().pCm().px() );
+    nTuple_->column( "l0_cmpy" , eventCandidate.l0().pCm().py() );
+    nTuple_->column( "l0_cmpy" , eventCandidate.l0().pCm().py() );
+    nTuple_->column( "l0_cmpz" , eventCandidate.l0().pCm().pz() );
+    nTuple_->column( "l0_cmpz" , eventCandidate.l0().pCm().pz() );
     nTuple_->column( "l0_costh", eventCandidate.l0().p().cosTheta() );
     nTuple_->column( "l1_costh", eventCandidate.l1().p().cosTheta() );
     nTuple_->column( "l0_dr"   , l0IpDrDz.dr() );
@@ -775,8 +781,14 @@ void Adcab::hist_def()
                        "l1_pcm "
                        "l0_plab "
                        "l1_plab "
-                       "l0_ptran "
-                       "l1_ptran "
+                       "l0_cme "
+                       "l1_cme "
+                       "l0_cmpx "
+                       "l1_cmpx "
+                       "l0_cmpy "
+                       "l1_cmpy "
+                       "l0_cmpz "
+                       "l1_cmpz "
                        "l0_costh "
                        "l1_costh "
                        "l0_dr "
