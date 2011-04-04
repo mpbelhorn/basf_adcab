@@ -301,8 +301,9 @@ void Adcab::event(BelleEvent* evptr, int* status)
   // Reserve a large amount of memory ( 50 elements ) to avoid 
   //   relocating list to a new block of memory in case of large
   //   events.
-  static std::vector< Particle > uncleanElectronList( 50 );
+  static std::vector< Particle > initialElectronList( 50 );
   static std::vector< Particle > electronList( 50 );
+  static std::vector< Particle > intialMuonList( 50 );
   static std::vector< Particle > muonList( 50 );
   static std::vector< Particle > leptonList( 100 );
   static std::vector< Particle > kaonList( 50 );
@@ -311,8 +312,9 @@ void Adcab::event(BelleEvent* evptr, int* status)
   static std::vector< DileptonEvent > dileptonEventList( 50 );
   
   // Ensure lists are empty so as not to consume too much memory.
-  uncleanElectronList.clear();
+  initialElectronList.clear();
   electronList.clear();
+  initialMuonList.clear();
   muonList.clear();
   leptonList.clear();
   kaonList.clear();
@@ -376,7 +378,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
     if ( tfit.nhits( 4 ) < cuts.minSvdZHits ) continue;
 
 
-    // Reject particle if liklihoods are the same from eid and muid.
+    // Reject particle if likelihoods are the same from eid and muid.
     if ( eidProb == muidProb ) continue;
 
     // Assume the particle species is that of the highest PID liklihood.
@@ -408,7 +410,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
       setMCtruth( eCandidate );
 
       // Add eCandidate to list of e+/- candidates.
-      uncleanElectronList.push_back( eCandidate );
+      initialElectronList.push_back( eCandidate );
 
       // Collect diagnostic information.
       if ( eCandidate.relation().genHepevt() ) {
@@ -478,16 +480,16 @@ void Adcab::event(BelleEvent* evptr, int* status)
 
   // Report number of electons in electron list for diagnostic purposes.
   // std::cout << "Number of electrons in event: "
-  //           << uncleanElectronList.size() << std::endl;
+  //           << initialElectronList.size() << std::endl;
 
-  // Remove possible pair production electrons.
-  for ( std::vector< Particle >::iterator j = uncleanElectronList.begin();
-        j != uncleanElectronList.end(); ++j ) {
+  // Remove possible pair production electrons and J/Psi candidates.
+  for ( std::vector< Particle >::iterator j = initialElectronList.begin();
+        j != initialElectronList.end(); ++j ) {
     const Particle &eCndt = *j;
     
     // Flag for electrons that are not candidates for pair production daughters.
     // By default, assume all electrons are good.
-    bool flagNonPairProduction = true;
+    bool flagGoodElectron = true;
 
     // If the invariant mass of an electron candidate and every other opposite
     //   charged tracks is smaller than the cut value (nominally 100 MeV), the
@@ -504,21 +506,70 @@ void Adcab::event(BelleEvent* evptr, int* status)
       //   charged track.
       HepLorentzVector eCndtP = eCndt.p();
       HepLorentzVector otherChgP = otherChg.p();
-      double ePlusEMinusMass = ( eCndtP + otherChgP ).m();      
+      double electronChargedMass = ( eCndtP + otherChgP ).m();      
       
       // Report invariant mass for diagnostic purposes.
-      // std::cout << "e p/m mass: " << ePlusEMinusMass << std::endl;
+      // std::cout << "e p/m mass: " << electronChargedMass << std::endl;
 
       // If at any time eCndt proves to be likely from pair production,
-      //   the flag is switched.
-      if ( ePlusEMinusMass < cuts.minEPlusEMinusMass )
-        flagNonPairProduction = false;
+      //   or a J/Psi, the flag is switched.
+      if ( electronChargedMass < cuts.minEPlusEMinusMass ) {
+        flagGoodElectron = false;
+      }
+      double deltaMass = electronChargedMass - cuts.massJPsi;
+      if ( cuts.minElElJPsiCandidate < deltaMass ||
+          deltaMass < cuts.maxElElJPsiCandidate ) {
+        flagGoodElectron = false;
+      }
     }
 
     // While eCndt is still a good candidate, add it to the electron list.
-    if ( flagNonPairProduction )
+    if ( flagGoodElectron )
       electronList.push_back( eCndt );
-  } 
+  }
+  
+  // Remove possible J/Psi daughter muons.
+  for ( std::vector< Particle >::iterator j = initialMuonList.begin();
+        j != initialMuonList.end(); ++j ) {
+    const Particle &muCndt = *j;
+    
+    // Flag for muons that are not candidates J/psi daughters.
+    // By default, assume all muons are good.
+    bool flagGoodMuon = true;
+
+    // If the difference of the invariant mass of a muon candidate and every
+    //   other opposite charged tracks is within the cut range, the candidate
+    //   is rejected.
+    for ( std::vector< Mdst_charged >::const_iterator i = chg_mgr.begin();
+          i != chg_mgr.end(); ++i ) {
+      const Mdst_charged &chg = *i;
+      Particle otherChg( chg, chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
+
+      // Same sign charge pairs cannot be J/Psi muons.
+      if ( muCndt.charge() == otherChg.charge() ) continue;
+      
+      // Calculate the invariant mass of the muon candidate and the other
+      //   charged track.
+      HepLorentzVector muCndtP = muCndt.p();
+      HepLorentzVector otherChgP = otherChg.p();
+      double muonChargedMass = ( muCndtP + otherChgP ).m();      
+      
+      // Report invariant mass for diagnostic purposes.
+      // std::cout << "e p/m mass: " << muonChargedMass << std::endl;
+
+      // If at any time muCndt proves to be likely from a J/Psi, the flag
+      //   is switched.
+      double deltaMass = muonChargedMass - cuts.massJPsi;
+      if ( cuts.minMuMuJPsiCandidate < deltaMass ||
+          deltaMass < cuts.maxMuMuJPsiCandidate ) {
+        flagGoodMuon = false;
+      }
+    }
+
+    // While muCndt is still a good candidate, add it to the electron list.
+    if ( flagGoodMuon )
+      muonList.push_back( muCndt );
+  }
   
   // Report size of cleaned electron list for diagnotic purposes.
   // std::cout << "Number of electrons in event: " << electronList.size() 
