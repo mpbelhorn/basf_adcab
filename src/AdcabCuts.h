@@ -26,14 +26,19 @@ struct AdcabCuts {
   static const double maxLeptonMomentumCm = 5.0; // = 2.3;  // GeV/c.
   static const double minLeptonCosTheta   = -1.0;
   static const double maxLeptonCosTheta   = 1.0;
+  static const double massJPsi            = 3.096; // Gev
   
   // Electron selection cuts.
-  static const double minEidProb          = 0.80; // Low for diagnostics.
-  static const double minElectronMomentum = 0.00; // GeV/c
+  static const double minEidProb           = 0.80; // Low for diagnostics.
+  static const double minElectronMomentum  = 0.00; // GeV/c
+  static const double minMuMuJPsiCandidate = -0.15; // Gev
+  static const double maxMuMuJPsiCandidate = 0.05;  // Gev
   
   // Muon selection cuts.
-  static const double minMuidProb         = 0.90; // Low for diagnostics.
-  static const double minMuonMomentum     = 0.00; // GeV/c
+  static const double minMuidProb          = 0.90; // Low for diagnostics.
+  static const double minMuonMomentum      = 0.00; // GeV/c
+  static const double minMuMuJPsiCandidate = -0.05; // Gev
+  static const double maxMuMuJPsiCandidate = 0.05;  // Gev
 
   // Pair-production removal cuts.
   static const double minEPlusEMinusMass  = 0.10; // GeV/c
