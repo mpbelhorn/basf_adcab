@@ -303,7 +303,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
   //   events.
   static std::vector< Particle > initialElectronList( 50 );
   static std::vector< Particle > electronList( 50 );
-  static std::vector< Particle > intialMuonList( 50 );
+  static std::vector< Particle > initialMuonList( 50 );
   static std::vector< Particle > muonList( 50 );
   static std::vector< Particle > leptonList( 100 );
   static std::vector< Particle > kaonList( 50 );
@@ -714,7 +714,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
         bestEvent = currentEvent;
       }
     }
-    // If the list of dilepton events is empty, better not add an
+    // If the list of dilepton events is empty, better not
     //   treat the past-end-of-vector object as an event!
     if ( dileptonEventList.begin() != dileptonEventList.end() ) {
       dileptonEventList.clear();
