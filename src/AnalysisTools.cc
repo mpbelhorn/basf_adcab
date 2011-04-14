@@ -338,8 +338,8 @@ LeptonCandidate DileptonEvent::l1()
 
 // Determines the type of dilepton event and returns an integer for the
 //   cases of 22:(e+e+)/(e-e-);     -22:e+e-;
-//            24:(mu+e+)/(mu-e-);   -24:mu+mu-
-//            26:(mu+mu+)/(mu-mu-); -26:(mu+e-)/(mu-e+).
+//            26:(mu+e+)/(mu-e-);   -26:mu+mu-
+//            24:(mu+mu+)/(mu-mu-); -24:(mu+e-)/(mu-e+).
 // Negative codes imply opposite-sign whereas positive codes imply same-sign.
 // The magnitude of the code is the sum of the magnitudes of the Lund ID values.
 // The Lund values as of 2010/08/12 are e(+/-) = (+/-)11, mu(+/-) = (+/-)13.
