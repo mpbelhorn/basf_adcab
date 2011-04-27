@@ -182,7 +182,7 @@ void Adcab::begin_run(BelleEvent* evptr, int *status)
     << "* Run Information *\n"
     << "*******************\n"
     << std::endl;
-   if ( runhead.ExpMC() == 1 ) {
+  if ( runhead.ExpMC() == 1 ) {
     flagMC = false; // Set Data type flag to Real Data.
     std::cout << "Data is Real." << std::endl;
   } else {
