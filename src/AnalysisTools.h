@@ -1,11 +1,10 @@
-//
-//******************************************************************************
+//______________________________________________________________________________
 // Filename: AnalysisTools.h
 // Version: 2010.11.03.A
 // Author: M.P. Belhorn
 // Original Date: 2010-06-24
 // Description: Declaration of custom analysis classes and functions. 
-//******************************************************************************
+//______________________________________________________________________________
 
 #ifndef ANALYSISTOOLS_H
 #define ANALYSISTOOLS_H
@@ -39,12 +38,12 @@ namespace Belle {
 #endif
 
 
-//******************************************************************************
+//______________________________________________________________________________
 // IPdrdz class definition and prototypes.
-//******************************************************************************
 
 // Class for Impact Parameters "dr" and "dz"
-class IpDrDz {
+class
+IpDrDz {
  public:
 
   // Constructors and destructor.
@@ -65,11 +64,12 @@ class IpDrDz {
   double dz_;
   
 };
-//******************************************************************************
-// LeptonCandidate class definition and prototypes.
-//******************************************************************************
 
-class LeptonCandidate {
+//______________________________________________________________________________
+// LeptonCandidate class definition and prototypes.
+
+class 
+LeptonCandidate {
  public:
 
   // Constructors and destructor.
@@ -108,11 +108,11 @@ class LeptonCandidate {
 
 };
 
-//******************************************************************************
+//______________________________________________________________________________
 // DileptonEvent class definition and prototypes.
-//******************************************************************************
 
-class DileptonEvent {
+class
+DileptonEvent {
  public:
 
   // Constructors and destructor.
@@ -144,12 +144,6 @@ class DileptonEvent {
   Hep3Vector cmBoostVector_;
 
 };
-
-
-//******************************************************************************
-// General function prototypes.
-//******************************************************************************
-
 
 #if defined(BELLE_NAMESPACE)
 } //namespace Belle

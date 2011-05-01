@@ -1,3 +1,11 @@
+//______________________________________________________________________________
+// Filename: Userinfo.h
+// Author: Unknown.
+// Modified: M.P.Belhorn (matt.belhorn@gmail.com).
+// Description: Class for custom particle information. Used with A. Zupanc's
+//     MC truthtable functions.
+// _____________________________________________________________________________
+
 #include "belle.h"
 #include "particle/Particle.h"
 #include "particle/Momentum.h"
@@ -8,35 +16,27 @@
 namespace Belle {
 #endif
 
-
 // For Interface to Set UserInfo Class
-
 void setUserInfo(Particle &p, unsigned ch=0);
 void setUserInfo(std::vector<Particle>& p, unsigned ch=0);
 
 // UserInfo Class
-
-class UserInfo : public ParticleUserInfo
+class
+UserInfo : public ParticleUserInfo
 {
-public:
-	/// Default constructor
-	UserInfo();
-
-	UserInfo(unsigned);
-
-	/// Copy constructor
-	UserInfo(const UserInfo &);
-
-	/// Destructor
+ public:
+	UserInfo();                 // Default Constructor.
+	UserInfo(unsigned);         // Useful Constructor.
+	UserInfo(const UserInfo &); // Copy Constructor.
 	virtual ~UserInfo();
 
-	/// constructs self object.
+	// Constructs self object.
 	UserInfo * clone(void) const;
 
-	/// Copy operator
+	// Copy operator.
 	UserInfo & operator = (const UserInfo &);
 
-public:
+ public:
 	const int & decayMode(void) const { return m_decayMode; }
 	void decayMode(const int &v) { m_decayMode = v; }
 
@@ -46,13 +46,12 @@ public:
 	const int & genHepevtChecked(void) const { return m_genHepevtChecked; }
 	void genHepevtChecked(const int &v) { m_genHepevtChecked = v; }
 
-private:
+ private:
 	int m_genHepevtLink;
 	int m_genHepevtChecked;
 	int m_decayMode;
-
-
 };
+
 #if defined(BELLE_NAMESPACE)
 } // namespace Belle
 #endif

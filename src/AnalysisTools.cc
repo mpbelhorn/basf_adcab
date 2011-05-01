@@ -1,43 +1,19 @@
-//
-//******************************************************************************
+//______________________________________________________________________________
 // Filename: AnalysisTools.cc
 // Version: 2010.11.03.A
 // Author: M.P. Belhorn
 // Original Date: 2010-06-24
 // Description: Definitions of custom analysis classes and functions. 
-//******************************************************************************
+//______________________________________________________________________________
 
-#include <cmath>                     // Uses cmath functions.
-
-#include "belle.h"                   // BELLE Library.
-#include "event/BelleEvent.h"        // For managing BELLE events.
-#include "tuple/BelleTupleManager.h" // For managing BELLE nTuples.
-#include "benergy/BeamEnergy.h"      // For determining run beam energy.
-#include "basf/module.h"             // For interfacing with BASF.
-#include "basf/module_descr.h"       // ???
-#include "particle/Particle.h"       // The BELLE Particle Class.
-#include "kid/atc_pid.h"             // For particle species separation.
-#include "eid/eid.h"                 // For electron identification.
-#include "mdst/mdst.h"               // For MDST files.
-#include "ip/IpProfile.h"            // Beam Interaction Point (IP) analysis
-                                     //   tools. Position unit = cm.
-
-#include <panther/panther.h>      // Panther.
-#include BELLETDF_H               // Panther.
-#include HEPEVT_H                 // Panther.
-#include MDST_H                   // Panther.
-
-#include "HEPconstants.h"         // PDG masses and constants.
-#include "AnalysisTools.h"        // General analysis functions and utilities.
-#include "AdcabCuts.h"       // Analysis specfic selection cut constants.
+#include "AnalysisTools.h"
 
 #if defined(BELLE_NAMESPACE)
 namespace Belle {
 #endif
 
-//******************************************************************************
+//______________________________________________________________________________
 // IpDrDz member function definitions.
-//******************************************************************************
 
 // Default constructor.
 IpDrDz::IpDrDz()
@@ -57,13 +33,12 @@ IpDrDz::IpDrDz( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
   for ( int i = 0; i < 5; i++ ) {
     cdcHelixParameters[ i ] = trkfit.helix( i );
   }
-  HepPoint3D cdcPivot( trkfit.pivot( 0 ),
-                       trkfit.pivot( 1 ),
-                       trkfit.pivot( 2 ) );
+  HepPoint3D cdcPivot( trkfit.pivot( 0 ), trkfit.pivot( 1 ),
+      trkfit.pivot( 2 ) );
   Helix ipHelixParameters( cdcPivot, cdcHelixParameters );
   ipHelixParameters.pivot( ip );
-  dr_  = ipHelixParameters.dr();
-  dz_  = ipHelixParameters.dz();
+  dr_ = ipHelixParameters.dr();
+  dz_ = ipHelixParameters.dz();
 }
 
 
@@ -81,7 +56,8 @@ IpDrDz::IpDrDz( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
 //   reparametrize the trajectory using the IP as the pivot in order to
 //   determine (using dr and dz) how close the charged tracks originate to the
 //   decay of the B meson, which should be close to the IP.
-void IpDrDz::setDrDz( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
+void
+IpDrDz::setDrDz( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
 { 
   // Get the MSDT track information for chg.
   Mdst_trk &trk = chg.trk();
@@ -107,9 +83,8 @@ void IpDrDz::setDrDz( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
   for ( int i = 0; i < 5; i++ ) {
     cdcHelixParameters[ i ] = trkfit.helix( i );
   }
-  HepPoint3D cdcPivot( trkfit.pivot( 0 ),
-                       trkfit.pivot( 1 ),
-                       trkfit.pivot( 2 ) );
+  HepPoint3D cdcPivot( trkfit.pivot( 0 ), trkfit.pivot( 1 ),
+      trkfit.pivot( 2 ) );
   
   // Create a new set of helix parameters from the old ones.
   Helix ipHelixParameters( cdcPivot, cdcHelixParameters );
@@ -119,26 +94,26 @@ void IpDrDz::setDrDz( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
   
   // Set the values of IPdrdz class dr and dz from the IP-pivot
   //   parameterization, and indicate that they have been set correctly.
-  dr_  = ipHelixParameters.dr();
-  dz_  = ipHelixParameters.dz();
-
+  dr_ = ipHelixParameters.dr();
+  dz_ = ipHelixParameters.dz();
 }
 
 // Accessor for dr_ helix parameter.
-double IpDrDz::dr()
+double
+IpDrDz::dr()
 {
   return dr_;
 }
 
 // Accessor for dz_ helix parameter.
-double IpDrDz::dz()
+double
+IpDrDz::dz()
 {
   return dz_;
 }
 
-//******************************************************************************
+//______________________________________________________________________________
 // LeptonCandidate Member functions.
-//******************************************************************************
 
 // Default Contructor.
 LeptonCandidate::LeptonCandidate()
@@ -154,13 +129,15 @@ LeptonCandidate::LeptonCandidate( Particle lepton, Hep3Vector cmBoostVector )
 }
 
 // Mutator for lepton_.
-void LeptonCandidate::setLepton( Particle lepton )
+void
+LeptonCandidate::setLepton( Particle lepton )
 {
   lepton_ = lepton;
 }
 
 // Mutator for cmBoostVector_.
-void LeptonCandidate::setCmBoostVector( Hep3Vector cmBoostVector )
+void
+LeptonCandidate::setCmBoostVector( Hep3Vector cmBoostVector )
 {
   cmBoostVector_ = cmBoostVector;
 }
@@ -172,27 +149,31 @@ Particle LeptonCandidate::lepton()
 }
 
 // Accessor for cmBoostVector_.
-Hep3Vector LeptonCandidate::cmBoostVector()
+Hep3Vector
+LeptonCandidate::cmBoostVector()
 {
   return cmBoostVector_;
 }
 
 // Alias for for lepton().
-Particle LeptonCandidate::particle()
+Particle
+LeptonCandidate::particle()
 {
   return lepton_;
 }
 
 // Returns the pythia particle ID code of the assignment given to particle
 //   lepton_ at its creation.
-double LeptonCandidate::idAssigned()
+double
+LeptonCandidate::idAssigned()
 {
   return lepton_.pType().lund();
 }
 
 // Returns the pythia particle ID code of lepton_ as determined by the MC truth
 //   table. Returns 0 if truth table is unavailable.
-double LeptonCandidate::idTruth()
+double
+LeptonCandidate::idTruth()
 {
   double id = 0;
   if ( lepton_.relation().genHepevt() ) {
@@ -205,7 +186,8 @@ double LeptonCandidate::idTruth()
 
 // Returns the pythia code of the lepton mother as determined from the truth
 //   table. Returns 0 if truth table is unavailable.
-double LeptonCandidate::idMother()
+double
+LeptonCandidate::idMother()
 {
   double id = 0;
   if ( lepton_.relation().genHepevt() ) {
@@ -217,7 +199,8 @@ double LeptonCandidate::idMother()
 }
 
 // Returns the CM frame 4 momentum of lepton_.
-HepLorentzVector LeptonCandidate::pCm()
+HepLorentzVector
+LeptonCandidate::pCm()
 {
   HepLorentzVector leptonPCm( lepton_.p() );
   leptonPCm.boost( cmBoostVector_ );
@@ -225,13 +208,15 @@ HepLorentzVector LeptonCandidate::pCm()
 }
 
 // Returns the lab frame 4 momentum of lepton_.
-HepLorentzVector LeptonCandidate::p()
+HepLorentzVector
+LeptonCandidate::p()
 {
   return lepton_.p();
 }
 
 // Returns the eid likelihood of lepton_.
-double LeptonCandidate::likelihoodE()
+double
+LeptonCandidate::likelihoodE()
 {
   const Mdst_charged &leptonMdstCharged = lepton_.relation().mdstCharged();
   eid leptonEid( leptonMdstCharged );
@@ -239,7 +224,8 @@ double LeptonCandidate::likelihoodE()
 }
 
 // Returns the muid likelihood of lepton_.
-double LeptonCandidate::likelihoodMu()
+double
+LeptonCandidate::likelihoodMu()
 {
   Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
   return leptonMuid.Muon_likelihood();
@@ -247,7 +233,8 @@ double LeptonCandidate::likelihoodMu()
 
 // Returns the Chi^2 of the associated hits in the KLM assuming the track is a
 //   muon. If the track is not in Muid_mdst, the function returns 0.
-double LeptonCandidate::klmHitsChi2()
+double
+LeptonCandidate::klmHitsChi2()
 {
   Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
   return leptonMuid.Chi_2();
@@ -255,7 +242,8 @@ double LeptonCandidate::klmHitsChi2()
 
 // Returns the number of the hits in the KLM assuming the track is a
 //   muon. If the track is not in Muid_mdst, the function returns 0.
-int LeptonCandidate::klmHitsN()
+int
+LeptonCandidate::klmHitsN()
 {
   Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
   return leptonMuid.N_layer_hit_brl() + leptonMuid.N_layer_hit_end();
@@ -265,7 +253,8 @@ int LeptonCandidate::klmHitsN()
 //   the hits in the KLM assuming the track is a muon. If the track has no
 //   associated hits in the KLM layers, the function returns 0 (consistant with 
 //   an electron).
-double LeptonCandidate::klmHitsChi2PerN()
+double
+LeptonCandidate::klmHitsChi2PerN()
 {
   Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
   int klmHitsN = leptonMuid.N_layer_hit_brl() + leptonMuid.N_layer_hit_end();
@@ -277,20 +266,21 @@ double LeptonCandidate::klmHitsChi2PerN()
 }
 
 // Returns the number of hits in the r-side of the SVD for lepton_.
-double LeptonCandidate::svdHitsR()
+double
+LeptonCandidate::svdHitsR()
 {
   return lepton_.relation().mdstCharged().trk().mhyp( 1 ).nhits( 3 );
 }
 
 // Returns the number of hits in the z-side of the SVD for lepton_.
-double LeptonCandidate::svdHitsZ()
+double
+LeptonCandidate::svdHitsZ()
 {
   return lepton_.relation().mdstCharged().trk().mhyp( 1 ).nhits( 4 );
 }
 
-//******************************************************************************
+//______________________________________________________________________________
 // Definitions for use with Bs->Dilepton analysis.
-//******************************************************************************
 
 // Default constructor.
 DileptonEvent::DileptonEvent()
@@ -299,7 +289,8 @@ DileptonEvent::DileptonEvent()
 }
 
 // Dilepton constructor.
-DileptonEvent::DileptonEvent( Particle lepton0, Particle lepton1, Hep3Vector cmBoostVector )
+DileptonEvent::DileptonEvent( Particle lepton0, Particle lepton1,
+    Hep3Vector cmBoostVector )
 {
   l0_ = LeptonCandidate( lepton0, cmBoostVector );
   l1_ = LeptonCandidate( lepton1, cmBoostVector );
@@ -307,31 +298,36 @@ DileptonEvent::DileptonEvent( Particle lepton0, Particle lepton1, Hep3Vector cmB
 }
 
 // Mutator for l0_.
-void DileptonEvent::setL0( Particle lepton0 )
+void
+DileptonEvent::setL0( Particle lepton0 )
 {
   l0_ = LeptonCandidate( lepton0, cmBoostVector_ );
 }
 
 // Mutator for l1_.
-void DileptonEvent::setL1( Particle lepton1 )
+void
+DileptonEvent::setL1( Particle lepton1 )
 {
   l1_ = LeptonCandidate( lepton1, cmBoostVector_ );
 }
 
 // Mutator for cmBoostVector_.
-void DileptonEvent::setCmBoostVector( Hep3Vector cmBoostVector )
+void
+DileptonEvent::setCmBoostVector( Hep3Vector cmBoostVector )
 {
   cmBoostVector_ = cmBoostVector;
 }
 
 // Accessor for l0_.
-LeptonCandidate DileptonEvent::l0()
+LeptonCandidate
+DileptonEvent::l0()
 {
   return l0_;
 }
 
 // Accessor for l1_.
-LeptonCandidate DileptonEvent::l1()
+LeptonCandidate
+DileptonEvent::l1()
 {
   return l1_;
 }
@@ -343,7 +339,8 @@ LeptonCandidate DileptonEvent::l1()
 // Negative codes imply opposite-sign whereas positive codes imply same-sign.
 // The magnitude of the code is the sum of the magnitudes of the Lund ID values.
 // The Lund values as of 2010/08/12 are e(+/-) = (+/-)11, mu(+/-) = (+/-)13.
-double DileptonEvent::eventType()
+double
+DileptonEvent::eventType()
 {
   double sign = l0_.particle().charge() * l1_.particle().charge();
   double lundSum = abs( l0_.idAssigned() ) + abs( l1_.idAssigned() );
@@ -352,7 +349,8 @@ double DileptonEvent::eventType()
 
 // Calculates the cosine of the opening angle theta_ll between the two leptons
 //   in the CM frame.
-double DileptonEvent::cosThetaLL()
+double
+DileptonEvent::cosThetaLL()
 {
   Hep3Vector lepton0P3Cm = l0_.pCm().vect();
   Hep3Vector lepton1P3Cm = l1_.pCm().vect();
@@ -372,20 +370,18 @@ double DileptonEvent::cosThetaLL()
 }
 
 // Returns the scalar sum of the lepton CM 3-momenta.
-double DileptonEvent::pSum()
+double
+DileptonEvent::pSum()
 {
   return l0_.pCm().vect().mag() + l1_.pCm().vect().mag();
 }
 
 // Returns the positive scalar difference of the lepton CM 3-momenta.
-double DileptonEvent::pDifference()
+double
+DileptonEvent::pDifference()
 {
   return abs( l0_.pCm().vect().mag() - l1_.pCm().vect().mag() );
 }
-
-//******************************************************************************
-// General analysis function definitions.
-//******************************************************************************
 
 #if defined(BELLE_NAMESPACE)
 } //namespace Belle
