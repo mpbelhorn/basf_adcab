@@ -1,31 +1,25 @@
-//
-//******************************************************************************
+//______________________________________________________________________________
 // Filename: Adcab.cc
 // Version: 2011.02.09.A
 // Author: M.P. Belhorn
 // Original Date: 2010-07-19
 // Description: Analysis of the (A)nomalous (D)ilepton (C)harge (A)symmetry in
 //   (B)s0 decays.
-//******************************************************************************
+//______________________________________________________________________________
 
-
-//******************************************************************************
-//  Preamble
-//******************************************************************************
-
-#include "Adcab.h"              // Acad Analysis header.
+#include "Adcab.h"              // Adcab Analysis header.
 
 #if defined(BELLE_NAMESPACE)    // Namespace container for backwards
 namespace Belle {               //  compatibility with older versions of
 #endif                          //  BELLE Library (used for b200611xx onward).
                                 //  Must be in all files.
 
-//******************************************************************************
-// Adcab Class Definitions. 
-//******************************************************************************
+//______________________________________________________________________________
+// BASF Module interface.
 
 // Registers analysis module in BASF.
-extern "C" Module_descr *mdcl_Adcab() 
+extern "C" Module_descr
+*mdcl_Adcab() 
 { 
   // Creates pointer to allocated Adcab class object.
   Adcab *module = new Adcab;
@@ -35,10 +29,11 @@ extern "C" Module_descr *mdcl_Adcab()
   
   // Provide path to pass paramaters to BeamEnergy class.
   BeamEnergy::define_global( dscr );
-  
   return dscr;
 }
 
+//______________________________________________________________________________
+// Module class member definitions.
 
 // Adcab constructor definition.
 Adcab::Adcab()
@@ -63,35 +58,32 @@ Adcab::Adcab()
 
   // Inform of succesful module load.
   std::cout 
-    << "\n\n"
-    << "*********************************************\n"
-    << "* Adcab Analysis Module loaded successfully *\n"
-    << "*********************************************\n"
-    << std::endl;
+      << "\n\n"
+      << "*********************************************\n"
+      << "* Adcab Analysis Module loaded successfully *\n"
+      << "*********************************************\n"
+      << std::endl;
   
   return;
 }
 
-
-//******************************************************************************
-// Module Initialization Functions
-//******************************************************************************
-
-// init() definition.
-void Adcab::init(int *)
+// Function run at loading of BASF module.
+void
+Adcab::init(int *)
 {
   return;
 }
 
-// term() definition.
-void Adcab::term()
+// Function run at termination of BASF module.
+void
+Adcab::term()
 {
   std::cout
-    << "\n\n"
-    << "*************************************************\n"
-    << "* Adcab Analysis Module terminated successfully *\n"
-    << "*************************************************\n"
-    << std::endl;
+      << "\n\n"
+      << "*************************************************\n"
+      << "* Adcab Analysis Module terminated successfully *\n"
+      << "*************************************************\n"
+      << std::endl;
 
   return;
 }
@@ -106,15 +98,16 @@ void Adcab::term()
 //   experiment number, run number, mdst access), it retrieves the run-dependent
 //   beam and interaction point information. A basic run summery is dumped to
 //   the log for the record.
-void Adcab::begin_run(BelleEvent* evptr, int *status) 
+void
+Adcab::begin_run(BelleEvent* evptr, int *status) 
 {
   (void)evptr;
   (void)status;
   
   // Set run information to default values.
-  experimentNumber  = 0;
-  runNumber         = 0;
-  numberOfEvents    = 0;
+  experimentNumber = 0;
+  runNumber = 0;
+  numberOfEvents = 0;
   numDileptonEvents = 0;
   eventsInHeaderNumber = 0;
   
@@ -127,14 +120,14 @@ void Adcab::begin_run(BelleEvent* evptr, int *status)
   num_bs_at_after_event_selection.second = 0;
 
   // Set default flags.
-  flagMC    = false;
+  flagMC = false;
   flagERROR = false;
   flagVERBOSELOG = false;
   flagSELECTBESTCANDIDATE = false;
   
   // Set interaction point and error to default values.
-  ip       = HepPoint3D( 0, 0, 0 );
-  ipErr    = HepSymMatrix( 3, 0 );
+  ip = HepPoint3D( 0, 0, 0 );
+  ipErr = HepSymMatrix( 3, 0 );
   ipUsable = 0;
 
   // Get BELLE_EVENT runhead manager. This is the data stored in the 
@@ -177,11 +170,11 @@ void Adcab::begin_run(BelleEvent* evptr, int *status)
   
   // Print run information to the log.
   std::cout
-    << "\n\n"
-    << "*******************\n"
-    << "* Run Information *\n"
-    << "*******************\n"
-    << std::endl;
+      << "\n\n"
+      << "*******************\n"
+      << "* Run Information *\n"
+      << "*******************\n"
+      << std::endl;
   if ( runhead.ExpMC() == 1 ) {
     flagMC = false; // Set Data type flag to Real Data.
     std::cout << "Data is Real." << std::endl;
@@ -191,13 +184,13 @@ void Adcab::begin_run(BelleEvent* evptr, int *status)
   }
   
   std::cout
-    << "Experiment " << experimentNumber << ", Run " << runNumber 
-    << ", Events " << eventsInHeaderNumber << "\n" 
-    << "Actual Beam Energy: " << beamEnergyCMFrame 
-    << " +/- " << beamEnergyError << " GeV\n"
-    << "Reported Beam Energy: " << kekbBeamEnergy << " GeV\n"
-    << "BE Class cmBoostVector: " << cmBoostVector << "\n"
-    << std::endl;
+      << "Experiment " << experimentNumber << ", Run " << runNumber 
+      << ", Events " << eventsInHeaderNumber << "\n" 
+      << "Actual Beam Energy: " << beamEnergyCMFrame 
+      << " +/- " << beamEnergyError << " GeV\n"
+      << "Reported Beam Energy: " << kekbBeamEnergy << " GeV\n"
+      << "BE Class cmBoostVector: " << cmBoostVector << "\n"
+      << std::endl;
 
   return;
 }
@@ -205,17 +198,18 @@ void Adcab::begin_run(BelleEvent* evptr, int *status)
 // This function is run once at the end of a data run. It does nothing but
 //   write a message to somewhere. This message does not appear in log
 //   although MPB believes it should.
-void Adcab::end_run(BelleEvent* evptr, int *status )
+void
+Adcab::end_run(BelleEvent* evptr, int *status )
 { 
   (void)evptr;
   (void)status;
   
   std::cout
-    << "\n\n"
-    << "***************************************************\n"
-    << "* WHERE IS THIS FUNCTION end_run() EXECUTED?!?!?! *\n"
-    << "***************************************************\n"
-    << std::endl;
+      << "\n\n"
+      << "***************************************************\n"
+      << "* WHERE IS THIS FUNCTION end_run() EXECUTED?!?!?! *\n"
+      << "***************************************************\n"
+      << std::endl;
 
   return;
 }
@@ -224,7 +218,8 @@ void Adcab::end_run(BelleEvent* evptr, int *status )
 //   for each event in a data run. Each event is analyized to find 
 //   signal dilepton event candidates and records information
 //   about those events to the n-tuple.
-void Adcab::event(BelleEvent* evptr, int* status)
+void
+Adcab::event(BelleEvent* evptr, int* status)
 {
   (void)evptr;
   (void)status;
@@ -244,6 +239,10 @@ void Adcab::event(BelleEvent* evptr, int* status)
   // Print hadron flag to the log.
   if ( hadronBFlag < 10 ) {
     std::cout << "HADRONB CUT" << std::endl;
+    // The following line prevents this event from being written to the ntuple
+    //   This is not necessary and can be done at the Cern ROOT analysis
+    //   level with the information contained in the ntuple.
+
     // continue;
   }
   
@@ -263,8 +262,8 @@ void Adcab::event(BelleEvent* evptr, int* status)
 
   // Write the event number to the log for diagnostics.
   // std::cout << experimentNumber << "," 
-  //           << runNumber << ","
-  //           << eventNumber << std::endl;
+  //     << runNumber << ","
+  //     << eventNumber << std::endl;
   
   // Instantiate constant data structures stored in external header files.
   PDGmasses masses;
@@ -330,8 +329,8 @@ void Adcab::event(BelleEvent* evptr, int* status)
   
   // Populate the lepton candidate lists.
   for ( std::vector< Mdst_charged >::const_iterator i = chg_mgr.begin();
-        i != chg_mgr.end(); ++i ) {
-    
+      i != chg_mgr.end(); ++i ) {
+
     // Alias the current particle as "chg".
     const Mdst_charged &chg = *i;
     
@@ -342,8 +341,9 @@ void Adcab::event(BelleEvent* evptr, int* status)
     double muidProb = chgMuid.Muon_likelihood();
 
     // Reject particle if below both electron and muon liklihood cuts.
-    if ( eidProb < cuts.minEidProb && muidProb < cuts.minMuidProb )
+    if ( eidProb < cuts.minEidProb && muidProb < cuts.minMuidProb ) {
       continue;
+    }
     
     // Cut on IP dr and dz.
     // This is to make sure that particles were created near the IP.
@@ -376,7 +376,6 @@ void Adcab::event(BelleEvent* evptr, int* status)
     Mdst_trk_fit &tfit = chg.trk().mhyp( 1 );
     if ( tfit.nhits( 3 ) < cuts.minSvdRHits ) continue;
     if ( tfit.nhits( 4 ) < cuts.minSvdZHits ) continue;
-
 
     // Reject particle if likelihoods are the same from eid and muid.
     if ( eidProb == muidProb ) continue;
@@ -431,7 +430,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
       
       // Assuming particle is a muon.
       Particle muCandidate( chg,
-                            chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
+          chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
 
       // Reject if the particle track has polar angle pointing outside the
       //   barrel (p is given closest to coord. origin - see mdst table).
@@ -475,7 +474,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
   // Write diagnostic information to the log.
   if ( flagVERBOSELOG ) {
   std::cout << num_bs_after_lepton_level.first << " "
-            << num_bs_after_lepton_level.second << std::endl;
+      << num_bs_after_lepton_level.second << std::endl;
   }
 
   // Report number of electons in electron list for diagnostic purposes.
@@ -484,7 +483,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
 
   // Remove possible pair production electrons and J/Psi candidates.
   for ( std::vector< Particle >::iterator j = initialElectronList.begin();
-        j != initialElectronList.end(); ++j ) {
+      j != initialElectronList.end(); ++j ) {
     const Particle &eCndt = *j;
     
     // Flag for electrons that are not candidates for pair production daughters.
@@ -495,7 +494,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
     //   charged tracks is smaller than the cut value (nominally 100 MeV), the
     //   electron candidate is rejected.
     for ( std::vector< Mdst_charged >::const_iterator i = chg_mgr.begin();
-          i != chg_mgr.end(); ++i ) {
+        i != chg_mgr.end(); ++i ) {
       const Mdst_charged &chg = *i;
       Particle otherChg( chg, chg.charge() > 0 ? ptypeEPlus : ptypeEMinus );
 
@@ -530,7 +529,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
   
   // Remove possible J/Psi daughter muons.
   for ( std::vector< Particle >::iterator j = initialMuonList.begin();
-        j != initialMuonList.end(); ++j ) {
+      j != initialMuonList.end(); ++j ) {
     const Particle &muCndt = *j;
     
     // Flag for muons that are not candidates J/psi daughters.
@@ -541,7 +540,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
     //   other opposite charged tracks is within the cut range, the candidate
     //   is rejected.
     for ( std::vector< Mdst_charged >::const_iterator i = chg_mgr.begin();
-          i != chg_mgr.end(); ++i ) {
+        i != chg_mgr.end(); ++i ) {
       const Mdst_charged &chg = *i;
       Particle otherChg( chg, chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
 
@@ -573,7 +572,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
   
   // Report size of cleaned electron list for diagnotic purposes.
   // std::cout << "Number of electrons in event: " << electronList.size() 
-  //           << std::endl;
+  //     << std::endl;
   
   // Combine all leptons into a single list.
   leptonList.reserve( electronList.size() + muonList.size() );
@@ -586,7 +585,7 @@ void Adcab::event(BelleEvent* evptr, int* status)
   //   selection information to the log.
   if ( flagVERBOSELOG ) {
     for ( std::vector< Particle >::iterator j = leptonList.begin();
-          j != leptonList.end(); ++j ) {
+        j != leptonList.end(); ++j ) {
       Particle &lepton0 = *j;
       if ( lepton0.relation().genHepevt() ) {
         double motherId = 0;
@@ -604,19 +603,19 @@ void Adcab::event(BelleEvent* evptr, int* status)
 
   // Write diagnostic information to the log.
   std::cout << "           " 
-            << num_bs_after_pair_removal.first
-            << " "
-            << num_bs_after_pair_removal.second << std::endl;
+      << num_bs_after_pair_removal.first
+      << " "
+      << num_bs_after_pair_removal.second << std::endl;
   }
 
   // Find dilepton event candidates.
   // Loop over the lepton list.
   for ( std::vector< Particle >::iterator j = leptonList.begin();
-        j != leptonList.end(); ++j ) {
+      j != leptonList.end(); ++j ) {
     
     // Loop over remaining leptons in the list to check all lepton pairs.
     for ( std::vector< Particle >::iterator i = j;
-          i != leptonList.end(); ++i ) {
+        i != leptonList.end(); ++i ) {
       
       // Exclude the case where both iterators point to the same particle.
       if ( i == j ) continue;
@@ -639,38 +638,32 @@ void Adcab::event(BelleEvent* evptr, int* status)
       double lepton0MomentumCmMag = lepton0MomentumCm.vect().mag();
       double lepton1MomentumCmMag = lepton1MomentumCm.vect().mag();
       if ( lepton0MomentumCmMag < cuts.minLeptonMomentumCm ||
-           lepton0MomentumCmMag > cuts.maxLeptonMomentumCm ) {
+          lepton0MomentumCmMag > cuts.maxLeptonMomentumCm ) {
         continue;
       }
 
       if ( lepton1MomentumCmMag < cuts.minLeptonMomentumCm ||
-           lepton1MomentumCmMag > cuts.maxLeptonMomentumCm ) {
+          lepton1MomentumCmMag > cuts.maxLeptonMomentumCm ) {
         continue;
       }
       
       // Determine higher momentum lepton and add it to an event candidate.
       //   lepton0 is henceforth considered the higher momentum lepton.
       Particle &leptonHigherP = ( lepton0MomentumCmMag > lepton1MomentumCmMag ?
-                                  lepton0 :
-                                  lepton1 );
+          lepton0 : lepton1 );
       Particle &leptonLowerP = ( lepton0MomentumCmMag > lepton1MomentumCmMag ?
-                                 lepton1 :
-                                 lepton0 );
-      DileptonEvent eventCandidate( leptonHigherP,
-                                    leptonLowerP,
-                                    cmBoostVector );
+          lepton1 : lepton0 );
+      DileptonEvent eventCandidate( leptonHigherP, leptonLowerP,
+          cmBoostVector );
       
       // Cut on jet-like events where the included angle between the leptons
       //   in the CM frame is near 0 or Pi.
       double cosThetaLLCm = eventCandidate.cosThetaLL();
       if ( cosThetaLLCm < cuts.minCosThetaLLCm ||
-           cosThetaLLCm > cuts.maxCosThetaLLCm ) {
+          cosThetaLLCm > cuts.maxCosThetaLLCm ) {
         continue;
       }
 
-      // TODO - 2010.07.27 - Hastings makes a cut requiring hits in the
-      //                     barrel CsI. Is this needed?
-      
       // Add event candidate to the list of dilepton events.
       dileptonEventList.push_back( eventCandidate );
 
@@ -687,15 +680,15 @@ void Adcab::event(BelleEvent* evptr, int* status)
   
   // Write diagnostic information to the log.
   if ( flagVERBOSELOG ) {
-  std::cout << "                     " 
-            << num_bs_at_after_event_selection.first
-            << " "
-            << num_bs_at_after_event_selection.second << std::endl;
+    std::cout << "                     " 
+        << num_bs_at_after_event_selection.first
+        << " "
+        << num_bs_at_after_event_selection.second << std::endl;
   }
 
   // Report the size of the number of dilepton events for diagnostic purposes.
   // std::cout << "numDileptonEvents = " << numDileptonEvents << "\n"
-  //           << "   numberOfEvents = " << numberOfEvents << std::endl;
+  //     << "   numberOfEvents = " << numberOfEvents << std::endl;
 
   // Choose single best event candidate if more than one.
   if ( flagSELECTBESTCANDIDATE ) {
@@ -731,9 +724,9 @@ void Adcab::event(BelleEvent* evptr, int* status)
     int l0MHyp = ( abs( eventCandidate.l0().idAssigned() ) == 13 ) ? 1 : 0;
     int l1MHyp = ( abs( eventCandidate.l1().idAssigned() ) == 13 ) ? 1 : 0;
     IpDrDz l0IpDrDz( eventCandidate.l0().particle().relation().mdstCharged(),
-                     ip, l0MHyp );
+        ip, l0MHyp );
     IpDrDz l1IpDrDz( eventCandidate.l1().particle().relation().mdstCharged(),
-                     ip, l1MHyp );
+        ip, l1MHyp );
 
     // Write data to the n-tuple. As of 2010.08.25, each row in the n-tuple will
     //   consist of a single dilepton event candidate.
@@ -797,9 +790,9 @@ void Adcab::event(BelleEvent* evptr, int* status)
   return;
 }
 
-
 // Specifies n-tuples to write and names for root histograms.
-void Adcab::hist_def()
+void
+Adcab::hist_def()
 {
   extern BelleTupleManager *BASF_Histogram;   // Define a BASF Histogram
   BelleTupleManager *tm = BASF_Histogram;   
@@ -855,7 +848,6 @@ void Adcab::hist_def()
   
   return;
 }
-
 
 #if defined(BELLE_NAMESPACE)  // Needed to close compiler namespace
 } // namespace Belle          // container for backwards compatibility

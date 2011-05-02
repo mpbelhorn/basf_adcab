@@ -1,17 +1,11 @@
-//
-//******************************************************************************
+//______________________________________________________________________________
 // Filename: Adcab.h
 // Version: 2011.02.09.A
 // Author: M.P. Belhorn
 // Original Date: 2011.02.09
 // Description: Analysis of the (A)nomalous (D)ilepton (C)harge (A)symmetry in
 //   (B)s0 decays.
-//******************************************************************************
-
-
-//******************************************************************************
-// Necessary Headers
-//******************************************************************************
+//______________________________________________________________________________
 
 #include <cmath>                      // Uses cmath functions.
   
@@ -48,13 +42,13 @@ namespace Belle {               //  compatibility with older versions of
 #endif                          //  BELLE Library (used for b200611xx onward).
                                 //  Must be in all files.
 
-
-//******************************************************************************
+//______________________________________________________________________________
 // Adcab Class Definition
-//******************************************************************************
 
 // Declare analysis class, inheriting Module from BASF.
-class Adcab : public Module {
+class
+Adcab : public Module
+{
  public:
   // Class functions.
   Adcab();                             // Constructor.
@@ -126,7 +120,7 @@ class Adcab : public Module {
   bool flagLOGBSASSYM; // Writes Bs - BsBar charge asym diagnostics to the log.
   bool flagSELECTBESTCANDIDATE; // Whether or not to choose a single event.
 
-private:
+ private:
   BelleTuple *nTuple_;  // Pointer for writing to the n-tuple. 
 };
 
