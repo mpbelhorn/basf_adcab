@@ -13,7 +13,7 @@ SIGMCPATH=/bwf/g68home/louvot/belle/fs/mcprod/mdstfile
 SIGMCMDST='evtgen-u5stobb-0-evt_RL-DECAY_BDlnu.dec-20101108_1839_new_e000067.081110_1846'
 OUTPUTNAME=${AMOD}.${DATATYPE}-diagnostic
 
-basf << EOF >& test.log
+basf << EOF >& ${OUTPUTDIR}/logs/test.log
 path create main
 path add_module main fix_mdst
 path create analysis
