@@ -65,6 +65,9 @@ Adcab : public Module
   void end_run( BelleEvent*, int* );        // At end of each run.
   void other( int*, BelleEvent*, int* ) {}  // Not used.
   void term();                              // Once by BASF "terminate".
+  
+  // BASF passable parameters.
+  int flag_jpsi_veto_os_only;
 
   // Particle type (Ptype) constants.
   Ptype ptypeElectron;
@@ -89,7 +92,6 @@ Adcab : public Module
   int eventNumber;
   int numberOfEvents;
   int numDileptonEvents;
-  int eventsInHeaderNumber;
 
   // Interaction point information.
   HepPoint3D ip;

@@ -27,6 +27,11 @@ extern "C" Module_descr
   // Creates pointer "dscr" to description of Adcab module.
   Module_descr *dscr = new Module_descr( "Adcab", module );
   
+  // Set up module parameters.
+  dscr->define_param ( "JPsi_Veto_OS_Only",
+      "Apply J/Psi veto to opposite-sign pairs only",
+      &module->flag_jpsi_veto_os_only);
+
   // Provide path to pass paramaters to BeamEnergy class.
   BeamEnergy::define_global( dscr );
   return dscr;
@@ -35,7 +40,10 @@ extern "C" Module_descr
 //______________________________________________________________________________
 // Module class member definitions.
 
-// Adcab constructor definition.
+// Adcab constructor definition. Loaded at the line
+//   "path add_module analysis Adcab" in a BASF script. Place BASF passable
+//   parameter initializations here, as they will apply for the entire 
+//   analysis run.
 Adcab::Adcab()
 { 
   // Define particle types (Ptype) constants for particle class objects.
@@ -56,13 +64,8 @@ Adcab::Adcab()
   ptypeDsStarMinus = ( Ptype( "DS*-" ) );
   ptypeDsStarPlus  = ( Ptype( "DS*+" ) );
 
-  // Inform of succesful module load.
-  std::cout 
-      << "\n\n"
-      << "*********************************************\n"
-      << "* Adcab Analysis Module loaded successfully *\n"
-      << "*********************************************\n"
-      << std::endl;
+  // Initialize BASF parameters.
+  flag_jpsi_veto_os_only = 1;
   
   return;
 }
@@ -71,7 +74,7 @@ Adcab::Adcab()
 void
 Adcab::init(int *)
 {
-  return;
+  // Body is intentionally blank.
 }
 
 // Function run at termination of BASF module.
@@ -80,18 +83,16 @@ Adcab::term()
 {
   std::cout
       << "\n\n"
-      << "*************************************************\n"
-      << "* Adcab Analysis Module terminated successfully *\n"
-      << "*************************************************\n"
+      << "____________________________________________________________\n"
+      << " Adcab Analysis Module terminated successfully \n\n"
       << std::endl;
 
   return;
 }
 
 
-//******************************************************************************
+//______________________________________________________________________________
 // Event Analysis Functions
-//******************************************************************************
 
 // This function is exectuted once per data run. Thus it resets the class flags
 //   and event run counters, it initializes the runhead information (data type,
@@ -109,7 +110,6 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   runNumber = 0;
   numberOfEvents = 0;
   numDileptonEvents = 0;
-  eventsInHeaderNumber = 0;
   
   // Set Diagnostic Variables to 0.
   num_bs_after_lepton_level.first = 0;
@@ -136,7 +136,6 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   Belle_runhead &runhead = runhead_manager( ( Panther_ID ) 1 );
   experimentNumber = runhead.ExpNo();
   runNumber = runhead.RunNo();
-  eventsInHeaderNumber = runhead.NEvt();
   
   // Initialise BeamEnergy class.
   BeamEnergy::begin_run();
@@ -171,25 +170,30 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   // Print run information to the log.
   std::cout
       << "\n\n"
-      << "*******************\n"
-      << "* Run Information *\n"
-      << "*******************\n"
+      << "____________________________________________________________\n"
+      << " New Run: "
+      << "Experiment " << experimentNumber 
+      << ", Run " << runNumber 
+      << "\n" 
       << std::endl;
+
   if ( runhead.ExpMC() == 1 ) {
     flagMC = false; // Set Data type flag to Real Data.
-    std::cout << "Data is Real." << std::endl;
+    std::cout << " Data is Real." << std::endl;
   } else {
     flagMC = true;  // Set Data type flag to Monte Carlo.
-    std::cout << "Data is Monte Carlo." << std::endl;
+    std::cout << " Data is Monte Carlo." << std::endl;
   }
   
   std::cout
-      << "Experiment " << experimentNumber << ", Run " << runNumber 
-      << ", Events " << eventsInHeaderNumber << "\n" 
-      << "Actual Beam Energy: " << beamEnergyCMFrame 
+      << " Actual Beam Energy: " << beamEnergyCMFrame 
       << " +/- " << beamEnergyError << " GeV\n"
-      << "Reported Beam Energy: " << kekbBeamEnergy << " GeV\n"
-      << "BE Class cmBoostVector: " << cmBoostVector << "\n"
+      << " Reported Beam Energy: " << kekbBeamEnergy << " GeV\n"
+      << " BE Class cmBoostVector: " << cmBoostVector << "\n"
+      << "\n"
+      << " BASF Parameter Flags Settings:\n"
+      << "   flag_jpsi_veto_os_only = " << flag_jpsi_veto_os_only << "\n"
+      << "____________________________________________________________\n"
       << std::endl;
 
   return;
@@ -497,10 +501,10 @@ Adcab::event(BelleEvent* evptr, int* status)
         i != chg_mgr.end(); ++i ) {
       const Mdst_charged &chg = *i;
       Particle otherChg( chg, chg.charge() > 0 ? ptypeEPlus : ptypeEMinus );
-
-      // Same sign charge pairs cannot be pair production electrons.
-      if ( eCndt.charge() == otherChg.charge() ) continue;
       
+      // We need to know if the pair is same sign or opposite sign.
+      bool ss_pair = ( eCndt.charge() == otherChg.charge() );
+
       // Calculate the invariant mass of the electron candidate and the other
       //   charged track.
       HepLorentzVector eCndtP = eCndt.p();
@@ -512,11 +516,17 @@ Adcab::event(BelleEvent* evptr, int* status)
 
       // If at any time eCndt proves to be likely from pair production,
       //   or a J/Psi, the flag is switched.
-      if ( electronChargedMass < cuts.minEPlusEMinusMass ) {
+      if ( !( ss_pair ) && ( electronChargedMass < cuts.minEPlusEMinusMass ) ) {
         flagGoodElectron = false;
       }
+      
       double deltaMass = electronChargedMass - cuts.massJPsi;
-      if ( cuts.minElElJPsiCandidate < deltaMass ||
+      // Same sign charge pairs may or may not be included in J/Psi veto
+      //   depending on flag.
+      if ( flag_jpsi_veto_os_only && ss_pair ) {
+        // Nothing to do in this case.
+        continue;
+      } else if ( cuts.minElElJPsiCandidate < deltaMass ||
           deltaMass < cuts.maxElElJPsiCandidate ) {
         flagGoodElectron = false;
       }
@@ -544,8 +554,11 @@ Adcab::event(BelleEvent* evptr, int* status)
       const Mdst_charged &chg = *i;
       Particle otherChg( chg, chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
 
-      // Same sign charge pairs cannot be J/Psi muons.
-      if ( muCndt.charge() == otherChg.charge() ) continue;
+      // J/Psi veto only same sign charge muon pairs, depending on parameter.
+      if ( flag_jpsi_veto_os_only &&
+          ( muCndt.charge() == otherChg.charge() ) ) {
+        continue;
+      }
       
       // Calculate the invariant mass of the muon candidate and the other
       //   charged track.
