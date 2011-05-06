@@ -67,7 +67,8 @@ Adcab : public Module
   void term();                              // Once by BASF "terminate".
   
   // BASF passable parameters.
-  int flag_jpsi_veto_os_only;
+  int basf_parameter_jpsi_veto_os_only;
+  int basf_parameter_verbose_log;
 
   // Particle type (Ptype) constants.
   Ptype ptypeElectron;
@@ -116,11 +117,7 @@ Adcab : public Module
   std::pair<int,int> num_bs_at_after_event_selection;
 
   // Flags           
-  bool flagMC;         // Data type flag. 'true' = MC, 'false' = Real Data.
-  bool flagERROR;      // Error flag. 'true' = fatal error or unrelaiable data.
-  bool flagVERBOSELOG; // Turns on verbose diagnostic messages in the log.
-  bool flagLOGBSASSYM; // Writes Bs - BsBar charge asym diagnostics to the log.
-  bool flagSELECTBESTCANDIDATE; // Whether or not to choose a single event.
+  bool flag_mc;  // Data type flag. 'true' = MC, 'false' = Real Data.
 
  private:
   BelleTuple *nTuple_;  // Pointer for writing to the n-tuple. 

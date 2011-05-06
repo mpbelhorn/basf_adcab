@@ -8,6 +8,10 @@
 //______________________________________________________________________________
 
 #include "Adcab.h"              // Adcab Analysis header.
+#include <iostream>
+
+using std::cout;
+using std::endl;
 
 #if defined(BELLE_NAMESPACE)    // Namespace container for backwards
 namespace Belle {               //  compatibility with older versions of
@@ -30,7 +34,10 @@ extern "C" Module_descr
   // Set up module parameters.
   dscr->define_param ( "JPsi_Veto_OS_Only",
       "Apply J/Psi veto to opposite-sign pairs only",
-      &module->flag_jpsi_veto_os_only);
+      &module->basf_parameter_jpsi_veto_os_only);
+  dscr->define_param ( "Verbose_Log",
+      "Writes diagnotic information to the log",
+      &module->basf_parameter_verbose_log);
 
   // Provide path to pass paramaters to BeamEnergy class.
   BeamEnergy::define_global( dscr );
@@ -65,7 +72,8 @@ Adcab::Adcab()
   ptypeDsStarPlus  = ( Ptype( "DS*+" ) );
 
   // Initialize BASF parameters.
-  flag_jpsi_veto_os_only = 1;
+  basf_parameter_jpsi_veto_os_only = 1;
+  basf_parameter_verbose_log = 0;
   
   return;
 }
@@ -81,11 +89,10 @@ Adcab::init(int *)
 void
 Adcab::term()
 {
-  std::cout
-      << "\n\n"
-      << "____________________________________________________________\n"
-      << " Adcab Analysis Module terminated successfully \n\n"
-      << std::endl;
+  cout << "\n\n"
+       << "____________________________________________________________\n"
+       << " Adcab Analysis Module terminated successfully \n\n"
+       << endl;
 
   return;
 }
@@ -120,10 +127,7 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   num_bs_at_after_event_selection.second = 0;
 
   // Set default flags.
-  flagMC = false;
-  flagERROR = false;
-  flagVERBOSELOG = false;
-  flagSELECTBESTCANDIDATE = false;
+  flag_mc = false;
   
   // Set interaction point and error to default values.
   ip = HepPoint3D( 0, 0, 0 );
@@ -168,33 +172,32 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   }
   
   // Print run information to the log.
-  std::cout
-      << "\n\n"
-      << "____________________________________________________________\n"
-      << " New Run: "
-      << "Experiment " << experimentNumber 
-      << ", Run " << runNumber 
-      << "\n" 
-      << std::endl;
+  cout << "\n\n"
+       << "____________________________________________________________\n"
+       << " New Run: "
+       << "Experiment " << experimentNumber 
+       << ", Run " << runNumber 
+       << "\n" 
+       << endl;
 
   if ( runhead.ExpMC() == 1 ) {
-    flagMC = false; // Set Data type flag to Real Data.
-    std::cout << " Data is Real." << std::endl;
+    flag_mc = false; // Set Data type flag to Real Data.
+    cout << " Data is Real." << endl;
   } else {
-    flagMC = true;  // Set Data type flag to Monte Carlo.
-    std::cout << " Data is Monte Carlo." << std::endl;
+    flag_mc = true;  // Set Data type flag to Monte Carlo.
+    cout << " Data is Monte Carlo." << endl;
   }
   
-  std::cout
-      << " Actual Beam Energy: " << beamEnergyCMFrame 
-      << " +/- " << beamEnergyError << " GeV\n"
-      << " Reported Beam Energy: " << kekbBeamEnergy << " GeV\n"
-      << " BE Class cmBoostVector: " << cmBoostVector << "\n"
-      << "\n"
-      << " BASF Parameter Flags Settings:\n"
-      << "   flag_jpsi_veto_os_only = " << flag_jpsi_veto_os_only << "\n"
-      << "____________________________________________________________\n"
-      << std::endl;
+  cout << " Actual Beam Energy: " << beamEnergyCMFrame 
+       << " +/- " << beamEnergyError << " GeV\n"
+       << " Reported Beam Energy: " << kekbBeamEnergy << " GeV\n"
+       << " BE Class cmBoostVector: " << cmBoostVector << "\n"
+       << "\n"
+       << " BASF Parameter Flags Settings:\n"
+       << "   basf_parameter_jpsi_veto_os_only = " 
+       << basf_parameter_jpsi_veto_os_only << "\n"
+       << "____________________________________________________________\n"
+       << endl;
 
   return;
 }
@@ -208,12 +211,11 @@ Adcab::end_run(BelleEvent* evptr, int *status )
   (void)evptr;
   (void)status;
   
-  std::cout
-      << "\n\n"
-      << "***************************************************\n"
-      << "* WHERE IS THIS FUNCTION end_run() EXECUTED?!?!?! *\n"
-      << "***************************************************\n"
-      << std::endl;
+  cout << "\n\n"
+       << "***************************************************\n"
+       << "* WHERE IS THIS FUNCTION end_run() EXECUTED?!?!?! *\n"
+       << "***************************************************\n"
+       << endl;
 
   return;
 }
@@ -234,6 +236,10 @@ Adcab::event(BelleEvent* evptr, int* status)
   Belle_event_Manager& EvMgr = Belle_event_Manager::get_manager();
   eventNumber = EvMgr[0].EvtNo() & ~(~0 << 28);
 
+  if ( basf_parameter_verbose_log ) {
+    cout << "____________________________________________________________\n"
+         << "New Event #" << eventNumber << "(MC: " << flag_mc << ")" << endl;
+
   // Check the event classification information for HadronB criteria.
   Evtcls_hadronic_flag_Manager &hadronFlagManager
       = Evtcls_hadronic_flag_Manager::get_manager();
@@ -241,17 +247,9 @@ Adcab::event(BelleEvent* evptr, int* status)
   float hadronBFlag = hadronFlags.hadronic_flag( 2 );
 
   // Print hadron flag to the log.
-  if ( hadronBFlag < 10 ) {
-    std::cout << "HADRONB CUT" << std::endl;
-    // The following line prevents this event from being written to the ntuple
-    //   This is not necessary and can be done at the Cern ROOT analysis
-    //   level with the information contained in the ntuple.
-
-    // continue;
+  if ( basf_parameter_verbose_log && hadronBFlag < 10 ) {
+    cout << " Bad event: Fails hadronB criteria." << endl;
   }
-  
-  // Write the value of the MC flag to the log for diagnostics.
-  // std::cout << "(flagMC " << flagMC << ") ";
 
   // Get the Fox-wolfram R2 value for the event. Spherical events accepted (Low
   //   R2 values). If R2 is not calculated in the hadron info table, event will
@@ -263,11 +261,6 @@ Adcab::event(BelleEvent* evptr, int* status)
   if ( hadMgr.count() ) {
     foxWolframR2 = hadMgr[0].R2();
   }
-
-  // Write the event number to the log for diagnostics.
-  // std::cout << experimentNumber << "," 
-  //     << runNumber << ","
-  //     << eventNumber << std::endl;
   
   // Instantiate constant data structures stored in external header files.
   PDGmasses masses;
@@ -275,29 +268,6 @@ Adcab::event(BelleEvent* evptr, int* status)
   
   // Add event to counter.
   ++numberOfEvents;
-  
-  // Set particle counters.
-  int numCndtEPlus = 0;
-  int numCndtEMinus = 0;
-  int numCndtMuPlus = 0;
-  int numCndtMuMinus = 0;
-
-  // Set dilepton(++/--) counters.
-  int numCndtEPlusPlus = 0;
-  int numCndtMuPlusPlus = 0;
-  int numCndtEMinusMinus = 0;
-  int numCndtMuMinusMinus = 0;
-
-  // Set correctly reconstructed MC particle counters.
-  int numCrctEPlus = 0;
-  int numCrctEMinus = 0;
-  int numCrctMuPlus = 0;
-  int numCrctMuMinus = 0;
-  
-  int numCrctEPlusPlus = 0;
-  int numCrctMuPlusPlus = 0;
-  int numCrctEMinusMinus = 0;
-  int numCrctMuMinusMinus = 0;
     
   // Define lists (vector template) to store event particles.
   // Need a list for all mother and daughter particle species.
@@ -309,7 +279,6 @@ Adcab::event(BelleEvent* evptr, int* status)
   static std::vector< Particle > initialMuonList( 50 );
   static std::vector< Particle > muonList( 50 );
   static std::vector< Particle > leptonList( 100 );
-  static std::vector< Particle > kaonList( 50 );
 
   // Define list to store candidate dilepton events.
   static std::vector< DileptonEvent > dileptonEventList( 50 );
@@ -320,16 +289,16 @@ Adcab::event(BelleEvent* evptr, int* status)
   initialMuonList.clear();
   muonList.clear();
   leptonList.clear();
-  kaonList.clear();
   dileptonEventList.clear();
   
   // Alias the MDST charged manager, which contains
   // the measured charged tracks for each event.
   Mdst_charged_Manager &chg_mgr = Mdst_charged_Manager::get_manager();
   
-  // Create an alias "null" for the null value of generated signal MC.
-  // I.E. if something is not signal MC, it will be ascribed this value.
-  const Gen_hepevt &null = Gen_hepevt_Manager::get_manager().get_NULL();
+  // Print diagnostic information to the log.
+  if ( basf_parameter_verbose_log ) {
+    cout << " Passed initialization." << endl;
+  }
   
   // Populate the lepton candidate lists.
   for ( std::vector< Mdst_charged >::const_iterator i = chg_mgr.begin();
@@ -456,34 +425,19 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Store the MC truth to the lepton candidate.
       setMCtruth( muCandidate );
       
-      // Collect diagnostic information.
-      if ( muCandidate.relation().genHepevt() ) {
-        double motherId = 0;
-        if ( muCandidate.relation().genHepevt().mother() ) {
-          motherId = muCandidate.relation().genHepevt().mother().idhep();
-        }
-        if ( motherId == -531 ) {
-          num_bs_after_lepton_level.first++;
-        }
-        if ( motherId == 531 ) {
-          num_bs_after_lepton_level.second++;
-        }
-      }
-      
       // Add eCandidate to list of e+/- candidates.
       muonList.push_back( muCandidate );
     }
   } // End for() loop populating lepton lists.
 
-  // Write diagnostic information to the log.
-  if ( flagVERBOSELOG ) {
-  std::cout << num_bs_after_lepton_level.first << " "
-      << num_bs_after_lepton_level.second << std::endl;
+  // Print diagnostic information to the log.
+  if ( basf_parameter_verbose_log ) {
+    cout << " Passed lepton candidate selection..." << endl;
+    cout << "  electron candidates: " << initialElectronList.size()
+        << "." << endl;
+    cout << "      muon candidates: " << initialMuonList.size()
+        << "." << endl;
   }
-
-  // Report number of electons in electron list for diagnostic purposes.
-  // std::cout << "Number of electrons in event: "
-  //           << initialElectronList.size() << std::endl;
 
   // Remove possible pair production electrons and J/Psi candidates.
   for ( std::vector< Particle >::iterator j = initialElectronList.begin();
@@ -512,7 +466,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       double electronChargedMass = ( eCndtP + otherChgP ).m();      
       
       // Report invariant mass for diagnostic purposes.
-      // std::cout << "e p/m mass: " << electronChargedMass << std::endl;
+      // cout << "e p/m mass: " << electronChargedMass << endl;
 
       // If at any time eCndt proves to be likely from pair production,
       //   or a J/Psi, the flag is switched.
@@ -523,7 +477,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       double deltaMass = electronChargedMass - cuts.massJPsi;
       // Same sign charge pairs may or may not be included in J/Psi veto
       //   depending on flag.
-      if ( flag_jpsi_veto_os_only && ss_pair ) {
+      if ( basf_parameter_jpsi_veto_os_only && ss_pair ) {
         // Nothing to do in this case.
         continue;
       } else if ( cuts.minElElJPsiCandidate < deltaMass ||
@@ -535,6 +489,12 @@ Adcab::event(BelleEvent* evptr, int* status)
     // While eCndt is still a good candidate, add it to the electron list.
     if ( flagGoodElectron )
       electronList.push_back( eCndt );
+  }
+  
+  // Print diagnostic information to the log.
+  if ( basf_parameter_verbose_log ) {
+    cout << " Passed electron pair production and J/Psi vetoes." << endl;
+    cout << "   Remaining electrons: " << electronList.size() << "." << endl;
   }
   
   // Remove possible J/Psi daughter muons.
@@ -555,7 +515,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       Particle otherChg( chg, chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
 
       // J/Psi veto only same sign charge muon pairs, depending on parameter.
-      if ( flag_jpsi_veto_os_only &&
+      if ( basf_parameter_jpsi_veto_os_only &&
           ( muCndt.charge() == otherChg.charge() ) ) {
         continue;
       }
@@ -567,7 +527,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       double muonChargedMass = ( muCndtP + otherChgP ).m();      
       
       // Report invariant mass for diagnostic purposes.
-      // std::cout << "e p/m mass: " << muonChargedMass << std::endl;
+      // cout << "e p/m mass: " << muonChargedMass << endl;
 
       // If at any time muCndt proves to be likely from a J/Psi, the flag
       //   is switched.
@@ -579,13 +539,16 @@ Adcab::event(BelleEvent* evptr, int* status)
     }
 
     // While muCndt is still a good candidate, add it to the electron list.
-    if ( flagGoodMuon )
+    if ( flagGoodMuon ) {
       muonList.push_back( muCndt );
+    }
   }
   
-  // Report size of cleaned electron list for diagnotic purposes.
-  // std::cout << "Number of electrons in event: " << electronList.size() 
-  //     << std::endl;
+  // Print diagnostic information to the log.
+  if ( basf_parameter_verbose_log ) {
+    cout << " Passed muon J/Psi veto." << endl;
+    cout << "   Remaining muons: " << muonList.size() << "." << endl;
+  }
   
   // Combine all leptons into a single list.
   leptonList.reserve( electronList.size() + muonList.size() );
@@ -593,34 +556,6 @@ Adcab::event(BelleEvent* evptr, int* status)
                      electronList.end() );
   leptonList.insert( leptonList.end(), muonList.begin(), muonList.end() );
  
-  
-  // If wanting a verbose log, loop over the lepton list and write diagnostic
-  //   selection information to the log.
-  if ( flagVERBOSELOG ) {
-    for ( std::vector< Particle >::iterator j = leptonList.begin();
-        j != leptonList.end(); ++j ) {
-      Particle &lepton0 = *j;
-      if ( lepton0.relation().genHepevt() ) {
-        double motherId = 0;
-        if ( lepton0.relation().genHepevt().mother() ) {
-          motherId = lepton0.relation().genHepevt().mother().idhep();
-        }
-        if ( motherId == -531 ) {
-          num_bs_after_pair_removal.first++;
-        }
-        if ( motherId == 531 ) {
-          num_bs_after_pair_removal.second++;
-        }
-      }
-    }
-
-  // Write diagnostic information to the log.
-  std::cout << "           " 
-      << num_bs_after_pair_removal.first
-      << " "
-      << num_bs_after_pair_removal.second << std::endl;
-  }
-
   // Find dilepton event candidates.
   // Loop over the lepton list.
   for ( std::vector< Particle >::iterator j = leptonList.begin();
@@ -679,56 +614,16 @@ Adcab::event(BelleEvent* evptr, int* status)
 
       // Add event candidate to the list of dilepton events.
       dileptonEventList.push_back( eventCandidate );
-
-      if ( flagVERBOSELOG ) {
-        double lepton0MotherId = eventCandidate.l0().idMother();
-        double lepton1MotherId = eventCandidate.l1().idMother();
-        if ( lepton0MotherId == -531 ) num_bs_at_after_event_selection.first++;
-        if ( lepton0MotherId ==  531 ) num_bs_at_after_event_selection.second++;
-        if ( lepton1MotherId == -531 ) num_bs_at_after_event_selection.first++;
-        if ( lepton1MotherId ==  531 ) num_bs_at_after_event_selection.second++;
-      }
     }
   }
   
-  // Write diagnostic information to the log.
-  if ( flagVERBOSELOG ) {
-    std::cout << "                     " 
-        << num_bs_at_after_event_selection.first
-        << " "
-        << num_bs_at_after_event_selection.second << std::endl;
+  // Print diagnostic information to the log.
+  if ( basf_parameter_verbose_log ) {
+    cout << " Passed event candidate selection." << endl;
+    cout << "   " << dileptonEventList.size() << " candidates found." << endl;
   }
 
-  // Report the size of the number of dilepton events for diagnostic purposes.
-  // std::cout << "numDileptonEvents = " << numDileptonEvents << "\n"
-  //     << "   numberOfEvents = " << numberOfEvents << std::endl;
-
-  // Choose single best event candidate if more than one.
-  if ( flagSELECTBESTCANDIDATE ) {
-    DileptonEvent bestEvent;
-    double bestEventMomentum;
-    for ( std::vector< DileptonEvent >::iterator i = dileptonEventList.begin();
-        i != dileptonEventList.end(); ++i ) {
-      DileptonEvent &currentEvent = *i;
-      if ( i == dileptonEventList.begin() ) {
-        bestEventMomentum = currentEvent.pSum();
-        bestEvent = currentEvent;
-      }
-      double currentEventMomentum = currentEvent.pSum();
-      if ( currentEventMomentum > bestEventMomentum ) {
-        bestEventMomentum = currentEventMomentum;
-        bestEvent = currentEvent;
-      }
-    }
-    // If the list of dilepton events is empty, better not
-    //   treat the past-end-of-vector object as an event!
-    if ( dileptonEventList.begin() != dileptonEventList.end() ) {
-      dileptonEventList.clear();
-      dileptonEventList.push_back( bestEvent );
-    }
-  }
-
-  // Write the best candidate information to n-tuple.
+  // Write the event candidate information to n-tuple.
   for ( std::vector< DileptonEvent >::iterator i = dileptonEventList.begin();
       i != dileptonEventList.end(); ++i ) {
     DileptonEvent &eventCandidate = *i;
@@ -780,13 +675,13 @@ Adcab::event(BelleEvent* evptr, int* status)
     nTuple_->column( "l0_plab" , eventCandidate.l0().p().vect().mag() );
     nTuple_->column( "l1_plab" , eventCandidate.l1().p().vect().mag() );
     nTuple_->column( "l0_cme"  , eventCandidate.l0().pCm().e() );
-    nTuple_->column( "l0_cme"  , eventCandidate.l0().pCm().e() );
+    nTuple_->column( "l1_cme"  , eventCandidate.l1().pCm().e() );
     nTuple_->column( "l0_cmpx" , eventCandidate.l0().pCm().px() );
-    nTuple_->column( "l0_cmpx" , eventCandidate.l0().pCm().px() );
+    nTuple_->column( "l1_cmpx" , eventCandidate.l1().pCm().px() );
     nTuple_->column( "l0_cmpy" , eventCandidate.l0().pCm().py() );
-    nTuple_->column( "l0_cmpy" , eventCandidate.l0().pCm().py() );
+    nTuple_->column( "l1_cmpy" , eventCandidate.l1().pCm().py() );
     nTuple_->column( "l0_cmpz" , eventCandidate.l0().pCm().pz() );
-    nTuple_->column( "l0_cmpz" , eventCandidate.l0().pCm().pz() );
+    nTuple_->column( "l1_cmpz" , eventCandidate.l1().pCm().pz() );
     nTuple_->column( "l0_costh", eventCandidate.l0().p().cosTheta() );
     nTuple_->column( "l1_costh", eventCandidate.l1().p().cosTheta() );
     nTuple_->column( "l0_dr"   , l0IpDrDz.dr() );
@@ -798,6 +693,11 @@ Adcab::event(BelleEvent* evptr, int* status)
     nTuple_->column( "l0_svdz" , eventCandidate.l0().svdHitsZ() );
     nTuple_->column( "l1_svdz" , eventCandidate.l1().svdHitsZ() );
     nTuple_->dumpData();
+  }
+  
+  // Print diagnostic information to the log.
+  if ( basf_parameter_verbose_log ) {
+    cout << " Passed commit to ntuple." << endl;
   }
   
   return;
