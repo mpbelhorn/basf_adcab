@@ -34,7 +34,7 @@ extern "C" Module_descr
   // Set up module parameters.
   dscr->define_param ( "JPsi_Veto_OS_Only",
       "Apply J/Psi veto to opposite-sign pairs only",
-      &module->basf_parameter_jpsi_veto_os_only);
+      &module->basf_parameter_allow_charge_bias);
   dscr->define_param ( "Verbose_Log",
       "Writes diagnotic information to the log",
       &module->basf_parameter_verbose_log);
@@ -72,7 +72,7 @@ Adcab::Adcab()
   ptypeDsStarPlus  = ( Ptype( "DS*+" ) );
 
   // Initialize BASF parameters.
-  basf_parameter_jpsi_veto_os_only = 1;
+  basf_parameter_allow_charge_bias = 0;
   basf_parameter_verbose_log = 0;
   
   return;
@@ -194,8 +194,8 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
        << " BE Class cmBoostVector: " << cmBoostVector << "\n"
        << "\n"
        << " BASF Parameter Flags Settings:\n"
-       << "   basf_parameter_jpsi_veto_os_only = " 
-       << basf_parameter_jpsi_veto_os_only << "\n"
+       << "   basf_parameter_allow_charge_bias = " 
+       << basf_parameter_allow_charge_bias << "\n"
        << "____________________________________________________________\n"
        << endl;
 
@@ -448,8 +448,8 @@ Adcab::event(BelleEvent* evptr, int* status)
     // By default, assume all electrons are good.
     bool flagGoodElectron = true;
 
-    // If the invariant mass of an electron candidate and every other opposite
-    //   charged tracks is smaller than the cut value (nominally 100 MeV), the
+    // If the invariant mass of an electron candidate any other charged
+    //   track is smaller than the cut value (nominally 100 MeV), the
     //   electron candidate is rejected.
     for ( std::vector< Mdst_charged >::const_iterator i = chg_mgr.begin();
         i != chg_mgr.end(); ++i ) {
@@ -458,37 +458,33 @@ Adcab::event(BelleEvent* evptr, int* status)
       
       // We need to know if the pair is same sign or opposite sign.
       bool ss_pair = ( eCndt.charge() == otherChg.charge() );
+      bool allow_charge_bias = basf_parameter_allow_charge_bias && ss_pair;
+      
+      // If allowing a charge bias and pair is SS, skip to the next otherChg.
+      if ( allow_charge_bias ) {
+        continue;
+      }
 
       // Calculate the invariant mass of the electron candidate and the other
       //   charged track.
       HepLorentzVector eCndtP = eCndt.p();
       HepLorentzVector otherChgP = otherChg.p();
-      double electronChargedMass = ( eCndtP + otherChgP ).m();      
-      
-      // Report invariant mass for diagnostic purposes.
-      // cout << "e p/m mass: " << electronChargedMass << endl;
-
-      // If at any time eCndt proves to be likely from pair production,
-      //   or a J/Psi, the flag is switched.
-      if ( !( ss_pair ) && ( electronChargedMass < cuts.minEPlusEMinusMass ) ) {
-        flagGoodElectron = false;
-      }
-      
+      double electronChargedMass = ( eCndtP + otherChgP ).m();
       double deltaMass = electronChargedMass - cuts.massJPsi;
-      // Same sign charge pairs may or may not be included in J/Psi veto
-      //   depending on flag.
-      if ( basf_parameter_jpsi_veto_os_only && ss_pair ) {
-        // Nothing to do in this case.
-        continue;
+
+      // Cut possible pair production electrons or J/Psi daughters.
+      if ( electronChargedMass < cuts.minEPlusEMinusMass ) {
+        flagGoodElectron = false;
       } else if ( cuts.minElElJPsiCandidate < deltaMass ||
           deltaMass < cuts.maxElElJPsiCandidate ) {
         flagGoodElectron = false;
       }
     }
-
+    
     // While eCndt is still a good candidate, add it to the electron list.
-    if ( flagGoodElectron )
+    if ( flagGoodElectron ) {
       electronList.push_back( eCndt );
+    }
   }
   
   // Print diagnostic information to the log.
@@ -514,9 +510,12 @@ Adcab::event(BelleEvent* evptr, int* status)
       const Mdst_charged &chg = *i;
       Particle otherChg( chg, chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
 
-      // J/Psi veto only same sign charge muon pairs, depending on parameter.
-      if ( basf_parameter_jpsi_veto_os_only &&
-          ( muCndt.charge() == otherChg.charge() ) ) {
+      // We need to know if the pair is same sign or opposite sign.
+      bool ss_pair = ( muCndt.charge() == otherChg.charge() );
+      bool allow_charge_bias = basf_parameter_allow_charge_bias && ss_pair;
+      
+      // If allowing a charge bias and pair is SS, skip to the next otherChg.
+      if ( allow_charge_bias ) {
         continue;
       }
       
@@ -525,9 +524,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       HepLorentzVector muCndtP = muCndt.p();
       HepLorentzVector otherChgP = otherChg.p();
       double muonChargedMass = ( muCndtP + otherChgP ).m();      
-      
-      // Report invariant mass for diagnostic purposes.
-      // cout << "e p/m mass: " << muonChargedMass << endl;
 
       // If at any time muCndt proves to be likely from a J/Psi, the flag
       //   is switched.

@@ -67,7 +67,7 @@ Adcab : public Module
   void term();                              // Once by BASF "terminate".
   
   // BASF passable parameters.
-  int basf_parameter_jpsi_veto_os_only;
+  int basf_parameter_allow_charge_bias;
   int basf_parameter_verbose_log;
 
   // Particle type (Ptype) constants.
