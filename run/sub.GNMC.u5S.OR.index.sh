@@ -28,7 +28,7 @@ if [ ! -f ${MDSTPATH}/${MDSTFILE}.index ]
     OUTPUTDIR=${ANALYSISDIR}/output
     RUNSTART=`echo ${MDSTFILE} | cut -c 19-24`
     RUNEND=`echo ${MDSTFILE} | cut -c 26-31`
-    OUTPUTNAME=Adcab.GNMC.OR.e${EXPNO}.rs${RUNSTART}.re${RUNEND}.${EVENTTYPE}.s0${STREAMNO}
+    OUTPUTNAME=Adcab.GNMC.OR.s0${STREAMNO}.${EVENTTYPE}.e${EXPNO}.rs${RUNSTART}.re${RUNEND}
     echo "Submitting job for ${OUTPUTNAME}"
 fi
 
@@ -48,6 +48,6 @@ path add_condition main >:0:analysis
 
 initialize
 histogram define ${OUTPUTDIR}/hbks/${OUTPUTNAME}.hbk
-process_event ${MDSTPATH}/${MDSTFILE}.mdst
+process_event ${MDSTPATH}/${MDSTFILE}.index
 terminate
 EOF
