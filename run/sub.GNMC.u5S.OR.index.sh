@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # File: sub.GNMC.u5S.OR.index.sh
 # Author: M.P. Belhorn
 # Date: 2011.05.09
@@ -15,10 +15,7 @@ if [ $# -ne 3 ]
     EXPNO=$1
     EVENTTYPE=$2
     STREAMNO=$3
-    MDSTPATH=/bwf/g89home/g0mc/skim/skim5S/index/dilepskim/5S_onresonance/e0000${EXPNO}/evtgen-${EVENTTYPE}/s0${STREAMNO}
 fi
 
-for MDSTFILE in $MDSTPATH/*.index
-do
-  echo "Processing $MDSTFILE..."
-done
+shopt -s nullglob
+bsub -q index ./basf.GNMC.u5S.OR.index.e${EXPNO}.sh ${EVENTTYPE} ${STREAMNO}

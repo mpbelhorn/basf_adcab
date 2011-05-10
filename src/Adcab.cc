@@ -74,6 +74,16 @@ Adcab::Adcab()
   // Initialize BASF parameters.
   basf_parameter_allow_charge_bias = 0;
   basf_parameter_verbose_log = 0;
+
+  cout << "\n\n"
+       << "____________________________________________________________\n"
+       << " Adcab Analysis Module loaded successfully \n\n"
+       << " BASF Parameter Flags Settings:\n"
+       << "   basf_parameter_allow_charge_bias = " 
+       << basf_parameter_allow_charge_bias << "\n"
+       << "   basf_parameter_verbose_log = " 
+       << basf_parameter_verbose_log << "\n"
+       << endl;
   
   return;
 }
@@ -192,10 +202,6 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
        << " +/- " << beamEnergyError << " GeV\n"
        << " Reported Beam Energy: " << kekbBeamEnergy << " GeV\n"
        << " BE Class cmBoostVector: " << cmBoostVector << "\n"
-       << "\n"
-       << " BASF Parameter Flags Settings:\n"
-       << "   basf_parameter_allow_charge_bias = " 
-       << basf_parameter_allow_charge_bias << "\n"
        << "____________________________________________________________\n"
        << endl;
 
@@ -239,6 +245,7 @@ Adcab::event(BelleEvent* evptr, int* status)
   if ( basf_parameter_verbose_log ) {
     cout << "____________________________________________________________\n"
          << "New Event #" << eventNumber << "(MC: " << flag_mc << ")" << endl;
+  }
 
   // Check the event classification information for HadronB criteria.
   Evtcls_hadronic_flag_Manager &hadronFlagManager
@@ -364,7 +371,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Reject if the particle track has polar angle pointing outside the
       //   barrel (p is given closest to coord. origin - see mdst table).
       if ( eCandidate.p().cosTheta() < cuts.minLeptonCosTheta ||
-           eCandidate.p().cosTheta() > cuts.maxLeptonCosTheta ) {
+          eCandidate.p().cosTheta() > cuts.maxLeptonCosTheta ) {
         continue;
       }
 
