@@ -41,7 +41,7 @@ path create analysis
 module register Adcab
 path add_module analysis Adcab
 module put_parameter Adcab JPsi_Veto_OS_Only\0
-module put_parameter Adcab Verbose_Log\0
+module put_parameter Adcab Verbose_Log\1
 
 path add_condition main <=:0:KILL
 path add_condition main >:0:analysis

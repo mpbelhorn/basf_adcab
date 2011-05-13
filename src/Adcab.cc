@@ -476,13 +476,13 @@ Adcab::event(BelleEvent* evptr, int* status)
       //   charged track.
       HepLorentzVector eCndtP = eCndt.p();
       HepLorentzVector otherChgP = otherChg.p();
-      double electronChargedMass = ( eCndtP + otherChgP ).m();
+      double electronChargedMass = abs( ( eCndtP + otherChgP ).m() );
       double deltaMass = electronChargedMass - cuts.massJPsi;
 
       // Cut possible pair production electrons or J/Psi daughters.
       if ( electronChargedMass < cuts.minEPlusEMinusMass ) {
         flagGoodElectron = false;
-      } else if ( cuts.minElElJPsiCandidate < deltaMass ||
+      } else if ( cuts.minElElJPsiCandidate < deltaMass &&
           deltaMass < cuts.maxElElJPsiCandidate ) {
         flagGoodElectron = false;
       }
@@ -530,12 +530,12 @@ Adcab::event(BelleEvent* evptr, int* status)
       //   charged track.
       HepLorentzVector muCndtP = muCndt.p();
       HepLorentzVector otherChgP = otherChg.p();
-      double muonChargedMass = ( muCndtP + otherChgP ).m();      
+      double muonChargedMass = abs( ( muCndtP + otherChgP ).m() );
 
       // If at any time muCndt proves to be likely from a J/Psi, the flag
       //   is switched.
       double deltaMass = muonChargedMass - cuts.massJPsi;
-      if ( cuts.minMuMuJPsiCandidate < deltaMass ||
+      if ( cuts.minMuMuJPsiCandidate < deltaMass &&
           deltaMass < cuts.maxMuMuJPsiCandidate ) {
         flagGoodMuon = false;
       }
