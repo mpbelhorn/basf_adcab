@@ -463,6 +463,11 @@ Adcab::event(BelleEvent* evptr, int* status)
       const Mdst_charged &chg = *i;
       Particle otherChg( chg, chg.charge() > 0 ? ptypeEPlus : ptypeEMinus );
       
+      // Reject case where pointers point to same object.
+      if ( eCndt == otherChg ) {
+        continue;
+      }
+      
       // We need to know if the pair is same sign or opposite sign.
       bool ss_pair = ( eCndt.charge() == otherChg.charge() );
       bool allow_charge_bias = basf_parameter_allow_charge_bias && ss_pair;
@@ -516,7 +521,12 @@ Adcab::event(BelleEvent* evptr, int* status)
         i != chg_mgr.end(); ++i ) {
       const Mdst_charged &chg = *i;
       Particle otherChg( chg, chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
-
+      
+      // Reject case where pointers point to same object.
+      if ( muCndt == otherChg ) {
+        continue;
+      }
+      
       // We need to know if the pair is same sign or opposite sign.
       bool ss_pair = ( muCndt.charge() == otherChg.charge() );
       bool allow_charge_bias = basf_parameter_allow_charge_bias && ss_pair;
