@@ -449,7 +449,6 @@ Adcab::event(BelleEvent* evptr, int* status)
   // Remove possible pair production electrons and J/Psi candidates.
   for ( std::vector< Particle >::iterator j = initialElectronList.begin();
       j != initialElectronList.end(); ++j ) {
-    const Particle &eCndt = *j;
     
     // Flag for electrons that are not candidates for pair production daughters.
     // By default, assume all electrons are good.
@@ -460,13 +459,13 @@ Adcab::event(BelleEvent* evptr, int* status)
     //   electron candidate is rejected.
     for ( std::vector< Mdst_charged >::const_iterator i = chg_mgr.begin();
         i != chg_mgr.end(); ++i ) {
+
+      // Reject case where pointers point to same object.
+      if ( j == i ) continue;
+
+      const Particle &eCndt = *j;
       const Mdst_charged &chg = *i;
       Particle otherChg( chg, chg.charge() > 0 ? ptypeEPlus : ptypeEMinus );
-      
-      // Reject case where pointers point to same object.
-      if ( eCndt == otherChg ) {
-        continue;
-      }
       
       // We need to know if the pair is same sign or opposite sign.
       bool ss_pair = ( eCndt.charge() == otherChg.charge() );
@@ -508,7 +507,6 @@ Adcab::event(BelleEvent* evptr, int* status)
   // Remove possible J/Psi daughter muons.
   for ( std::vector< Particle >::iterator j = initialMuonList.begin();
       j != initialMuonList.end(); ++j ) {
-    const Particle &muCndt = *j;
     
     // Flag for muons that are not candidates J/psi daughters.
     // By default, assume all muons are good.
@@ -519,11 +517,16 @@ Adcab::event(BelleEvent* evptr, int* status)
     //   is rejected.
     for ( std::vector< Mdst_charged >::const_iterator i = chg_mgr.begin();
         i != chg_mgr.end(); ++i ) {
+        
+      // Reject case where pointers point to same object.
+      if ( j == i ) continue;
+      
+      const Particle &muCndt = *j;
       const Mdst_charged &chg = *i;
       Particle otherChg( chg, chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
       
       // Reject case where pointers point to same object.
-      if ( muCndt == otherChg ) {
+      if ( j == i ) {
         continue;
       }
       
