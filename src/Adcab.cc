@@ -449,6 +449,7 @@ Adcab::event(BelleEvent* evptr, int* status)
   // Remove possible pair production electrons and J/Psi candidates.
   for ( std::vector< Particle >::iterator j = initialElectronList.begin();
       j != initialElectronList.end(); ++j ) {
+    const Particle &eCndt = *j;
     
     // Flag for electrons that are not candidates for pair production daughters.
     // By default, assume all electrons are good.
@@ -459,12 +460,11 @@ Adcab::event(BelleEvent* evptr, int* status)
     //   electron candidate is rejected.
     for ( std::vector< Mdst_charged >::const_iterator i = chg_mgr.begin();
         i != chg_mgr.end(); ++i ) {
+      const Mdst_charged &chg = *i;
 
       // Reject case where pointers point to same object.
-      if ( j == i ) continue;
+      if ( eCndt.relation().mdstCharged() == chg ) continue;
 
-      const Particle &eCndt = *j;
-      const Mdst_charged &chg = *i;
       Particle otherChg( chg, chg.charge() > 0 ? ptypeEPlus : ptypeEMinus );
       
       // We need to know if the pair is same sign or opposite sign.
@@ -482,6 +482,12 @@ Adcab::event(BelleEvent* evptr, int* status)
       HepLorentzVector otherChgP = otherChg.p();
       double electronChargedMass = abs( ( eCndtP + otherChgP ).m() );
       double deltaMass = electronChargedMass - cuts.massJPsi;
+
+      // Print diagnostic information to the log.
+      if ( basf_parameter_verbose_log == 2 ) {
+        cout << " e-chg mass: " << electronChargedMass << endl;
+        cout << " delta mass: " << deltaMass << muonList.size() << endl;
+      }
 
       // Cut possible pair production electrons or J/Psi daughters.
       if ( electronChargedMass < cuts.minEPlusEMinusMass ) {
@@ -507,6 +513,7 @@ Adcab::event(BelleEvent* evptr, int* status)
   // Remove possible J/Psi daughter muons.
   for ( std::vector< Particle >::iterator j = initialMuonList.begin();
       j != initialMuonList.end(); ++j ) {
+    const Particle &muCndt = *j;
     
     // Flag for muons that are not candidates J/psi daughters.
     // By default, assume all muons are good.
@@ -517,18 +524,12 @@ Adcab::event(BelleEvent* evptr, int* status)
     //   is rejected.
     for ( std::vector< Mdst_charged >::const_iterator i = chg_mgr.begin();
         i != chg_mgr.end(); ++i ) {
-        
-      // Reject case where pointers point to same object.
-      if ( j == i ) continue;
-      
-      const Particle &muCndt = *j;
       const Mdst_charged &chg = *i;
-      Particle otherChg( chg, chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
-      
+
       // Reject case where pointers point to same object.
-      if ( j == i ) {
-        continue;
-      }
+      if ( muCndt.relation().mdstCharged() == chg ) continue;
+
+      Particle otherChg( chg, chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
       
       // We need to know if the pair is same sign or opposite sign.
       bool ss_pair = ( muCndt.charge() == otherChg.charge() );
