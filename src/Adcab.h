@@ -56,25 +56,25 @@ Adcab : public Module
 
   // BASF Module functions.
   // These functions are called by BASF via the BASF interface script.
-  //                                        Each function is run...
-  void init( int * );                       // Once by BASF "initialize".
-  void disp_stat( const char* ) {}          // Not used.
-  void hist_def();                          // Once by BASF "histogram define".
-  void begin_run( BelleEvent*, int* );      // At beginning of each run.
-  void event( BelleEvent*, int* );          // For each event in run.
-  void end_run( BelleEvent*, int* );        // At end of each run.
-  void other( int*, BelleEvent*, int* ) {}  // Not used.
-  void term();                              // Once by BASF "terminate".
+  //                                      Each function is run...
+  void init(int *);                       // Once by BASF "initialize".
+  void disp_stat(const char*) {}          // Not used.
+  void hist_def();                        // Once by BASF "histogram define".
+  void begin_run(BelleEvent*, int*);      // At beginning of each run.
+  void event(BelleEvent*, int*);          // For each event in run.
+  void end_run(BelleEvent*, int*);        // At end of each run.
+  void other(int*, BelleEvent*, int*) {}  // Not used.
+  void term();                            // Once by BASF "terminate".
   
   // BASF passable parameters.
   int basf_parameter_allow_charge_bias;
   int basf_parameter_verbose_log;
 
   // Particle type (Ptype) constants.
-  Ptype particle_e_minus;
-  Ptype particle_e_plus;
-  Ptype particle_mu_minus;
-  Ptype particle_mu_plus;
+  Ptype particle_e_minus_;
+  Ptype particle_e_plus_;
+  Ptype particle_mu_minus_;
+  Ptype particle_mu_plus_;
 
   // Runhead / run analysis information.
   int experiment_number_;
@@ -92,13 +92,13 @@ Adcab : public Module
   double beam_energy_error_;
   double ler_beam_energy_;
   double her_beam_energy_;
-  double kekb_beam_energy_;     // Uncalibrated energy reported by KEKB.
+  double kekb_beam_energy_;      // Uncalibrated energy reported by KEKB.
   double kekb_ler_beam_energy_;  // Uncalibrated energy reported by KEKB.
   double kekb_her_beam_energy_;  // Uncalibrated energy reported by KEKB.
   double beam_crossing_angle_;
 
   // Flags           
-  bool flag_mc;  // Data type flag. 'true' = MC, 'false' = Real Data.
+  bool flag_mc_;  // Data type flag. 'true' = MC, 'false' = Real Data.
 
  private:
   BelleTuple *nTuple_;  // Pointer for writing to the n-tuple. 
