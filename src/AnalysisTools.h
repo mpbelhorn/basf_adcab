@@ -74,38 +74,37 @@ LeptonCandidate {
 
   // Constructors and destructor.
   LeptonCandidate();
-  LeptonCandidate( Particle lepton, Hep3Vector cmBoostVector );
+  LeptonCandidate( Particle lepton, Hep3Vector cm_boost );
   ~LeptonCandidate() {};
 
   // Mutators.
-  void setLepton( Particle lepton );
-  void setCmBoostVector( Hep3Vector cmBoostVector );
+  void set_lepton( Particle lepton );
+  void set_cm_boost_vector( Hep3Vector cm_boost );
 
   // Accessors.
   Particle lepton();
-  Hep3Vector cmBoostVector();
-  Particle particle();
+  Hep3Vector cm_boost();
 
   // Methods.
-  double idAssigned();
-  int massHypothesis();
-  double idTruth();
-  double idMother();
-  HepLorentzVector pCm();
+  double id_assigned();
+  int mass_hypothesis();
+  double id_true();
+  double id_mother();
+  HepLorentzVector p_cm();
   HepLorentzVector p();
-  double likelihoodE();
-  double likelihoodMu();
-  double klmHitsChi2();
-  int    klmHitsN();
-  double klmHitsChi2PerN();
-  double svdHitsR();
-  double svdHitsZ();
+  double electron_probability();
+  double muon_probability();
+  double klm_hits_chi2();
+  int number_of_klm_hits();
+  double klm_chi2_per_hits();
+  double svd_radial_hits();
+  double svd_axial_hits();
 
  private:
 
   // Attributes.
   Particle lepton_;
-  Hep3Vector cmBoostVector_;
+  Hep3Vector cm_boost_;
 
 };
 

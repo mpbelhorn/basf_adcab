@@ -624,10 +624,10 @@ Adcab::event(BelleEvent* evptr, int* status)
     // Rebuild the dr and dz track parameters for each lepton.
     IpParameters l0_ip_parameters(
         event_candidate.l0().particle().relation().mdstCharged(),
-        interaction_point_, event_candidate.l0().massHypothesis());
+        interaction_point_, event_candidate.l0().mass_hypothesis());
     IpParameters l1_ip_parameters(
         event_candidate.l1().particle().relation().mdstCharged(),
-        interaction_point_, event_candidate.l1().massHypothesis());
+        interaction_point_, event_candidate.l1().mass_hypothesis());
 
     // Write data to the n-tuple. As of 2010.08.25, each row in the n-tuple will
     //   consist of a single dilepton event candidate.
@@ -651,40 +651,40 @@ Adcab::event(BelleEvent* evptr, int* status)
     nTuple_->column("l1_chg"  , event_candidate.l1().particle().charge());
     nTuple_->column("l0_m"    , event_candidate.l0().p().mag());
     nTuple_->column("l1_m"    , event_candidate.l1().p().mag());
-    nTuple_->column("l0_idasn", event_candidate.l0().idAssigned());
-    nTuple_->column("l1_idasn", event_candidate.l1().idAssigned());
-    nTuple_->column("l0_idtru", event_candidate.l0().idTruth());
-    nTuple_->column("l1_idtru", event_candidate.l1().idTruth());
-    nTuple_->column("l0_idmom", event_candidate.l0().idMother());
-    nTuple_->column("l1_idmom", event_candidate.l1().idMother());
-    nTuple_->column("l0_eidp" , event_candidate.l0().likelihoodE());
-    nTuple_->column("l1_eidp" , event_candidate.l1().likelihoodE());
-    nTuple_->column("l0_muidp", event_candidate.l0().likelihoodMu());
-    nTuple_->column("l1_muidp", event_candidate.l1().likelihoodMu());
-    nTuple_->column("l0_muidr", event_candidate.l0().klmHitsChi2PerN());
-    nTuple_->column("l1_muidr", event_candidate.l1().klmHitsChi2PerN());
-    nTuple_->column("l0_pcm"  , event_candidate.l0().pCm().vect().mag());
-    nTuple_->column("l1_pcm"  , event_candidate.l1().pCm().vect().mag());
+    nTuple_->column("l0_idasn", event_candidate.l0().id_assigned());
+    nTuple_->column("l1_idasn", event_candidate.l1().id_assigned());
+    nTuple_->column("l0_idtru", event_candidate.l0().id_true());
+    nTuple_->column("l1_idtru", event_candidate.l1().id_true());
+    nTuple_->column("l0_idmom", event_candidate.l0().id_mother());
+    nTuple_->column("l1_idmom", event_candidate.l1().id_mother());
+    nTuple_->column("l0_eidp" , event_candidate.l0().electron_probability());
+    nTuple_->column("l1_eidp" , event_candidate.l1().electron_probability());
+    nTuple_->column("l0_muidp", event_candidate.l0().muon_probability());
+    nTuple_->column("l1_muidp", event_candidate.l1().muon_probability());
+    nTuple_->column("l0_muidr", event_candidate.l0().klm_chi2_per_hits());
+    nTuple_->column("l1_muidr", event_candidate.l1().klm_chi2_per_hits());
+    nTuple_->column("l0_pcm"  , event_candidate.l0().p_cm().vect().mag());
+    nTuple_->column("l1_pcm"  , event_candidate.l1().p_cm().vect().mag());
     nTuple_->column("l0_plab" , event_candidate.l0().p().vect().mag());
     nTuple_->column("l1_plab" , event_candidate.l1().p().vect().mag());
-    nTuple_->column("l0_cme"  , event_candidate.l0().pCm().e());
-    nTuple_->column("l1_cme"  , event_candidate.l1().pCm().e());
-    nTuple_->column("l0_cmpx" , event_candidate.l0().pCm().px());
-    nTuple_->column("l1_cmpx" , event_candidate.l1().pCm().px());
-    nTuple_->column("l0_cmpy" , event_candidate.l0().pCm().py());
-    nTuple_->column("l1_cmpy" , event_candidate.l1().pCm().py());
-    nTuple_->column("l0_cmpz" , event_candidate.l0().pCm().pz());
-    nTuple_->column("l1_cmpz" , event_candidate.l1().pCm().pz());
+    nTuple_->column("l0_cme"  , event_candidate.l0().p_cm().e());
+    nTuple_->column("l1_cme"  , event_candidate.l1().p_cm().e());
+    nTuple_->column("l0_cmpx" , event_candidate.l0().p_cm().px());
+    nTuple_->column("l1_cmpx" , event_candidate.l1().p_cm().px());
+    nTuple_->column("l0_cmpy" , event_candidate.l0().p_cm().py());
+    nTuple_->column("l1_cmpy" , event_candidate.l1().p_cm().py());
+    nTuple_->column("l0_cmpz" , event_candidate.l0().p_cm().pz());
+    nTuple_->column("l1_cmpz" , event_candidate.l1().p_cm().pz());
     nTuple_->column("l0_costh", event_candidate.l0().p().cosTheta());
     nTuple_->column("l1_costh", event_candidate.l1().p().cosTheta());
     nTuple_->column("l0_dr"   , l0_ip_parameters.dr());
     nTuple_->column("l1_dr"   , l1_ip_parameters.dr());
     nTuple_->column("l0_dz"   , l0_ip_parameters.dz());
     nTuple_->column("l1_dz"   , l1_ip_parameters.dz());
-    nTuple_->column("l0_svdr" , event_candidate.l0().svdHitsR());
-    nTuple_->column("l1_svdr" , event_candidate.l1().svdHitsR());
-    nTuple_->column("l0_svdz" , event_candidate.l0().svdHitsZ());
-    nTuple_->column("l1_svdz" , event_candidate.l1().svdHitsZ());
+    nTuple_->column("l0_svdr" , event_candidate.l0().svd_radial_hits());
+    nTuple_->column("l1_svdr" , event_candidate.l1().svd_radial_hits());
+    nTuple_->column("l0_svdz" , event_candidate.l0().svd_axial_hits());
+    nTuple_->column("l1_svdz" , event_candidate.l1().svd_axial_hits());
     nTuple_->dumpData();
   }
   
