@@ -115,14 +115,6 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   // Set run information to default values.
   experiment_number_ = 0;
   run_number_ = 0;
-  
-  // Set Diagnostic Variables to 0.
-  num_bs_after_lepton_level.first = 0;
-  num_bs_after_lepton_level.second = 0;
-  num_bs_after_pair_removal.first = 0;
-  num_bs_after_pair_removal.second = 0;
-  num_bs_at_after_event_selection.first = 0;
-  num_bs_at_after_event_selection.second = 0;
 
   // Set default flags.
   flag_mc = false;
@@ -375,20 +367,6 @@ Adcab::event(BelleEvent* evptr, int* status)
 
       // Add eCandidate to list of e+/- candidates.
       initialElectronList.push_back( eCandidate );
-
-      // Collect diagnostic information.
-      if ( eCandidate.relation().genHepevt() ) {
-        double motherId = 0;
-        if ( eCandidate.relation().genHepevt().mother() ) {
-          motherId = eCandidate.relation().genHepevt().mother().idhep();
-        }
-        if ( motherId == -531 ) {
-          num_bs_after_lepton_level.first++;
-        }
-        if ( motherId == 531 ) {
-          num_bs_after_lepton_level.second++;
-        }
-      }
     } else {
       // Cut on minimum MUID.
       if ( muidProb < cuts.minMuidProb ) continue;

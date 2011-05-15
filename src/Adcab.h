@@ -97,11 +97,6 @@ Adcab : public Module
   double kekb_her_beam_energy_;  // Uncalibrated energy reported by KEKB.
   double beam_crossing_angle_;
 
-  // Bs - Bsbar Diagnostic Tests.
-  std::pair<int,int> num_bs_after_lepton_level;
-  std::pair<int,int> num_bs_after_pair_removal;
-  std::pair<int,int> num_bs_at_after_event_selection;
-
   // Flags           
   bool flag_mc;  // Data type flag. 'true' = MC, 'false' = Real Data.
 
