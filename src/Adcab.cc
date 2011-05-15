@@ -143,15 +143,15 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   BeamEnergy::begin_run();
   
   // Set beam energy related class variables.
-  beamEnergyCMFrame = BeamEnergy::E_beam_corr();  
-  beamEnergyError   = BeamEnergy::E_beam_err();
-  lerBeamEnergy     = BeamEnergy::E_LER();
-  herBeamEnergy     = BeamEnergy::E_HER();
-  kekbBeamEnergy    = BeamEnergy::E_beam_orig();
-  kekbLerBeamEnergy = BeamEnergy::E_LER_orig();
-  kekbHerBeamEnergy = BeamEnergy::E_HER_orig();
-  beamCrossingAngle = BeamEnergy::Cross_angle();
-  cmBoostVector     = -BeamEnergy::CMBoost();
+  beam_energy_cm_frame_ = BeamEnergy::E_beam_corr();  
+  beam_energy_error_ = BeamEnergy::E_beam_err();
+  ler_beam_energy_  = BeamEnergy::E_LER();
+  her_beam_energy_ = BeamEnergy::E_HER();
+  kekb_beam_energy_ = BeamEnergy::E_beam_orig();
+  kekb_ler_beam_energy_ = BeamEnergy::E_LER_orig();
+  kekb_her_beam_energy_ = BeamEnergy::E_HER_orig();
+  beam_crossing_angle_ = BeamEnergy::Cross_angle();
+  cm_boost_     = -BeamEnergy::CMBoost();
 
   // Initialize PID functions.
   eid::init_data();
@@ -186,10 +186,10 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
     cout << " Data is Monte Carlo." << endl;
   }
   
-  cout << " Actual Beam Energy: " << beamEnergyCMFrame 
-       << " +/- " << beamEnergyError << " GeV\n"
-       << " Reported Beam Energy: " << kekbBeamEnergy << " GeV\n"
-       << " BE Class cmBoostVector: " << cmBoostVector << "\n"
+  cout << " Actual Beam Energy: " << beam_energy_cm_frame_ 
+       << " +/- " << beam_energy_error_ << " GeV\n"
+       << " Reported Beam Energy: " << kekb_beam_energy_ << " GeV\n"
+       << " BE Class cm_boost_: " << cm_boost_ << "\n"
        << "____________________________________________________________\n"
        << endl;
 
@@ -363,7 +363,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Cut on lepton CM momentum.
       // Get the lab-frame momentum and boost it to CM frame.
       HepLorentzVector candidatePCm( eCandidate.p() );
-      candidatePCm.boost( cmBoostVector );
+      candidatePCm.boost( cm_boost_ );
       double candidatePCmMag = candidatePCm.vect().mag();
       if ( candidatePCmMag < cuts.minLeptonMomentumCm ||
            candidatePCmMag > cuts.maxLeptonMomentumCm ) {
@@ -407,7 +407,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Cut on lepton CM momentum.
       // Get the lab-frame momentum and boost it to CM frame.
       HepLorentzVector candidatePCm( muCandidate.p() );
-      candidatePCm.boost( cmBoostVector );
+      candidatePCm.boost( cm_boost_ );
       double candidatePCmMag = candidatePCm.vect().mag();
       if ( candidatePCmMag < cuts.minLeptonMomentumCm ||
            candidatePCmMag > cuts.maxLeptonMomentumCm ) {
@@ -581,8 +581,8 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Get the lab-frame momentum for each lepton and boost it to CM frame.
       HepLorentzVector lepton0MomentumCm( lepton0.p() );
       HepLorentzVector lepton1MomentumCm( lepton1.p() );
-      lepton0MomentumCm.boost( cmBoostVector );
-      lepton1MomentumCm.boost( cmBoostVector );
+      lepton0MomentumCm.boost( cm_boost_ );
+      lepton1MomentumCm.boost( cm_boost_ );
 
       // Make the CM momentum cut.
       double lepton0MomentumCmMag = lepton0MomentumCm.vect().mag();
@@ -604,7 +604,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       Particle &leptonLowerP = ( lepton0MomentumCmMag > lepton1MomentumCmMag ?
           lepton1 : lepton0 );
       DileptonEvent eventCandidate( leptonHigherP, leptonLowerP,
-          cmBoostVector );
+          cm_boost_ );
       
       // Cut on jet-like events where the included angle between the leptons
       //   in the CM frame is near 0 or Pi.

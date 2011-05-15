@@ -87,16 +87,15 @@ Adcab : public Module
   int flag_good_interaction_point_;
 
   // Beam Information.
-  HepLorentzVector cmFourMomentum;
-  Hep3Vector cmBoostVector;
-  double beamEnergyCMFrame;
-  double beamEnergyError;
-  double lerBeamEnergy;
-  double herBeamEnergy;
-  double kekbBeamEnergy;     // Uncalibrated energy reported by KEKB.
-  double kekbLerBeamEnergy;  // Uncalibrated energy reported by KEKB.
-  double kekbHerBeamEnergy;  // Uncalibrated energy reported by KEKB.
-  double beamCrossingAngle;
+  Hep3Vector cm_boost_;
+  double beam_energy_cm_frame_;
+  double beam_energy_error_;
+  double ler_beam_energy_;
+  double her_beam_energy_;
+  double kekb_beam_energy_;     // Uncalibrated energy reported by KEKB.
+  double kekb_ler_beam_energy_;  // Uncalibrated energy reported by KEKB.
+  double kekb_her_beam_energy_;  // Uncalibrated energy reported by KEKB.
+  double beam_crossing_angle_;
 
   // Bs - Bsbar Diagnostic Tests.
   std::pair<int,int> num_bs_after_lepton_level;
