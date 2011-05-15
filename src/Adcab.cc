@@ -128,9 +128,9 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   flag_mc = false;
   
   // Set interaction point and error to default values.
-  ip = HepPoint3D( 0, 0, 0 );
-  ipErr = HepSymMatrix( 3, 0 );
-  ipUsable = 0;
+  interaction_point_ = HepPoint3D( 0, 0, 0 );
+  interaction_point_error_ = HepSymMatrix( 3, 0 );
+  flag_good_interaction_point_ = 0;
 
   // Get BELLE_EVENT runhead manager. This is the data stored in the 
   //   belletdf.tdf panther table.
@@ -161,12 +161,12 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   
   // Set interaction point and error to run values.
   if ( IpProfile::usable() ) {
-    ip = IpProfile::e_position();
-    ipErr = IpProfile::e_position_err_b_life_smeared();
-    ipUsable = 1;
+    interaction_point_ = IpProfile::e_position();
+    interaction_point_error_ = IpProfile::e_position_err_b_life_smeared();
+    flag_good_interaction_point_ = 1;
   } else {
-    ip = HepPoint3D( 0, 0, 0 );
-    ipErr = HepSymMatrix( 3, 0 );
+    interaction_point_ = HepPoint3D( 0, 0, 0 );
+    interaction_point_error_ = HepSymMatrix( 3, 0 );
   }
   
   // Print run information to the log.
@@ -314,7 +314,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     // This is to make sure that particles were created near the IP.
     // TODO - 2010.08.11 - Is mass hypothesis = 3 (kaon) appropriate? Check with
     //                       authorities!
-    IpDrDz ipDrDzParameters( chg, ip, 3 );
+    IpDrDz ipDrDzParameters( chg, interaction_point_, 3 );
     if ( abs( ipDrDzParameters.dr() ) > cuts.maxIpDr ||
          abs( ipDrDzParameters.dz() ) > cuts.maxIpDz ) {
       continue;
@@ -634,9 +634,9 @@ Adcab::event(BelleEvent* evptr, int* status)
     int l0MHyp = ( abs( eventCandidate.l0().idAssigned() ) == 13 ) ? 1 : 0;
     int l1MHyp = ( abs( eventCandidate.l1().idAssigned() ) == 13 ) ? 1 : 0;
     IpDrDz l0IpDrDz( eventCandidate.l0().particle().relation().mdstCharged(),
-        ip, l0MHyp );
+        interaction_point_, l0MHyp );
     IpDrDz l1IpDrDz( eventCandidate.l1().particle().relation().mdstCharged(),
-        ip, l1MHyp );
+        interaction_point_, l1MHyp );
 
     // Write data to the n-tuple. As of 2010.08.25, each row in the n-tuple will
     //   consist of a single dilepton event candidate.

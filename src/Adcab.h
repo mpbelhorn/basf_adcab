@@ -82,9 +82,9 @@ Adcab : public Module
   int event_number_;
 
   // Interaction point information.
-  HepPoint3D ip;
-  HepSymMatrix ipErr;
-  int ipUsable;
+  HepPoint3D interaction_point_;
+  HepSymMatrix interaction_point_error_;
+  int flag_good_interaction_point_;
 
   // Beam Information.
   HepLorentzVector cmFourMomentum;
