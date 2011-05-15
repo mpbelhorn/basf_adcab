@@ -113,10 +113,8 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   (void)status;
   
   // Set run information to default values.
-  experimentNumber = 0;
-  runNumber = 0;
-  numberOfEvents = 0;
-  numDileptonEvents = 0;
+  experiment_number_ = 0;
+  run_number_ = 0;
   
   // Set Diagnostic Variables to 0.
   num_bs_after_lepton_level.first = 0;
@@ -138,8 +136,8 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   //   belletdf.tdf panther table.
   Belle_runhead_Manager &runhead_manager = Belle_runhead_Manager::get_manager();
   Belle_runhead &runhead = runhead_manager( ( Panther_ID ) 1 );
-  experimentNumber = runhead.ExpNo();
-  runNumber = runhead.RunNo();
+  experiment_number_ = runhead.ExpNo();
+  run_number_ = runhead.RunNo();
   
   // Initialise BeamEnergy class.
   BeamEnergy::begin_run();
@@ -175,8 +173,8 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
   cout << "\n\n"
        << "____________________________________________________________\n"
        << " New Run: "
-       << "Experiment " << experimentNumber 
-       << ", Run " << runNumber 
+       << "Experiment " << experiment_number_ 
+       << ", Run " << run_number_ 
        << "\n" 
        << endl;
 
@@ -230,11 +228,11 @@ Adcab::event(BelleEvent* evptr, int* status)
   // The bitwise operation "& ~(0 << 28)" forces the event number to count from 
   //   zero again after EvtNo() reaches 2^28. Not sure why this is necessary?
   Belle_event_Manager& EvMgr = Belle_event_Manager::get_manager();
-  eventNumber = EvMgr[0].EvtNo() & ~(~0 << 28);
+  event_number_ = EvMgr[0].EvtNo() & ~(~0 << 28);
 
   if ( basf_parameter_verbose_log ) {
     cout << "____________________________________________________________\n"
-         << "New Event #" << eventNumber << "(MC: " << flag_mc << ")" << endl;
+         << "New Event #" << event_number_ << "(MC: " << flag_mc << ")" << endl;
   }
 
   // Check the event classification information for HadronB criteria.
@@ -262,9 +260,6 @@ Adcab::event(BelleEvent* evptr, int* status)
   // Instantiate constant data structures stored in external header files.
   PDGmasses masses;
   AdcabCuts cuts;
-  
-  // Add event to counter.
-  ++numberOfEvents;
     
   // Define lists (vector template) to store event particles.
   // Need a list for all mother and daughter particle species.
@@ -648,9 +643,9 @@ Adcab::event(BelleEvent* evptr, int* status)
     // Column names can be no greater than eight (8) characters long.
     // Format:       "name    ", value )
     // Event singular information
-    nTuple_->column( "exp_no"  , experimentNumber );
-    nTuple_->column( "run_no"  , runNumber );
-    nTuple_->column( "evt_no"  , eventNumber );
+    nTuple_->column( "exp_no"  , experiment_number_ );
+    nTuple_->column( "run_no"  , run_number_ );
+    nTuple_->column( "evt_no"  , event_number_ );
     nTuple_->column( "fw_r2"   , foxWolframR2 );
     nTuple_->column( "hadronb" , hadronBFlag );
     

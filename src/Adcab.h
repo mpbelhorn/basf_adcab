@@ -77,11 +77,9 @@ Adcab : public Module
   Ptype particle_mu_plus;
 
   // Runhead / run analysis information.
-  int experimentNumber;
-  int runNumber;
-  int eventNumber;
-  int numberOfEvents;
-  int numDileptonEvents;
+  int experiment_number_;
+  int run_number_;
+  int event_number_;
 
   // Interaction point information.
   HepPoint3D ip;
