@@ -43,16 +43,16 @@ namespace Belle {
 
 // Class for Impact Parameters "dr" and "dz"
 class
-IpDrDz {
+IpParameters {
  public:
 
   // Constructors and destructor.
-  IpDrDz();
-  IpDrDz( const Mdst_charged&, HepPoint3D, int );
-  ~IpDrDz() {}
+  IpParameters();
+  IpParameters( const Mdst_charged&, HepPoint3D, int );
+  ~IpParameters() {}
 
   // Mutators.
-  void setDrDz( const Mdst_charged&, HepPoint3D, int );
+  void init( const Mdst_charged&, HepPoint3D, int );
 
   // Accessors
   double dr();

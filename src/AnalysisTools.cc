@@ -13,20 +13,20 @@ namespace Belle {
 #endif
 
 //______________________________________________________________________________
-// IpDrDz member function definitions.
+// IpParameters member function definitions.
 
 // Default constructor.
-IpDrDz::IpDrDz()
+IpParameters::IpParameters()
 { 
   dr_ = -44444;  // Units of cm. Initilized way outside detector.
   dz_ = -44444;  // Units of cm. Initilized way outside detector.
 }
 
 // Useful constructor.
-IpDrDz::IpDrDz( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
+IpParameters::IpParameters(const Mdst_charged& chg, HepPoint3D ip, int massHyp)
 {
   // This constructor follows the same series of calculations as
-  //   IpDrDz::setDrDz() but forgoes the use of keyword "this"
+  //   IpParameters::init() but forgoes the use of keyword "this"
   //   and private mutators.
   Mdst_trk_fit &trkfit =chg.trk().mhyp( massHyp );
   HepVector cdcHelixParameters( 5, 0 );
@@ -57,7 +57,7 @@ IpDrDz::IpDrDz( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
 //   determine (using dr and dz) how close the charged tracks originate to the
 //   decay of the B meson, which should be close to the IP.
 void
-IpDrDz::setDrDz( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
+IpParameters::init( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
 { 
   // Get the MSDT track information for chg.
   Mdst_trk &trk = chg.trk();
@@ -100,14 +100,14 @@ IpDrDz::setDrDz( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
 
 // Accessor for dr_ helix parameter.
 double
-IpDrDz::dr()
+IpParameters::dr()
 {
   return dr_;
 }
 
 // Accessor for dz_ helix parameter.
 double
-IpDrDz::dz()
+IpParameters::dz()
 {
   return dz_;
 }

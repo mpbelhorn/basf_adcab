@@ -87,8 +87,8 @@ Adcab : public Module
   int flag_good_interaction_point_;
   
   typedef std::vector<Mdst_charged>::const_iterator MdstChargedConstIterator;
-  typedef std::vector< Particle >::iterator ParticleIterator;
-  typedef std::vector< DileptonEvent >::iterator DileptonEventIterator;
+  typedef std::vector<Particle>::iterator ParticleIterator;
+  typedef std::vector<DileptonEvent>::iterator DileptonEventIterator;
 
   // Beam Information.
   Hep3Vector cm_boost_;

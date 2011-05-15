@@ -309,7 +309,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     // This is to make sure that particles were created near the IP.
     // TODO - 2010.08.11 - Is mass hypothesis = 3 (kaon) appropriate? Check with
     //                       authorities!
-    IpDrDz ip_parameters(charged_particle, interaction_point_, 3);
+    IpParameters ip_parameters(charged_particle, interaction_point_, 3);
     if (abs(ip_parameters.dr()) > cuts.maxIpDr ||
         abs(ip_parameters.dz()) > cuts.maxIpDz) {
       continue;
@@ -622,10 +622,10 @@ Adcab::event(BelleEvent* evptr, int* status)
     DileptonEvent &event_candidate = *i;
 
     // Rebuild the dr and dz track parameters for each lepton.
-    IpDrDz l0_ip_parameters(
+    IpParameters l0_ip_parameters(
         event_candidate.l0().particle().relation().mdstCharged(),
         interaction_point_, event_candidate.l0().massHypothesis());
-    IpDrDz l1_ip_parameters(
+    IpParameters l1_ip_parameters(
         event_candidate.l1().particle().relation().mdstCharged(),
         interaction_point_, event_candidate.l1().massHypothesis());
 
