@@ -71,21 +71,10 @@ Adcab : public Module
   int basf_parameter_verbose_log;
 
   // Particle type (Ptype) constants.
-  Ptype ptypeElectron;
-  Ptype ptypeEMinus;
-  Ptype ptypeEPlus;
-  Ptype ptypeNuE;
-  Ptype ptypeNuEBar;
-  Ptype ptypeMuMinus;
-  Ptype ptypeMuPlus;
-  Ptype ptypeNuMu;
-  Ptype ptypeNuMuBar;
-  Ptype ptypeKMinus;
-  Ptype ptypeKPlus;
-  Ptype ptypeDsMinus;
-  Ptype ptypeDsPlus;
-  Ptype ptypeDsStarMinus;
-  Ptype ptypeDsStarPlus;
+  Ptype particle_e_minus;
+  Ptype particle_e_plus;
+  Ptype particle_mu_minus;
+  Ptype particle_mu_plus;
 
   // Runhead / run analysis information.
   int experimentNumber;

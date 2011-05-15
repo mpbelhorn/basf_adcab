@@ -56,20 +56,10 @@ Adcab::Adcab()
   // Define particle types (Ptype) constants for particle class objects.
   // Valid names are those in the qq98 decay file located at
   // $BELLE_TOP_DIR/share/data-files/qq98/decay.dec
-  ptypeEMinus      = ( Ptype( "E-" ) );
-  ptypeEPlus       = ( Ptype( "E+" ) );
-  ptypeNuE         = ( Ptype( "NUE" ) );
-  ptypeNuEBar      = ( Ptype( "NUEB" ) );
-  ptypeMuMinus     = ( Ptype( "MU-" ) );
-  ptypeMuPlus      = ( Ptype( "MU+" ) );
-  ptypeNuMu        = ( Ptype( "NUM" ) );
-  ptypeNuMuBar     = ( Ptype( "NUMB" ) );
-  ptypeKMinus      = ( Ptype( "K-" ) );
-  ptypeKPlus       = ( Ptype( "K+" ) );
-  ptypeDsMinus     = ( Ptype( "DS-" ) );
-  ptypeDsPlus      = ( Ptype( "DS+" ) );
-  ptypeDsStarMinus = ( Ptype( "DS*-" ) );
-  ptypeDsStarPlus  = ( Ptype( "DS*+" ) );
+  particle_e_minus      = ( Ptype( "E-" ) );
+  particle_e_plus       = ( Ptype( "E+" ) );
+  particle_mu_minus     = ( Ptype( "MU-" ) );
+  particle_mu_plus      = ( Ptype( "MU+" ) );
 
   // Initialize BASF parameters.
   basf_parameter_allow_charge_bias = 0;
@@ -366,7 +356,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       if ( eidProb < cuts.minEidProb ) continue;
       
       // Assuming particle is an electron.
-      Particle eCandidate( chg, chg.charge() > 0 ? ptypeEPlus : ptypeEMinus );
+      Particle eCandidate( chg, chg.charge() > 0 ? particle_e_plus : particle_e_minus );
 
       // Reject if the particle track has polar angle pointing outside the
       //   barrel (p is given closest to coord. origin - see mdst table).
@@ -410,7 +400,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       
       // Assuming particle is a muon.
       Particle muCandidate( chg,
-          chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
+          chg.charge() > 0 ? particle_mu_plus : particle_mu_minus );
 
       // Reject if the particle track has polar angle pointing outside the
       //   barrel (p is given closest to coord. origin - see mdst table).
@@ -465,7 +455,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Reject case where pointers point to same object.
       if ( eCndt.relation().mdstCharged() == chg ) continue;
 
-      Particle otherChg( chg, chg.charge() > 0 ? ptypeEPlus : ptypeEMinus );
+      Particle otherChg( chg, chg.charge() > 0 ? particle_e_plus : particle_e_minus );
       
       // We need to know if the pair is same sign or opposite sign.
       bool ss_pair = ( eCndt.charge() == otherChg.charge() );
@@ -529,7 +519,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Reject case where pointers point to same object.
       if ( muCndt.relation().mdstCharged() == chg ) continue;
 
-      Particle otherChg( chg, chg.charge() > 0 ? ptypeMuPlus : ptypeMuMinus );
+      Particle otherChg( chg, chg.charge() > 0 ? particle_mu_plus : particle_mu_minus );
       
       // We need to know if the pair is same sign or opposite sign.
       bool ss_pair = ( muCndt.charge() == otherChg.charge() );
