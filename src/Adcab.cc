@@ -622,21 +622,17 @@ Adcab::event(BelleEvent* evptr, int* status)
     DileptonEvent &event_candidate = *i;
 
     // Rebuild the dr and dz track parameters for each lepton.
-    // TODO - 2011.05.15 - This is ugly. Methodize this in the event candidate
-    //   class.
-    int l0_mass_hypothesis = (abs(event_candidate.l0().idAssigned()) == 13) ?
-        1 : 0;
-    int l1_mass_hypothesis = (abs(event_candidate.l1().idAssigned()) == 13) ?
-        1 : 0;
-    IpDrDz l0IpDrDz(event_candidate.l0().particle().relation().mdstCharged(),
-        interaction_point_, l0_mass_hypothesis);
-    IpDrDz l1IpDrDz(event_candidate.l1().particle().relation().mdstCharged(),
-        interaction_point_, l1_mass_hypothesis);
+    IpDrDz l0_ip_parameters(
+        event_candidate.l0().particle().relation().mdstCharged(),
+        interaction_point_, event_candidate.l0().massHypothesis());
+    IpDrDz l1_ip_parameters(
+        event_candidate.l1().particle().relation().mdstCharged(),
+        interaction_point_, event_candidate.l1().massHypothesis());
 
     // Write data to the n-tuple. As of 2010.08.25, each row in the n-tuple will
     //   consist of a single dilepton event candidate.
     // Column names can be no greater than eight (8) characters long.
-    // Format:       "name    ", value)
+    // Format:      "name    ", value)
     // Event singular information
     nTuple_->column("exp_no"  , experiment_number_);
     nTuple_->column("run_no"  , run_number_);
@@ -681,10 +677,10 @@ Adcab::event(BelleEvent* evptr, int* status)
     nTuple_->column("l1_cmpz" , event_candidate.l1().pCm().pz());
     nTuple_->column("l0_costh", event_candidate.l0().p().cosTheta());
     nTuple_->column("l1_costh", event_candidate.l1().p().cosTheta());
-    nTuple_->column("l0_dr"   , l0IpDrDz.dr());
-    nTuple_->column("l1_dr"   , l1IpDrDz.dr());
-    nTuple_->column("l0_dz"   , l0IpDrDz.dz());
-    nTuple_->column("l1_dz"   , l1IpDrDz.dz());
+    nTuple_->column("l0_dr"   , l0_ip_parameters.dr());
+    nTuple_->column("l1_dr"   , l1_ip_parameters.dr());
+    nTuple_->column("l0_dz"   , l0_ip_parameters.dz());
+    nTuple_->column("l1_dz"   , l1_ip_parameters.dz());
     nTuple_->column("l0_svdr" , event_candidate.l0().svdHitsR());
     nTuple_->column("l1_svdr" , event_candidate.l1().svdHitsR());
     nTuple_->column("l0_svdz" , event_candidate.l0().svdHitsZ());

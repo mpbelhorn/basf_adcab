@@ -170,6 +170,18 @@ LeptonCandidate::idAssigned()
   return lepton_.pType().lund();
 }
 
+// Returns the mass hypothesis needed for the interaction point parameters.
+// mass_hyp = 1 for muons, mass_hyp = 0 for electrons.
+int
+LeptonCandidate::massHypothesis()
+{
+  int mass_hyp = 0;
+  if (abs(idAssigned()) == 13) {
+     mass_hyp = 1;
+  }
+  return mass_hyp;
+}
+
 // Returns the pythia particle ID code of lepton_ as determined by the MC truth
 //   table. Returns 0 if truth table is unavailable.
 double

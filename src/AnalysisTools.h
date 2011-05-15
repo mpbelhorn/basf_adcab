@@ -88,6 +88,7 @@ LeptonCandidate {
 
   // Methods.
   double idAssigned();
+  int massHypothesis();
   double idTruth();
   double idMother();
   HepLorentzVector pCm();
