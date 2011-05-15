@@ -67,8 +67,8 @@ Adcab : public Module
   void term();                            // Once by BASF "terminate".
   
   // BASF passable parameters.
-  int basf_parameter_allow_charge_bias;
-  int basf_parameter_verbose_log;
+  int basf_parameter_allow_charge_bias_;
+  int basf_parameter_verbose_log_;
 
   // Particle type (Ptype) constants.
   Ptype particle_e_minus_;
@@ -85,6 +85,10 @@ Adcab : public Module
   HepPoint3D interaction_point_;
   HepSymMatrix interaction_point_error_;
   int flag_good_interaction_point_;
+  
+  typedef std::vector<Mdst_charged>::const_iterator MdstChargedConstIterator;
+  typedef std::vector< Particle >::iterator ParticleIterator;
+  typedef std::vector< DileptonEvent >::iterator DileptonEventIterator;
 
   // Beam Information.
   Hep3Vector cm_boost_;
