@@ -86,19 +86,19 @@ LeptonCandidate {
   Hep3Vector cm_boost();
 
   // Methods.
-  double id_assigned();
-  int mass_hypothesis();
-  double id_true();
-  double id_mother();
-  HepLorentzVector p_cm();
+  double idAssigned();
+  double idTrue();
+  double idMom();
+  int massHypothesis();
+  HepLorentzVector pCm();
   HepLorentzVector p();
-  double electron_probability();
-  double muon_probability();
-  double klm_hits_chi2();
-  int number_of_klm_hits();
-  double klm_chi2_per_hits();
-  double svd_radial_hits();
-  double svd_axial_hits();
+  double electronProbability();
+  double muonProbability();
+  double klmHitsChi2();
+  int klmHits();
+  double klmChi2PerHits();
+  double svdRadialHits();
+  double svdAxialHits();
 
  private:
 
@@ -117,31 +117,30 @@ DileptonEvent {
 
   // Constructors and destructor.
   DileptonEvent();
-  DileptonEvent( Particle lepton0, Particle lepton1, Hep3Vector cmBoostVector );
+  DileptonEvent( Particle lepton0, Particle lepton1, Hep3Vector cm_boost );
   ~DileptonEvent() {}
 
   // Mutators.
-  void setL0( Particle lepton0 );
-  void setL1( Particle lepton1 );
-  void setCmBoostVector( Hep3Vector cmBoostVector );
+  void set_l0( Particle lepton0 );
+  void set_l1( Particle lepton1 );
+  void set_cm_boost( Hep3Vector cm_boost );
   
   // Accessors.
   LeptonCandidate l0();
   LeptonCandidate l1();
-  Hep3Vector cmBoostVector();
+  Hep3Vector cm_boost();
   
   // Methods
   double eventType();
   double cosThetaLL();
   double pSum();
   double pDifference();
-  // int goodEvent();
 
  private:
   // Attributes.
   LeptonCandidate l0_;
   LeptonCandidate l1_;
-  Hep3Vector cmBoostVector_;
+  Hep3Vector cm_boost_;
 
 };
 

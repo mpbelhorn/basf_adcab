@@ -158,7 +158,7 @@ LeptonCandidate::cm_boost()
 // Returns the pythia particle ID code of the assignment given to particle
 //   lepton_ at its creation.
 double
-LeptonCandidate::id_assigned()
+LeptonCandidate::idAssigned()
 {
   return lepton_.pType().lund();
 }
@@ -166,10 +166,10 @@ LeptonCandidate::id_assigned()
 // Returns the mass hypothesis needed for the interaction point parameters.
 // mass_hyp = 1 for muons, mass_hyp = 0 for electrons.
 int
-LeptonCandidate::mass_hypothesis()
+LeptonCandidate::massHypothesis()
 {
   int mass_hyp = 0;
-  if (abs(id_assigned()) == 13) {
+  if (abs(idAssigned()) == 13) {
      mass_hyp = 1;
   }
   return mass_hyp;
@@ -178,7 +178,7 @@ LeptonCandidate::mass_hypothesis()
 // Returns the pythia particle ID code of lepton_ as determined by the MC truth
 //   table. Returns 0 if truth table is unavailable.
 double
-LeptonCandidate::id_true()
+LeptonCandidate::idTrue()
 {
   double id = 0;
   if ( lepton_.relation().genHepevt() ) {
@@ -192,7 +192,7 @@ LeptonCandidate::id_true()
 // Returns the pythia code of the lepton mother as determined from the truth
 //   table. Returns 0 if truth table is unavailable.
 double
-LeptonCandidate::id_mother()
+LeptonCandidate::idMom()
 {
   double id = 0;
   if ( lepton_.relation().genHepevt() ) {
@@ -205,7 +205,7 @@ LeptonCandidate::id_mother()
 
 // Returns the CM frame 4 momentum of lepton_.
 HepLorentzVector
-LeptonCandidate::p_cm()
+LeptonCandidate::pCm()
 {
   HepLorentzVector leptonPCm( lepton_.p() );
   leptonPCm.boost( cm_boost_ );
@@ -221,7 +221,7 @@ LeptonCandidate::p()
 
 // Returns the eid likelihood of lepton_.
 double
-LeptonCandidate::electron_probability()
+LeptonCandidate::electronProbability()
 {
   const Mdst_charged &leptonMdstCharged = lepton_.relation().mdstCharged();
   eid leptonEid( leptonMdstCharged );
@@ -230,7 +230,7 @@ LeptonCandidate::electron_probability()
 
 // Returns the muid likelihood of lepton_.
 double
-LeptonCandidate::muon_probability()
+LeptonCandidate::muonProbability()
 {
   Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
   return leptonMuid.Muon_likelihood();
@@ -239,7 +239,7 @@ LeptonCandidate::muon_probability()
 // Returns the Chi^2 of the associated hits in the KLM assuming the track is a
 //   muon. If the track is not in Muid_mdst, the function returns 0.
 double
-LeptonCandidate::klm_hits_chi2()
+LeptonCandidate::klmHitsChi2()
 {
   Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
   return leptonMuid.Chi_2();
@@ -248,7 +248,7 @@ LeptonCandidate::klm_hits_chi2()
 // Returns the number of the hits in the KLM assuming the track is a
 //   muon. If the track is not in Muid_mdst, the function returns 0.
 int
-LeptonCandidate::number_of_klm_hits()
+LeptonCandidate::klmHits()
 {
   Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
   return leptonMuid.N_layer_hit_brl() + leptonMuid.N_layer_hit_end();
@@ -259,26 +259,26 @@ LeptonCandidate::number_of_klm_hits()
 //   associated hits in the KLM layers, the function returns 0 (consistant with 
 //   an electron).
 double
-LeptonCandidate::klm_chi2_per_hits()
+LeptonCandidate::klmChi2PerHits()
 {
   Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
-  if ( number_of_klm_hits() <= 0 ) {
+  if ( klmHits() <= 0 ) {
     return 0;
   } else {
-    return klm_hits_chi2() / number_of_klm_hits();
+    return klmHitsChi2() / klmHits();
   }
 }
 
 // Returns the number of hits in the r-side of the SVD for lepton_.
 double
-LeptonCandidate::svd_radial_hits()
+LeptonCandidate::svdRadialHits()
 {
   return lepton_.relation().mdstCharged().trk().mhyp( 1 ).nhits( 3 );
 }
 
 // Returns the number of hits in the z-side of the SVD for lepton_.
 double
-LeptonCandidate::svd_axial_hits()
+LeptonCandidate::svdAxialHits()
 {
   return lepton_.relation().mdstCharged().trk().mhyp( 1 ).nhits( 4 );
 }
@@ -294,32 +294,32 @@ DileptonEvent::DileptonEvent()
 
 // Dilepton constructor.
 DileptonEvent::DileptonEvent( Particle lepton0, Particle lepton1,
-    Hep3Vector cmBoostVector )
+    Hep3Vector cm_boost )
 {
-  l0_ = LeptonCandidate( lepton0, cmBoostVector );
-  l1_ = LeptonCandidate( lepton1, cmBoostVector );
-  cmBoostVector_ = cmBoostVector;
+  l0_ = LeptonCandidate( lepton0, cm_boost );
+  l1_ = LeptonCandidate( lepton1, cm_boost );
+  cm_boost_ = cm_boost;
 }
 
 // Mutator for l0_.
 void
-DileptonEvent::setL0( Particle lepton0 )
+DileptonEvent::set_l0( Particle lepton0 )
 {
-  l0_ = LeptonCandidate( lepton0, cmBoostVector_ );
+  l0_ = LeptonCandidate( lepton0, cm_boost_ );
 }
 
 // Mutator for l1_.
 void
-DileptonEvent::setL1( Particle lepton1 )
+DileptonEvent::set_l1( Particle lepton1 )
 {
-  l1_ = LeptonCandidate( lepton1, cmBoostVector_ );
+  l1_ = LeptonCandidate( lepton1, cm_boost_ );
 }
 
-// Mutator for cmBoostVector_.
+// Mutator for cm_boost_.
 void
-DileptonEvent::setCmBoostVector( Hep3Vector cmBoostVector )
+DileptonEvent::set_cm_boost( Hep3Vector cm_boost )
 {
-  cmBoostVector_ = cmBoostVector;
+  cm_boost_ = cm_boost;
 }
 
 // Accessor for l0_.
@@ -347,7 +347,7 @@ double
 DileptonEvent::eventType()
 {
   double sign = l0_.particle().charge() * l1_.particle().charge();
-  double lundSum = abs( l0_.id_assigned() ) + abs( l1_.id_assigned() );
+  double lundSum = abs( l0_.idAssigned() ) + abs( l1_.idAssigned() );
   return sign * lundSum;
 }
 
@@ -356,8 +356,8 @@ DileptonEvent::eventType()
 double
 DileptonEvent::cosThetaLL()
 {
-  Hep3Vector lepton0P3Cm = l0_.p_cm().vect();
-  Hep3Vector lepton1P3Cm = l1_.p_cm().vect();
+  Hep3Vector lepton0P3Cm = l0_.pCm().vect();
+  Hep3Vector lepton1P3Cm = l1_.pCm().vect();
   
   double cosThetaLL;
   double pTotal2 = lepton0P3Cm.mag2() * lepton1P3Cm.mag2();
@@ -377,14 +377,14 @@ DileptonEvent::cosThetaLL()
 double
 DileptonEvent::pSum()
 {
-  return l0_.p_cm().vect().mag() + l1_.p_cm().vect().mag();
+  return l0_.pCm().vect().mag() + l1_.pCm().vect().mag();
 }
 
 // Returns the positive scalar difference of the lepton CM 3-momenta.
 double
 DileptonEvent::pDifference()
 {
-  return abs( l0_.p_cm().vect().mag() - l1_.p_cm().vect().mag() );
+  return abs( l0_.pCm().vect().mag() - l1_.pCm().vect().mag() );
 }
 
 #if defined(BELLE_NAMESPACE)
