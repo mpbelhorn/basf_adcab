@@ -346,7 +346,7 @@ DileptonEvent::l1()
 double
 DileptonEvent::eventType()
 {
-  double sign = l0_.particle().charge() * l1_.particle().charge();
+  double sign = l0_.lepton().charge() * l1_.lepton().charge();
   double lundSum = abs( l0_.idAssigned() ) + abs( l1_.idAssigned() );
   return sign * lundSum;
 }
