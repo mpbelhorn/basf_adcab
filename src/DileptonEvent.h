@@ -11,7 +11,6 @@
 
 #include <cmath>                     // Uses cmath functions.
 
-#include "particle/Particle.h"       // The BELLE Particle Class.
 #include "LeptonCandidate.h"
 
 #if defined( BELLE_NAMESPACE )

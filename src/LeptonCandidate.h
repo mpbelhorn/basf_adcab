@@ -9,19 +9,10 @@
 #ifndef LEPTONCANDIDATE_H
 #define LEPTONCANDIDATE_H
 
-#include <cmath>                     // Uses cmath functions.
-
-#include "belle.h"                   // BELLE Library.
 #include "particle/Particle.h"       // The BELLE Particle Class.
-#include "kid/atc_pid.h"             // For particle species separation.
 #include "eid/eid.h"                 // For electron identification.
-#include "mdst/mdst.h"               // For MDST files.
 #include "mdst/Muid_mdst.h"           // For muon identification. 
-#include "ip/IpProfile.h"            // Beam Interaction Point (IP) analysis
-                                     //   tools. Position unit = cm.
 
-#include <panther/panther.h>         // Panther.
-#include BELLETDF_H                  // Panther.
 #include HEPEVT_H                    // Panther.
 #include MDST_H                      // Panther.
 

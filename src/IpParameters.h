@@ -9,15 +9,7 @@
 #ifndef IPPARAMETERS_H
 #define IPPARAMETERS_H
 
-#include <cmath>                     // Uses cmath functions.
-
-#include "belle.h"                   // BELLE Library.
 #include "particle/Particle.h"       // The BELLE Particle Class.
-#include "mdst/mdst.h"               // For MDST files.
-#include "ip/IpProfile.h"            // Beam Interaction Point (IP) analysis
-                                     //   tools. Position unit = cm.
-
-#include <panther/panther.h>         // Panther.
 #include MDST_H                      // Panther.
 
 #if defined( BELLE_NAMESPACE )
