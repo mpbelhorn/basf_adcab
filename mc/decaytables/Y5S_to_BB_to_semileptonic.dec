@@ -175,7 +175,7 @@ Decay Upsilon(5S)
 0.00012  my-anti-B0long  my-B+  pi-  my-B0long       PHSP_B_MIX  dm_B0;
 
 # Residual  SUM=0.09606
-0.09606  myUpsilon(4S) gamma PHSP;
+0.09606  my-Upsilon(4S) gamma PHSP;
 
 # non-BB SUM=0.02805
 0.00530  Upsilon      pi+  pi-      PHSP;
@@ -188,7 +188,7 @@ Decay Upsilon(5S)
 0.00060  Upsilon      K0   anti-K0  PHSP;
 Enddecay
 
-Decay myUpsilon(4S)
+Decay my-Upsilon(4S)
 0.50000  my-B+      my-B-           VSS;
 0.50000  my-B0long  my-anti-B0long  PHSP_BB_MIX  dm_B0  -1;
 Enddecay

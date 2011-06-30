@@ -96,10 +96,10 @@ Decay Upsilon(5S)
 0.00006  my-B+   my-B-   pi0  PHSP;
 
 # Normally 0.09606, but final signal channel is split in half.
-0.04848  myUpsilon(4S) gamma PHSP;
+0.04848  my-Upsilon(4S) gamma PHSP;
 Enddecay
 
-Decay myUpsilon(4S)
+Decay my-Upsilon(4S)
 0.50000  my-B+      my-B-           VSS;
 Enddecay
 

@@ -40,7 +40,7 @@
 
 #_______________________________________________________________________________
 # Define custom particles.
-Alias myUpsilon(4S) Upsilon(4S)
+Alias my-Upsilon(4S) Upsilon(4S)
 
 #_______________________________________________________________________________
 # Define the mixing parameters.
@@ -97,7 +97,7 @@ Decay Upsilon(5S)
 
 
 # Residual  SUM=0.09606
-0.09606 myUpsilon(4S) gamma PHSP;
+0.09606 my-Upsilon(4S) gamma PHSP;
 
 # non-BB SUM=0.02805
 0.00530  Upsilon       pi+         pi-            PHSP;
@@ -112,7 +112,7 @@ Decay Upsilon(5S)
 Enddecay
 
 #_______________________________________________________________________________
-Decay myUpsilon(4S)
+Decay my-Upsilon(4S)
 0.5  B+            B-                                                   VSS                    ;
 0.5  B0long        anti-B0long                                          PHSP_BB_MIX  dm_B0  -1 ;
 Enddecay
