@@ -50,8 +50,10 @@ ChargeConj  my-B*+nospin  my-B*-nospin
 
 #_______________________________________________________________________________
 # Decays of special particles for use with the mixing model.
+# (2011.06.29) - I disagree that the "heavy" particles should decay by PHSP.
+#   Heavy particle spin must be implemented so we can use VSP_PWAVE.
 Decay my-B_s0heavy
-1.00000  my-B_s0 gamma VSP_PWAVE;
+1.00000  my-B_s0 gamma PHSP;
 Enddecay
 CDecay my-anti-B_s0heavy
 
@@ -61,7 +63,7 @@ Enddecay
 CDecay my-anti-B_s0long
 
 Decay my-B0heavy
-1.00000  my-B0 gamma VSP_PWAVE;
+1.00000  my-B0 gamma PHSP;
 Enddecay
 CDecay my-anti-B0heavy
 
