@@ -7,7 +7,7 @@
 //   (B)s0 decays.
 //______________________________________________________________________________
 
-#include "Adcab.h"              // Adcab Analysis header.
+#include "Adcab.h"
 #include <iostream>
 
 using std::cout;
