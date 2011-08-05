@@ -668,8 +668,10 @@ Adcab::event(BelleEvent* evptr, int* status)
           .mdstCharged().trk().mhyp(1).first(1);
       double track_first_position_1_z = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(1).first(3);
-      Hep3Vector track_first_position_0(track_first_position_x,
-          track_first_position_y, track_first_position_z);
+      Hep3Vector track_first_position_0(track_first_position_0_x,
+          track_first_position_0_y, track_first_position_0_z);
+      Hep3Vector track_first_position_1(track_first_position_1_x,
+          track_first_position_1_y, track_first_position_1_z);
       cout << "Checking position where Particle::p() is defined"
            << " vs mdst_trk_fit::first()" << endl;
       cout << momentum_position << " <--?--> "<< endl;
