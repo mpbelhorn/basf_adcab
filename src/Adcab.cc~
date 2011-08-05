@@ -654,8 +654,12 @@ Adcab::event(BelleEvent* evptr, int* status)
     
     // Temporary (2011.08.05) test of use of Mdst_trk_fit::first() to locate
     //   beginning of track arc.  Mdst_trk_fit::first() != Particle::x() (where
-    //   momentum is defined).
+    //   momentum is defined). Also, Particle::x() != Mdst_trk_fit::pivot().
+    //   Does Particle::x() ==
+    //   (pivot.x + helix.dr*cos(phi0`), pivot.y + helix.dr*sin(phi0`),
+    //       pivot.z + helix.dz) (with phi0` = phi0 - ((1 - chg)/2 * PI) ?
     {
+      double const pi = 4 * atan(1);
       Hep3Vector momentum_position = event_candidate.l0().lepton().x();
       double track_pivot_position_0_x = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(0).pivot(0);
@@ -669,12 +673,34 @@ Adcab::event(BelleEvent* evptr, int* status)
           .mdstCharged().trk().mhyp(1).pivot(1);
       double track_pivot_position_1_z = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(1).pivot(3);
-      Hep3Vector track_pivot_position_0(track_pivot_position_0_x,
-          track_pivot_position_0_y, track_pivot_position_0_z);
-      Hep3Vector track_pivot_position_1(track_pivot_position_1_x,
-          track_pivot_position_1_y, track_pivot_position_1_z);
-      if (track_pivot_position_0 != track_pivot_position_1) {
-        cout << "WARNING : track pivot position is dependent on mhyp!" << endl;
+      double track_helix_dr_0   = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(0).helix(0);
+      double track_helix_phi0_0 = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(0).helix(1);
+      double track_helix_phi0p_0 = track_helix_phi0p_0 -
+          (pi * ((1 - event_candidate.l0().lepton().charge()) / 2));
+      double track_helix_dz_0   = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(0).helix(3);
+      double track_helix_dr_1   = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(1).helix(0);
+      double track_helix_phi0_1 = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(1).helix(1);
+      double track_helix_phi0p_1 = track_helix_phi0p_1 -
+          (pi * ((1 - event_candidate.l0().lepton().charge()) / 2));
+      double track_helix_dz_1   = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(1).helix(3);
+      Hep3Vector track_helix_start_0(track_pivot_position_0_x +
+          track_helix_dr_0 * cos(track_helix_phi0p_0),
+          track_pivot_position_0_y +
+          track_helix_dr_0 * sin(track_helix_phi0p_0),
+          track_pivot_position_0_z + track_helix_dz_0);
+      Hep3Vector track_helix_start_1(track_pivot_position_1_x +
+          track_helix_dr_1 * cos(track_helix_phi0p_1),
+          track_pivot_position_1_y +
+          track_helix_dr_1 * sin(track_helix_phi0p_1),
+          track_pivot_position_1_z + track_helix_dz_1);
+      if (track_helix_start_0 != track_helix_start_1) {
+        cout << "WARNING : helix starting points is mhyp dependent!" << endl;
       }
       if (momentum_position != track_pivot_position_0) {
         cout << "WARNING : track pivot != momentum definition position" << endl
