@@ -652,30 +652,34 @@ Adcab::event(BelleEvent* evptr, int* status)
       }
     }
     
-    // Temporary (2011.08.05) test ofuse of Mdst_trk_fit::first() to locate
-    //   beginning of track arc.
+    // Temporary (2011.08.05) test of use of Mdst_trk_fit::first() to locate
+    //   beginning of track arc.  Mdst_trk_fit::first() != Particle::x() (where
+    //   momentum is defined).
     {
       Hep3Vector momentum_position = event_candidate.l0().lepton().x();
-      double track_first_position_0_x = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(0).first(0);
-      double track_first_position_0_y = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(0).first(1);
-      double track_first_position_0_z = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(0).first(3);
-      double track_first_position_1_x = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(1).first(0);
-      double track_first_position_1_y = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(1).first(1);
-      double track_first_position_1_z = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(1).first(3);
-      Hep3Vector track_first_position_0(track_first_position_0_x,
-          track_first_position_0_y, track_first_position_0_z);
-      Hep3Vector track_first_position_1(track_first_position_1_x,
-          track_first_position_1_y, track_first_position_1_z);
-      cout << "Checking position where Particle::p() is defined"
-           << " vs mdst_trk_fit::first()" << endl;
-      cout << momentum_position << " <--?--> "<< endl;
-      cout << track_first_position_0 << " or " track_first_position_1 << endl;
+      double track_pivot_position_0_x = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(0).pivot(0);
+      double track_pivot_position_0_y = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(0).pivot(1);
+      double track_pivot_position_0_z = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(0).pivot(3);
+      double track_pivot_position_1_x = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(1).pivot(0);
+      double track_pivot_position_1_y = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(1).pivot(1);
+      double track_pivot_position_1_z = event_candidate.l0().lepton().relation()
+          .mdstCharged().trk().mhyp(1).pivot(3);
+      Hep3Vector track_pivot_position_0(track_pivot_position_0_x,
+          track_pivot_position_0_y, track_pivot_position_0_z);
+      Hep3Vector track_pivot_position_1(track_pivot_position_1_x,
+          track_pivot_position_1_y, track_pivot_position_1_z);
+      if (track_pivot_position_0 != track_pivot_position_1) {
+        cout << "WARNING : track pivot position is dependent on mhyp!" << endl;
+      }
+      if (momentum_position != track_pivot_position_0) {
+        cout << "WARNING : track pivot != momentum definition position" << endl
+             << track_pivot_position_0 << " != " << momentum_position << endl;
+      }
     }
     
     // Rebuild the dr and dz track parameters for each lepton.

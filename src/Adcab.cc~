@@ -674,8 +674,9 @@ Adcab::event(BelleEvent* evptr, int* status)
           track_first_position_1_y, track_first_position_1_z);
       cout << "Checking position where Particle::p() is defined"
            << " vs mdst_trk_fit::first()" << endl;
-      cout << momentum_position << " <--?--> "<< endl;
-      cout << track_first_position_0 << " or " track_first_position_1 << endl;
+      cout << momentum_position << " <--?--> " << endl;
+      cout << track_first_position_0 << " or " << track_first_position_1
+           << endl;
     }
     
     // Rebuild the dr and dz track parameters for each lepton.
