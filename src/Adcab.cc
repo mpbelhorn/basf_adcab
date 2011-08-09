@@ -621,45 +621,19 @@ Adcab::event(BelleEvent* evptr, int* status)
       i != dilepton_event_candidates.end(); ++i) {
     DileptonEvent &event_candidate = *i;
     
-    // Temporary (2011.08.05) test of varied mdst_charged mass hypotheses for
-    //   nhits.
-    {
-      int nhit_test_0 = event_candidate.l0().lepton().relation().mdstCharged()
-          .trk().mhyp(0).nhits(3);
-      int nhit_test_1 = event_candidate.l0().lepton().relation().mdstCharged()
-          .trk().mhyp(1).nhits(3);
-      int nhit_test_2 = event_candidate.l1().lepton().relation().mdstCharged()
-          .trk().mhyp(0).nhits(3);
-      int nhit_test_3 = event_candidate.l1().lepton().relation().mdstCharged()
-          .trk().mhyp(1).nhits(3);
-      int nhit_test_4 = event_candidate.l0().lepton().relation().mdstCharged()
-          .trk().mhyp(0).nhits(4);
-      int nhit_test_5 = event_candidate.l0().lepton().relation().mdstCharged()
-          .trk().mhyp(1).nhits(4);
-      int nhit_test_6 = event_candidate.l1().lepton().relation().mdstCharged()
-          .trk().mhyp(0).nhits(4);
-      int nhit_test_7 = event_candidate.l1().lepton().relation().mdstCharged()
-          .trk().mhyp(1).nhits(4);
-      if ((nhit_test_0 != nhit_test_1) || (nhit_test_2 != nhit_test_3)) {
-        cout << "Mass hyp changes number of hits in SVD r-phi!!!" << endl;
-        cout << "  " << nhit_test_0 << " <--> " << nhit_test_1 << endl;
-        cout << "  " << nhit_test_2 << " <--> " << nhit_test_3 << endl;
-      }
-      if ((nhit_test_4 != nhit_test_5) || (nhit_test_6 != nhit_test_7)) {
-        cout << "Mass hyp changes number of hits in SVD z!!!" << endl;
-        cout << "  " << nhit_test_4 << " <--> " << nhit_test_5 << endl;
-        cout << "  " << nhit_test_6 << " <--> " << nhit_test_7 << endl;
-      }
-    }
-    
     // Temporary (2011.08.05) test of use of Mdst_trk_fit::first() to locate
     //   beginning of track arc.  Mdst_trk_fit::first() != Particle::x() (where
     //   momentum is defined). Also, Particle::x() != Mdst_trk_fit::pivot().
     //   Does Particle::x() ==
     //   (pivot.x + helix.dr*cos(phi0`), pivot.y + helix.dr*sin(phi0`),
     //       pivot.z + helix.dz) (with phi0` = phi0 - ((1 - chg)/2 * PI) ?
+    // Helix start points are effectively mhyp independent as are nhits in SVD,
+    //   pivot positions, and mdst_trk_fit::first().
+    // Never any variation in helixstart.y ... why? Is this obsolete?
+    // Momentum position is not, in general, equal to helix start, pivot,
+    //   origin, or particle first position.... so, where is it from?
     {
-      double const pi = 4 * atan(1);
+      const double pi = 4 * atan(1);
       Hep3Vector momentum_position = event_candidate.l0().lepton().x();
       double track_pivot_position_0_x = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(0).pivot(0);
@@ -673,21 +647,21 @@ Adcab::event(BelleEvent* evptr, int* status)
           .mdstCharged().trk().mhyp(1).pivot(1);
       double track_pivot_position_1_z = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(1).pivot(3);
-      double track_helix_dr_0   = event_candidate.l0().lepton().relation()
+      double track_helix_dr_0 = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(0).helix(0);
       double track_helix_phi0_0 = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(0).helix(1);
       double track_helix_phi0p_0 = track_helix_phi0p_0 -
           (pi * ((1 - event_candidate.l0().lepton().charge()) / 2));
-      double track_helix_dz_0   = event_candidate.l0().lepton().relation()
+      double track_helix_dz_0 = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(0).helix(3);
-      double track_helix_dr_1   = event_candidate.l0().lepton().relation()
+      double track_helix_dr_1 = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(1).helix(0);
       double track_helix_phi0_1 = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(1).helix(1);
       double track_helix_phi0p_1 = track_helix_phi0p_1 -
           (pi * ((1 - event_candidate.l0().lepton().charge()) / 2));
-      double track_helix_dz_1   = event_candidate.l0().lepton().relation()
+      double track_helix_dz_1 = event_candidate.l0().lepton().relation()
           .mdstCharged().trk().mhyp(1).helix(3);
       Hep3Vector track_helix_start_0(track_pivot_position_0_x +
           track_helix_dr_0 * cos(track_helix_phi0p_0),
@@ -704,11 +678,12 @@ Adcab::event(BelleEvent* evptr, int* status)
       }
       if (momentum_position != track_helix_start_0) {
         cout << "WARNING : track pivot != helix start position" << endl
-             << track_pivot_position_0 << " != " << track_helix_start_0 << endl;
+             << momentum_position << " != " << track_helix_start_0 << endl;
       }
     }
     
-    // Rebuild the dr and dz track parameters for each lepton.
+    // Rebuild the dr and dz track parameters for each lepton using the IP as
+    //   the pivot.
     IpParameters l0_ip_parameters(
         event_candidate.l0().lepton().relation().mdstCharged(),
         interaction_point_, event_candidate.l0().massHypothesis());
