@@ -27,21 +27,24 @@ IpParameters {
 
   // Constructors and destructor.
   IpParameters();
-  IpParameters( const Mdst_charged&, HepPoint3D, int );
+  IpParameters(const Mdst_charged& chg, HepPoint3D ip, int massHyp);
   ~IpParameters() {}
 
   // Mutators.
-  void init( const Mdst_charged&, HepPoint3D, int );
+  void init(const Mdst_charged& chg, HepPoint3D ip, int massHyp);
 
   // Accessors
   double dr();
   double dz();
+  int svdHitsR();
+  int svdHitsZ();
   
  private:
   // Attributes.
   double dr_;
   double dz_;
-  
+  int svd_hits_r_;
+  int svd_hits_z_;
 };
 
 #if defined(BELLE_NAMESPACE)

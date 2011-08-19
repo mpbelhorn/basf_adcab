@@ -19,37 +19,45 @@ LeptonCandidate::LeptonCandidate()
 }
 
 // Lepton Candidate Constructor. 
-LeptonCandidate::LeptonCandidate( Particle lepton, Hep3Vector cm_boost )
+LeptonCandidate::LeptonCandidate(const Particle &lepton,
+    const Hep3Vector &cm_boost)
 {
-  lepton_ = lepton;
-  cm_boost_ = cm_boost;
-}
-
-// Mutator for lepton_.
-void
-LeptonCandidate::set_lepton( Particle lepton )
-{
-  lepton_ = lepton;
-}
-
-// Mutator for cm_boost_.
-void
-LeptonCandidate::set_cm_boost_vector( Hep3Vector cm_boost )
-{
-  cm_boost_ = cm_boost;
+  lepton_ = &lepton;
+  cm_boost_ = &cm_boost;
+  mdst_charged_ = &(lepton.relation().mdstCharged());
+  p_ = &(lepton.p());
+  p_cm_ = lepton.p();
+  p_cm_.boost(cm_boost);
 }
 
 // Accessor for lepton_.
-Particle LeptonCandidate::lepton()
+Particle &LeptonCandidate::lepton()
 {
-  return lepton_;
+  return *lepton_;
 }
 
 // Accessor for cm_boost_.
-Hep3Vector
-LeptonCandidate::cm_boost()
+Hep3Vector &LeptonCandidate::cm_boost()
 {
-  return cm_boost_;
+  return *cm_boost_;
+}
+
+// Accessor for mdst_charged_.
+Mdst_charged &LeptonCandidate::mdstCharged()
+{
+  return *mdst_charged_;
+}
+
+// Accessor for p_.
+HepLorentzVector &LeptonCandidate::p()
+{
+  return *p_;
+}
+
+// Accessor for p_cm_.
+HepLorentzVector &LeptonCandidate::pCm()
+{
+  return p_cm_;
 }
 
 // Returns the pythia particle ID code of the assignment given to particle
@@ -57,7 +65,7 @@ LeptonCandidate::cm_boost()
 double
 LeptonCandidate::idAssigned()
 {
-  return lepton_.pType().lund();
+  return lepton().pType().lund();
 }
 
 // Returns the mass hypothesis needed for the interaction point parameters.
@@ -78,9 +86,9 @@ double
 LeptonCandidate::idTrue()
 {
   double id = 0;
-  if ( lepton_.relation().genHepevt() ) {
-    if ( lepton_.relation().genHepevt().idhep() ) {
-      id = lepton_.relation().genHepevt().idhep();
+  if (lepton().relation().genHepevt()) {
+    if (lepton().relation().genHepevt().idhep()) {
+      id = lepton().relation().genHepevt().idhep();
     }
   }
   return id;
@@ -92,44 +100,27 @@ double
 LeptonCandidate::idMom()
 {
   double id = 0;
-  if ( lepton_.relation().genHepevt() ) {
-    if ( lepton_.relation().genHepevt().mother() ) {
-      id = lepton_.relation().genHepevt().mother().idhep();
+  if (lepton().relation().genHepevt()) {
+    if (lepton().relation().genHepevt().mother()) {
+      id = lepton().relation().genHepevt().mother().idhep();
     }
   }
   return id;
-}
-
-// Returns the CM frame 4 momentum of lepton_.
-HepLorentzVector
-LeptonCandidate::pCm()
-{
-  HepLorentzVector leptonPCm( lepton_.p() );
-  leptonPCm.boost( cm_boost_ );
-  return leptonPCm;
-}
-
-// Returns the lab frame 4 momentum of lepton_.
-HepLorentzVector
-LeptonCandidate::p()
-{
-  return lepton_.p();
 }
 
 // Returns the eid likelihood of lepton_.
 double
 LeptonCandidate::electronProbability()
 {
-  const Mdst_charged &leptonMdstCharged = lepton_.relation().mdstCharged();
-  eid leptonEid( leptonMdstCharged );
-  return leptonEid.prob( 3, -1, 5 );
+  eid leptonEid(mdstCharged());
+  return leptonEid.prob(3, -1, 5);
 }
 
 // Returns the muid likelihood of lepton_.
 double
 LeptonCandidate::muonProbability()
 {
-  Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
+  Muid_mdst leptonMuid(mdstCharged());
   return leptonMuid.Muon_likelihood();
 }
 
@@ -138,7 +129,7 @@ LeptonCandidate::muonProbability()
 double
 LeptonCandidate::klmHitsChi2()
 {
-  Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
+  Muid_mdst leptonMuid(mdstCharged());
   return leptonMuid.Chi_2();
 }
 
@@ -147,7 +138,7 @@ LeptonCandidate::klmHitsChi2()
 int
 LeptonCandidate::klmHits()
 {
-  Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
+  Muid_mdst leptonMuid(mdstCharged());
   return leptonMuid.N_layer_hit_brl() + leptonMuid.N_layer_hit_end();
 }
 
@@ -158,8 +149,8 @@ LeptonCandidate::klmHits()
 double
 LeptonCandidate::klmChi2PerHits()
 {
-  Muid_mdst leptonMuid( lepton_.relation().mdstCharged() );
-  if ( klmHits() <= 0 ) {
+  Muid_mdst leptonMuid(mdstCharged());
+  if (klmHits() <= 0) {
     return 0;
   } else {
     return klmHitsChi2() / klmHits();
@@ -170,14 +161,14 @@ LeptonCandidate::klmChi2PerHits()
 double
 LeptonCandidate::svdRadialHits()
 {
-  return lepton_.relation().mdstCharged().trk().mhyp( 1 ).nhits( 3 );
+  return mdstCharged().trk().mhyp(1).nhits(3);
 }
 
 // Returns the number of hits in the z-side of the SVD for lepton_.
 double
 LeptonCandidate::svdAxialHits()
 {
-  return lepton_.relation().mdstCharged().trk().mhyp( 1 ).nhits( 4 );
+  return mdstCharged().trk().mhyp(1).nhits(4);
 }
 
 #if defined(BELLE_NAMESPACE)

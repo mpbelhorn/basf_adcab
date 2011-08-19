@@ -16,7 +16,7 @@
 #include HEPEVT_H                    // Panther.
 #include MDST_H                      // Panther.
 
-#if defined( BELLE_NAMESPACE )
+#if defined(BELLE_NAMESPACE)
 namespace Belle {
 #endif
 
@@ -26,24 +26,25 @@ LeptonCandidate {
 
   // Constructors and destructor.
   LeptonCandidate();
-  LeptonCandidate( Particle lepton, Hep3Vector cm_boost );
+  LeptonCandidate(const Particle &lepton, const Hep3Vector &cm_boost);
   ~LeptonCandidate() {};
 
   // Mutators.
-  void set_lepton( Particle lepton );
-  void set_cm_boost_vector( Hep3Vector cm_boost );
+  void set_lepton(Particle lepton);
+  void set_cm_boost_vector(Hep3Vector cm_boost);
 
   // Accessors.
-  Particle lepton();
-  Hep3Vector cm_boost();
+  Particle &lepton();
+  Hep3Vector &cm_boost();
+  Mdst_charged &mdstCharged();
+  HepLorentzVector &p();
+  HepLorentzVector &pCm();
 
   // Methods.
   double idAssigned();
   double idTrue();
   double idMom();
   int massHypothesis();
-  HepLorentzVector pCm();
-  HepLorentzVector p();
   double electronProbability();
   double muonProbability();
   double klmHitsChi2();
@@ -53,11 +54,14 @@ LeptonCandidate {
   double svdAxialHits();
 
  private:
+  // Existing objects.
+  Particle *lepton_;
+  Hep3Vector *cm_boost_;
+  Mdst_charged *mdst_charged_;
+  HepLorentzVector *p_;
 
-  // Attributes.
-  Particle lepton_;
-  Hep3Vector cm_boost_;
-
+  // New objects.
+  HepLorentzVector p_cm_;
 };
 
 #if defined(BELLE_NAMESPACE)

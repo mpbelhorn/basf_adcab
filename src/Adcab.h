@@ -77,6 +77,8 @@ Adcab : public Module
   Ptype particle_e_plus_;
   Ptype particle_mu_minus_;
   Ptype particle_mu_plus_;
+  Ptype particle_k_plus_;
+  Ptype particle_k_minus_;
 
   // Runhead / run analysis information.
   int experiment_number_;
@@ -90,6 +92,7 @@ Adcab : public Module
   
   typedef std::vector<Mdst_charged>::const_iterator MdstChargedConstIterator;
   typedef std::vector<Particle>::iterator ParticleIterator;
+  typedef std::vector<LeptonCandidate>::iterator LeptonCandidateIterator;
   typedef std::vector<DileptonEvent>::iterator DileptonEventIterator;
 
   // Beam Information.
@@ -107,7 +110,10 @@ Adcab : public Module
   bool flag_mc_;  // Data type flag. 'true' = MC, 'false' = Real Data.
 
  private:
-  BelleTuple *nTuple_;  // Pointer for writing to the n-tuple. 
+  BelleTuple *nTuple_events_;  // Pointers for writing to the n-tuples.
+  BelleTuple *nTuple_leptons_;
+  BelleTuple *nTuple_kaons_;
+  BelleTuple *nTuple_dileptons_;
 };
 
 #if defined(BELLE_NAMESPACE)  // Needed to close compiler namespace

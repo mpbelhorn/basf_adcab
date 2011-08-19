@@ -22,22 +22,8 @@ IpParameters::IpParameters()
 // Useful constructor.
 IpParameters::IpParameters(const Mdst_charged& chg, HepPoint3D ip, int massHyp)
 {
-  // This constructor follows the same series of calculations as
-  //   IpParameters::init() but forgoes the use of keyword "this"
-  //   and private mutators.
-  Mdst_trk_fit &trkfit =chg.trk().mhyp( massHyp );
-  HepVector cdcHelixParameters( 5, 0 );
-  for ( int i = 0; i < 5; i++ ) {
-    cdcHelixParameters[ i ] = trkfit.helix( i );
-  }
-  HepPoint3D cdcPivot( trkfit.pivot( 0 ), trkfit.pivot( 1 ),
-      trkfit.pivot( 2 ) );
-  Helix ipHelixParameters( cdcPivot, cdcHelixParameters );
-  ipHelixParameters.pivot( ip );
-  dr_ = ipHelixParameters.dr();
-  dz_ = ipHelixParameters.dz();
+  init(chg, ip, massHyp);
 }
-
 
 // Interaction Point pivot dr and dz parameters.
 // Obtains a charged particle's 5 fitted helix parameters
@@ -70,29 +56,31 @@ IpParameters::init( const Mdst_charged& chg, HepPoint3D ip, int massHyp )
   //   detID = 0:axial-wire; 1:stereo-wire; 2:cathode; 
   //   3:SVD-rphi; 4:SVD-z.
   // Note that nhits(SVD)=0 indicates that the track fit is performed using
-  //   only information from the CDC.
+  //   only information from the CDC. The mass hypothesis does not affect the
+  //   number of svd hits.
   // See mdst.tdf for information about what information is contained in the
   //   mdst files.
-  Mdst_trk_fit &trkfit = trk.mhyp( massHyp );
+  Mdst_trk_fit &trkfit = trk.mhyp(massHyp);
   
   // Obtain the fitted CDC helix parameters and CDC pivot point.
-  HepVector cdcHelixParameters( 5, 0 );
-  for ( int i = 0; i < 5; i++ ) {
-    cdcHelixParameters[ i ] = trkfit.helix( i );
+  HepVector cdcHelixParameters(5, 0);
+  for (int i = 0; i < 5; i++) {
+    cdcHelixParameters[i] = trkfit.helix(i);
   }
-  HepPoint3D cdcPivot( trkfit.pivot( 0 ), trkfit.pivot( 1 ),
-      trkfit.pivot( 2 ) );
+  HepPoint3D cdcPivot(trkfit.pivot(0), trkfit.pivot(1), trkfit.pivot(2));
   
   // Create a new set of helix parameters from the old ones.
-  Helix ipHelixParameters( cdcPivot, cdcHelixParameters );
+  Helix ipHelixParameters(cdcPivot, cdcHelixParameters);
   
   // Transform the new parameters into a set using the IP as the pivot point.
-  ipHelixParameters.pivot( ip );
+  ipHelixParameters.pivot(ip);
   
   // Set the values of IPdrdz class dr and dz from the IP-pivot
   //   parameterization, and indicate that they have been set correctly.
   dr_ = ipHelixParameters.dr();
   dz_ = ipHelixParameters.dz();
+  svd_hits_r_ = trkfit.nhits(3);
+  svd_hits_z_ = trkfit.nhits(4);
 }
 
 // Accessor for dr_ helix parameter.
@@ -107,6 +95,20 @@ double
 IpParameters::dz()
 {
   return dz_;
+}
+
+// Returns the number of hits in the SVD on the r-phi side.
+double
+IpParameters::svdHitsR()
+{
+  return svd_hits_r_;
+}
+
+// Returns the number of hits in the SVD on the r-phi side.
+double
+IpParameters::svdHitsZ()
+{
+  return svd_hits_z_;
 }
 
 #if defined(BELLE_NAMESPACE)

@@ -194,8 +194,8 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
 void
 Adcab::end_run(BelleEvent* evptr, int *status)
 { 
-  (void)evptr;
-  (void)status;
+  (void) evptr;
+  (void) status;
   
   cout << "\n\n"
        << "***************************************************\n"
@@ -236,7 +236,7 @@ Adcab::event(BelleEvent* evptr, int* status)
 
   // Print hadron flag to the log.
   if (basf_parameter_verbose_log_ && hadronb_code < 10) {
-    cout << " Bad event: Fails hadronB criteria." << endl;
+    cout << "  BAD EVENT :: Fails hadronB criteria." << endl;
   }
 
   // Get the Fox-wolfram R2 value for the event. Spherical events accepted (Low
@@ -251,350 +251,271 @@ Adcab::event(BelleEvent* evptr, int* status)
   }
   
   // Instantiate constant data structures stored in external header files.
-  PDGmasses masses;
-  AdcabCuts cuts;
+  // Might as well make them static since
+  //     they will be needed again and they never change.
+  static PDGmasses masses;
+  static AdcabCuts cuts;
     
   // Define lists (vector template) to store event particles.
   // Need a list for all mother and daughter particle species.
-  // Reserve a large amount of memory (50 elements) to avoid 
-  //   relocating list to a new block of memory in case of large
-  //   events.
-  static std::vector<Particle> initial_electron_candidates(50);
-  static std::vector<Particle> electron_candidates(50);
-  static std::vector<Particle> initial_muon_candidates(50);
-  static std::vector<Particle> muon_candidates(50);
-  static std::vector<Particle> lepton_candidates(100);
-
-  // Define list to store candidate dilepton events.
-  static std::vector<DileptonEvent> dilepton_event_candidates(50);
-  
-  // Ensure lists are empty so as not to consume too much memory.
-  initial_electron_candidates.clear();
-  electron_candidates.clear();
-  initial_muon_candidates.clear();
-  muon_candidates.clear();
+  // Note that these vectors are static and will persist until BASF is closed.
+  //     They therefore must(!) be cleared for each call of Adcab::event().
+  static std::vector<LeptonCandidate> lepton_candidates(5);
+  static std::vector<DileptonEvent> dilepton_event_candidates(10);
   lepton_candidates.clear();
   dilepton_event_candidates.clear();
   
-  // Alias the MDST charged manager, which contains
-  // the measured charged tracks for each event.
+  // Alias the MDST charged manager, which contains the measured charged tracks
+  //     for each event and make pointers to it's boundaries.
   Mdst_charged_Manager
       &mdst_charged_particles = Mdst_charged_Manager::get_manager();
+  MdstChargedIterator first_mdst_charged = mdst_charged_particles.begin();
+  MdstChargedIterator last_mdst_charged = mdst_charged_particles.end();
   
   // Print diagnostic information to the log.
   if (basf_parameter_verbose_log_) {
-    cout << " Passed initialization." << endl;
+    cout << "  Passed event initialization." << endl;
   }
+
+  // Write unique event-level data to the n-tuple. This information is the
+  //     first of many rows associated with a physical event.
+  // Column names can be no greater than eight (8) characters long.
+  nTuple_events_->column("exp_no"  , experiment_number_);
+  nTuple_events_->column("run_no"  , run_number_);
+  nTuple_events_->column("evt_no"  , event_number_);
+  nTuple_events_->column("fw_r2"   , fox_wolfram_r2);
+  nTuple_events_->column("hadronb" , hadronb_code);
+  nTuple_events_->dumpData();
   
   // Populate the lepton candidate lists.
-  for (MdstChargedConstIterator i = mdst_charged_particles.begin();
-      i != mdst_charged_particles.end(); ++i) {
+  for (MdstChargedIterator lepton_scan_iterator = first_mdst_charged;
+      lepton_scan_iterator != last_mdst_charged; ++lepton_scan_iterator) {
 
+    if (basf_parameter_verbose_log_) {
+      cout << "  >>> New Lepton Candidate <<<" << endl;
+    }
     // Alias the current particle as "charged_particle".
-    const Mdst_charged &charged_particle = *i;
-    
-    // Get electron and muon liklihoods.
+    const Mdst_charged &charged_particle = *lepton_scan_iterator;
+
+    // Get electron and muon likelihoods.
     eid charged_particle_eid(charged_particle);
     double eid_probability = charged_particle_eid.prob(3, -1, 5);
     Muid_mdst charged_particle_muid(charged_particle);
     double muid_probability = charged_particle_muid.Muon_likelihood();
 
-    // Reject particle if below both electron and muon liklihood cuts.
-    if (eid_probability < cuts.minEidProb &&
-        muid_probability < cuts.minMuidProb) {
-      continue;
+    // Reject particle if below both electron and muon likelihood cuts.
+    bool good_eid = eid_probability >= cuts.minEidProb;
+    bool good_muid = ((muid_probability >= cuts.minMuidProb) &&
+        (charged_particle_muid.Chi_2() != 0));
+    if (!(good_eid || good_muid)) continue;
+    if (basf_parameter_verbose_log_) {
+      cout << "    Passed PID check." << endl;
     }
-    
-    // Cut on IP dr and dz.
+
+    // Cut on IP dr and dz and SVD hits.
     // This is to make sure that particles were created near the IP.
     // TODO - 2010.08.11 - Is mass hypothesis = 3 (kaon) appropriate? Check with
     //                       authorities!
     IpParameters ip_parameters(charged_particle, interaction_point_, 3);
-    if (abs(ip_parameters.dr()) > cuts.maxIpDr ||
-        abs(ip_parameters.dz()) > cuts.maxIpDz) {
-      continue;
+    if (abs(ip_parameters.dr()) > cuts.maxIpDr) continue;
+    if (abs(ip_parameters.dz()) > cuts.maxIpDz) continue;
+    if (basf_parameter_verbose_log_) {
+      cout << "    Passed dr/dz check." << endl;
     }
-      
-    // Mdst_trk member function mhyp(int hypID) returns the fitted
-    //   track parameters assuming certain particle mass hypotheses set
-    //   by hypID. Possible mass hypotheses are:
-    //   hypID = 0:e; 1:mu; 2:pi; 3:K; 4:p.
+    if (ip_parameters.svdHitsR() < cuts.minSvdRHits) continue;
+    if (ip_parameters.svdHitsZ() < cuts.minSvdZHits) continue;
+    if (basf_parameter_verbose_log_) {
+      cout << "    Passed SVD hits check." << endl;
+    }
 
-    // Mdst_trk_fit member function nhits(int detID) returns the
-    //   number of associated hits in CDC or SVD detector elements
-    //   as per the value of detID. Possible detID values are:
-    //   detID = 0:axial-wire; 1:stereo-wire; 2:cathode; 
-    //   3:SVD-rphi; 4:SVD-z.
-    // Note that nhits(SVD)=0 indicates that the track fit is performed using
-    //   only CDC info.
-    // See mdst.tdf for information about what information is contained in the
-    //   mdst files.
+    // Reject if the particle track has polar angle pointing outside the
+    //   barrel (p is given closest to coord. origin - see mdst table).
+    Hep3Vector momentum3_lab(
+        charged_particle.px(), charged_particle.py(), charged_particle.pz());
+    double track_cosine_polar_angle = momentum3_lab.cosTheta();
+    if (track_cosine_polar_angle < cuts.minLeptonCosTheta) continue;
+    if (track_cosine_polar_angle > cuts.maxLeptonCosTheta) continue;
+    if (basf_parameter_verbose_log_) {
+      cout << "    Passed Barrel PID check." << endl;
+    }
+
+    // Create an electron candidate...
+    double electric_charge = charged_particle.charge();
+    Particle electron_candidate(charged_particle,
+        electric_charge > 0 ? particle_e_plus_ : particle_e_minus_);
+    // ... and a muon candidate.
+    Particle muon_candidate(charged_particle,
+        electric_charge > 0 ? particle_mu_plus_ : particle_mu_minus_);
+
+    // Check if CM momentum is good assuming muon and electron masses.
+    // First, get the lab-frame 4-momentum assuming each mass
+    //     and boost it to CM frame.
+    HepLorentzVector electron_candidate_p4_cm(electron_candidate.p());
+    HepLorentzVector muon_candidate_p4_cm(muon_candidate.p());
+    electron_candidate_p4_cm.boost(cm_boost_);
+    muon_candidate_p4_cm.boost(cm_boost_);
     
-    // Reject particles with too few hits in the SVD.
-    // For the purpose of checking the number of hits in the SVD,
-    //   it is not necessary to use a specific mass hypothesis.
-    Mdst_trk_fit &charged_particle_track = charged_particle.trk().mhyp(1);
-    if (charged_particle_track.nhits(3) < cuts.minSvdRHits) continue;
-    if (charged_particle_track.nhits(4) < cuts.minSvdZHits) continue;
+    double electron_candidate_p4_cm_mag = electron_candidate_p4_cm.vect().mag();
+    double muon_candidate_p4_cm_mag = muon_candidate_p4_cm.vect().mag();
+    bool good_electron_momentum = !(
+        electron_candidate_p4_cm_mag < cuts.minLeptonMomentumCm ||
+        electron_candidate_p4_cm_mag > cuts.maxLeptonMomentumCm);
+    bool good_muon_momentum = !(
+        muon_candidate_p4_cm_mag < cuts.minLeptonMomentumCm ||
+        electron_candidate_p4_cm_mag > cuts.maxLeptonMomentumCm);
+    bool good_muon(good_muid && good_muon_momentum ? true : false);
+    bool good_electron(good_eid && good_electron_momentum ? true : false);
 
-    // Reject particle if likelihoods are the same from eid and muid.
-    if (eid_probability == muid_probability) continue;
+    if (!(good_muon || good_electron)) continue;
+    if (basf_parameter_verbose_log_) {
+      cout << "    Passed CM-frame momentum check." << endl;
+    }
+    
+    // Remove possible pair production and J/Psi daughters.
+    for (MdstChargedIterator jpsi_pair_iterator = first_mdst_charged;
+        != last_mdst_charged; ++jpsi_pair_iterator) {
+      const Mdst_charged &jpsi_pair_particle = *jpsi_pair_iterator;
 
-    // Assume the particle species is that of the highest PID liklihood.
-    if (eid_probability > muid_probability) {
-      // Cut on minimum EID.
-      if (eid_probability < cuts.minEidProb) continue;
-      
-      // Assuming particle is an electron.
-      Particle electron_candidate(charged_particle,
-          charged_particle.charge() > 0 ? particle_e_plus_ : particle_e_minus_);
+      // Reject case where pointers point to same object.
+      if (lepton_scan_iterator == jpsi_pair_iterator) continue;
 
-      // Reject if the particle track has polar angle pointing outside the
-      //   barrel (p is given closest to coord. origin - see mdst table).
-      if (electron_candidate.p().cosTheta() < cuts.minLeptonCosTheta ||
-          electron_candidate.p().cosTheta() > cuts.maxLeptonCosTheta) {
+      // If allowing a charge bias and pair is SS, skip to the next pair.
+      if (basf_parameter_allow_charge_bias_ &&
+          (electric_charge == jpsi_pair_particle.charge())) {
         continue;
       }
 
-      // Cut on lepton CM momentum.
-      // Get the lab-frame momentum and boost it to CM frame.
-      HepLorentzVector candidate_p4_cm(electron_candidate.p());
-      candidate_p4_cm.boost(cm_boost_);
-      double candidate_p4_cm_mag = candidate_p4_cm.vect().mag();
-      if (candidate_p4_cm_mag < cuts.minLeptonMomentumCm ||
-          candidate_p4_cm_mag > cuts.maxLeptonMomentumCm) {
-        continue;
+      if (good_muon) {
+        // Check to see if the candidate makes a bad muon. First, assume
+        //     the pair particle is a muon.
+        Particle other_muon(jpsi_pair_particle,
+            jpsi_pair_particle.charge() > 0 ?
+            particle_mu_plus_ : particle_mu_minus_);
+
+        // Calculate the invariant mass of the two particles.
+        double pair_invariant_mass = abs(
+            (muon_candidate.p() + other_muon.p()).m());
+
+        // If at any time candidate proves to be likely from a J/Psi, the flag
+        //   is switched.
+        double delta_mass = pair_invariant_mass - cuts.massJPsi;
+        if (cuts.minMuMuJPsiCandidate < delta_mass &&
+            delta_mass < cuts.maxMuMuJPsiCandidate) {
+          if (basf_parameter_verbose_log_) {
+            cout << "    BAD MU CANDIDATE :: Likely J/Psi daughter." << endl;
+          }
+          good_muon = false;
+        }
       }
 
-      // Store the MC truth to the lepton candidate.
-      setMCtruth(electron_candidate);
+      if (good_electron) {
+        // Check to see if the candidate makes a bad electron. First, assume
+        //     the pair particle is an electron.
+        Particle other_electron(jpsi_pair_particle,
+            jpsi_pair_particle.charge() > 0 ?
+            particle_e_plus_ : particle_e_minus_);
 
-      // Add electron_candidate to list of e+/- candidates.
-      initial_electron_candidates.push_back(electron_candidate);
-    } else {
-      // Cut on minimum MUID.
-      if (muid_probability < cuts.minMuidProb) continue;
-      
-      // Assuming particle is a muon.
-      Particle muon_candidate(charged_particle,
-          charged_particle.charge() > 0 ?
-          particle_mu_plus_ : particle_mu_minus_);
-
-      // Reject if the particle track has polar angle pointing outside the
-      //   barrel (p is given closest to coord. origin - see mdst table).
-      if (muon_candidate.p().cosTheta() < cuts.minLeptonCosTheta ||
-          muon_candidate.p().cosTheta() > cuts.maxLeptonCosTheta) {
-        continue;
+        // Calculate the invariant mass of the electron
+        //   candidate and the other charged track.
+        double pair_invariant_mass = abs(
+            (electron_candidate.p() + other_electron.p()).m());
+        double delta_mass = pair_invariant_mass - cuts.massJPsi;
+  
+        // Cut possible pair production electrons or J/Psi daughters.
+        if (pair_invariant_mass < cuts.minEPlusEMinusMass) {
+          if (basf_parameter_verbose_log_) {
+            cout << "    BAD E CANDIDATE :: Likely pair production." << endl;
+          }
+          good_electron = false;
+        } else if (cuts.minElElJPsiCandidate < delta_mass &&
+            delta_mass < cuts.maxElElJPsiCandidate) {
+          if (basf_parameter_verbose_log_) {
+            cout << "    BAD E CANDIDATE :: Likely J/Psi daughter." << endl;
+          }
+          good_electron = false;
+        }
       }
+    }
 
-      // Cut on lepton CM momentum.
-      // Get the lab-frame momentum and boost it to CM frame.
-      HepLorentzVector candidate_p4_cm(muon_candidate.p());
-      candidate_p4_cm.boost(cm_boost_);
-      double candidate_p4_cm_mag = candidate_p4_cm.vect().mag();
-      if (candidate_p4_cm_mag < cuts.minLeptonMomentumCm ||
-          candidate_p4_cm_mag > cuts.maxLeptonMomentumCm) {
-        continue;
-      }
-
-      // Store the MC truth to the lepton candidate.
+    // While the candidate is still good, add it to the lepton list. Only add
+    //     the candidate to the lepton list once! If it is a good muon
+    //     candidate, then consider it a muon, otherwise it is deemed an
+    //     electron, but flag the verbose log if the particle passes as both.
+    Particle *good_candidate = NULL;
+    if (good_muon) {
       setMCtruth(muon_candidate);
-      
-      // Add muon_candidate to list of mu+/- candidates.
-      muon_candidates.push_back(muon_candidate);
+      good_candidate = &muon_candidate;
+    } else if (good_electron) {
+      setMCtruth(electron_candidate);
+      good_candidate = &electron_candidate;
     }
-  } // End for() loop populating lepton lists.
+
+    if (good_electron && good_muon && basf_parameter_verbose_log_) {
+      cout << "    WARNING :: Good muon and good electron candidate." << endl;
+    }
+
+    // TODO - Dump lepton candidate information to the ntuple.
+    if (good_candidate) {
+      LeptonCandidate lepton((*good_candidate), cm_boost_);
+      lepton_candidates.push_back(lepton);
+      
+      nTuple_leptons_->column("charge"   , electric_charge);
+      nTuple_leptons_->column("mass"     , lepton.p().mag());
+      nTuple_leptons_->column("good_mu"  , good_muon);
+      nTuple_leptons_->column("good_el"  , good_electron);
+      nTuple_leptons_->column("id_asn"   , lepton.idAssigned());
+      nTuple_leptons_->column("id_tru"   , lepton.idTrue());
+      nTuple_leptons_->column("id_mom"   , lepton.idMom());
+      nTuple_leptons_->column("eid_prob" , eid_probability);
+      nTuple_leptons_->column("muid_prb" , muid_probability);
+      nTuple_leptons_->column("muid_rto" , lepton.klmChi2PerHits());
+      nTuple_leptons_->column("p_lb_mag" , lepton.p().vect().mag());
+      nTuple_leptons_->column("p_cm_mag" , lepton.pCm().vect().mag());
+      nTuple_leptons_->column("e_cm"     , lepton.pCm().e());
+      nTuple_leptons_->column("p_cm_x"   , lepton.pCm().px());
+      nTuple_leptons_->column("p_cm_y"   , lepton.pCm().py());
+      nTuple_leptons_->column("p_cm_z"   , lepton.pCm().pz());
+      nTuple_leptons_->column("cos_pol"  , lepton.p().cosTheta());
+      nTuple_leptons_->column("ip_dr"    , ip_parameters.dr());
+      nTuple_leptons_->column("ip_dz"    , ip_parameters.dz());
+      nTuple_leptons_->column("svd_hitr" , ip_parameters.svdHitsR());
+      nTuple_leptons_->column("svd_hitz" , ip_parameters.svdHitsZ());
+      nTuple_leptons_->dumpData();
+    }
+  }
 
   // Print diagnostic information to the log.
   if (basf_parameter_verbose_log_) {
-    cout << " Passed lepton candidate selection..." << endl;
-    cout << "  electron candidates: " << initial_electron_candidates.size()
-        << "." << endl;
-    cout << "      muon candidates: " << initial_muon_candidates.size()
-        << "." << endl;
+    cout << "  Passed lepton candidate selection." << endl;
+    cout << "    Total lepton candidates: " << lepton_candidates.size() << endl;
+    cout << "  Searching for dilepton candidates." << endl;
   }
 
-  // Remove possible pair production electrons and J/Psi candidates.
-  for (ParticleIterator j = initial_electron_candidates.begin();
-      j != initial_electron_candidates.end(); ++j) {
-    const Particle &electron_candidate = *j;
-    
-    // Flag for electrons that are not candidates for pair production daughters.
-    // By default, assume all electrons are good.
-    bool flag_good_electron = true;
-
-    // If the invariant mass of an electron candidate any other charged
-    //   track is smaller than the cut value (nominally 100 MeV), the
-    //   electron candidate is rejected.
-    
-    for (MdstChargedConstIterator i = mdst_charged_particles.begin();
-        i != mdst_charged_particles.end(); ++i) {
-      const Mdst_charged &mdst_particle = *i;
-
-      // Reject case where pointers point to same object.
-      if (electron_candidate.relation().mdstCharged() == mdst_particle) {
-        continue;
-      }
-
-      Particle other_particle(mdst_particle,
-          mdst_particle.charge() > 0 ? particle_e_plus_ : particle_e_minus_);
-      
-      // We need to know if the pair is same sign or opposite sign.
-      bool ss_pair = (electron_candidate.charge() == other_particle.charge());
-      bool allow_charge_bias = basf_parameter_allow_charge_bias_ && ss_pair;
-      
-      // If allowing a charge bias and pair is SS, skip to the next pair.
-      if (allow_charge_bias) {
-        continue;
-      }
-
-      // Calculate the invariant mass of the electron candidate and the other
-      //   charged track.
-      HepLorentzVector candidate_p4 = electron_candidate.p();
-      HepLorentzVector other_particle_p4 = other_particle.p();
-      double pair_invariant_mass = abs((candidate_p4 + other_particle_p4).m());
-      double delta_mass = pair_invariant_mass - cuts.massJPsi;
-
-      // Print diagnostic information to the log.
-      if (basf_parameter_verbose_log_ == 2) {
-        cout << " e-chg mass: " << pair_invariant_mass << endl;
-        cout << " delta mass: " << delta_mass << muon_candidates.size() << endl;
-      }
-
-      // Cut possible pair production electrons or J/Psi daughters.
-      if (pair_invariant_mass < cuts.minEPlusEMinusMass) {
-        flag_good_electron = false;
-      } else if (cuts.minElElJPsiCandidate < delta_mass &&
-          delta_mass < cuts.maxElElJPsiCandidate) {
-        flag_good_electron = false;
-      }
-    }
-    
-    // While electron_candidate is still a good candidate, add it to the list.
-    if (flag_good_electron) {
-      electron_candidates.push_back(electron_candidate);
-    }
-  }
-  
-  // Print diagnostic information to the log.
-  if (basf_parameter_verbose_log_) {
-    cout << " Passed electron pair production and J/Psi vetoes." << endl;
-    cout << "   Remaining electrons: " << electron_candidates.size() << "."
-         << endl;
-  }
-  
-  // Remove possible J/Psi daughter muons.
-  for (ParticleIterator j = initial_muon_candidates.begin();
-      j != initial_muon_candidates.end(); ++j) {
-    const Particle &muon_candidate = *j;
-    
-    // Flag for muons that are not candidates J/psi daughters.
-    // By default, assume all muons are good.
-    bool flagGoodMuon = true;
-
-    // If the difference of the invariant mass of a muon candidate and every
-    //   other opposite charged tracks is within the cut range, the candidate
-    //   is rejected.
-    for (MdstChargedConstIterator i = mdst_charged_particles.begin();
-        i != mdst_charged_particles.end(); ++i) {
-      const Mdst_charged &mdst_particle = *i;
-
-      // Reject case where pointers point to same object.
-      if (muon_candidate.relation().mdstCharged() == mdst_particle) continue;
-
-      Particle other_particle(mdst_particle,
-          mdst_particle.charge() > 0 ? particle_mu_plus_ : particle_mu_minus_);
-      
-      // We need to know if the pair is same sign or opposite sign.
-      bool ss_pair = (muon_candidate.charge() == other_particle.charge());
-      bool allow_charge_bias = basf_parameter_allow_charge_bias_ && ss_pair;
-      
-      // If allowing a charge bias and pair is SS, skip to the next pair.
-      if (allow_charge_bias) {
-        continue;
-      }
-      
-      // Calculate the invariant mass of the two particles.
-      HepLorentzVector candidate_p4 = muon_candidate.p();
-      HepLorentzVector other_particle_p4 = other_particle.p();
-      double pair_invariant_mass = abs((candidate_p4 + other_particle_p4).m());
-
-      // If at any time candidate proves to be likely from a J/Psi, the flag
-      //   is switched.
-      double delta_mass = pair_invariant_mass - cuts.massJPsi;
-      if (cuts.minMuMuJPsiCandidate < delta_mass &&
-          delta_mass < cuts.maxMuMuJPsiCandidate) {
-        flagGoodMuon = false;
-      }
-    }
-
-    // While candidate is still good, add it to the muon list.
-    if (flagGoodMuon) {
-      muon_candidates.push_back(muon_candidate);
-    }
-  }
-  
-  // Print diagnostic information to the log.
-  if (basf_parameter_verbose_log_) {
-    cout << " Passed muon J/Psi veto." << endl;
-    cout << "   Remaining muons: " << muon_candidates.size() << "." << endl;
-  }
-  
-  // Combine all leptons into a single list.
-  lepton_candidates.reserve(
-      electron_candidates.size() + muon_candidates.size());
-  lepton_candidates.insert(lepton_candidates.end(), electron_candidates.begin(),
-      electron_candidates.end());
-  lepton_candidates.insert(lepton_candidates.end(), muon_candidates.begin(),
-      muon_candidates.end());
+  // TODO - Find the number of kaons in the event.
+  // TODO - Find the number of phi mesons in the event.
  
   // Find dilepton event candidates.
   // Loop over the lepton list.
-  for (ParticleIterator j = lepton_candidates.begin();
+  for (LeptonCandidateIterator j = lepton_candidates.begin();
       j != lepton_candidates.end(); ++j) {
-    
     // Loop over remaining leptons in the list to check all lepton pairs.
-    for (ParticleIterator i = j;
-        i != lepton_candidates.end(); ++i) {
-      
+    for (LeptonCandidateIterator i = j; i != lepton_candidates.end(); ++i) {
       // Exclude the case where both iterators point to the same particle.
       if (i == j) continue;
-      
-      // Alias the first lepton as "lepton0"
-      //  and the second electron as "lepton1".
-      Particle &lepton0 = *j;
-      Particle &lepton1 = *i;
-      
-      // Cut on each lepton's CM momentum.
-      // TODO - 2010.08.10 - Perhaps this should be done when populating the
-      //                     lepton lists.
-      // Get the lab-frame momentum for each lepton and boost it to CM frame.
-      HepLorentzVector lepton0_p4_cm(lepton0.p());
-      HepLorentzVector lepton1_p4_cm(lepton1.p());
-      lepton0_p4_cm.boost(cm_boost_);
-      lepton1_p4_cm.boost(cm_boost_);
-
-      // Make the CM momentum cut.
-      double lepton0_p3_cm_mag = lepton0_p4_cm.vect().mag();
-      double lepton1_p3_cm_mag = lepton1_p4_cm.vect().mag();
-      if (lepton0_p3_cm_mag < cuts.minLeptonMomentumCm ||
-          lepton0_p3_cm_mag > cuts.maxLeptonMomentumCm) {
-        continue;
+      if (basf_parameter_verbose_log_) {
+        cout << "  >>> New Event Candidate <<<" << endl;
       }
 
-      if (lepton1_p3_cm_mag < cuts.minLeptonMomentumCm ||
-          lepton1_p3_cm_mag > cuts.maxLeptonMomentumCm) {
-        continue;
-      }
-      
       // Determine higher momentum lepton and add it to an event candidate.
-      //   lepton0 is henceforth considered the higher momentum lepton.
-      Particle &greater_p_lepton = (lepton0_p3_cm_mag > lepton1_p3_cm_mag ?
-          lepton0 : lepton1);
-      Particle &lower_p_lepton = (lepton0_p3_cm_mag > lepton1_p3_cm_mag ?
-          lepton1 : lepton0);
-      DileptonEvent event_candidate(greater_p_lepton, lower_p_lepton,
-          cm_boost_);
+      // Reference the higher momentum lepton as "lepton0"
+      //  and the lower momentum lepton as "lepton1".
+      LeptonCandidate *lepton0 = i;
+      LeptonCandidate *lepton1 = j;
+      if ((*j).pCm().mag() > (*i).pCm().mag()) {
+        lepton0 = j;
+        lepton1 = i;
+      }
+      DileptonEvent event_candidate(*lepton0, *lepton1);
       
       // Cut on jet-like events where the included angle between the leptons
       //   in the CM frame is near 0 or Pi.
@@ -603,156 +524,18 @@ Adcab::event(BelleEvent* evptr, int* status)
           cosine_cm_opening_angle > cuts.maxCosThetaLLCm) {
         continue;
       }
-
-      // Add event candidate to the list of dilepton events.
-      dilepton_event_candidates.push_back(event_candidate);
-    }
-  }
-  
-  // Print diagnostic information to the log.
-  if (basf_parameter_verbose_log_) {
-    cout << " Passed event candidate selection." << endl;
-    cout << "   " << dilepton_event_candidates.size() << " candidates found."
-         << endl;
-  }
-
-  // Write the event candidate information to n-tuple.
-  for (DileptonEventIterator i = dilepton_event_candidates.begin();
-      i != dilepton_event_candidates.end(); ++i) {
-    DileptonEvent &event_candidate = *i;
-    
-    // Temporary (2011.08.05) test of use of Mdst_trk_fit::first() to locate
-    //   beginning of track arc.  Mdst_trk_fit::first() != Particle::x() (where
-    //   momentum is defined). Also, Particle::x() != Mdst_trk_fit::pivot().
-    //   Does Particle::x() ==
-    //   (pivot.x + helix.dr*cos(phi0`), pivot.y + helix.dr*sin(phi0`),
-    //       pivot.z + helix.dz) (with phi0` = phi0 - ((1 - chg)/2 * PI) ?
-    // Helix start points are effectively mhyp independent as are nhits in SVD,
-    //   pivot positions, and mdst_trk_fit::first().
-    // Never any variation in helixstart.y ... why? Is this obsolete?
-    // Momentum position is not, in general, equal to helix start, pivot,
-    //   origin, or particle first position.... so, where is it from?
-    {
-      const double pi = 4 * atan(1);
-      Hep3Vector momentum_position = event_candidate.l0().lepton().x();
-      double track_pivot_position_0_x = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(0).pivot(0);
-      double track_pivot_position_0_y = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(0).pivot(1);
-      double track_pivot_position_0_z = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(0).pivot(3);
-      double track_pivot_position_1_x = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(1).pivot(0);
-      double track_pivot_position_1_y = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(1).pivot(1);
-      double track_pivot_position_1_z = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(1).pivot(3);
-      double track_helix_dr_0 = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(0).helix(0);
-      double track_helix_phi0_0 = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(0).helix(1);
-      double track_helix_phi0p_0 = track_helix_phi0p_0 -
-          (pi * ((1 - event_candidate.l0().lepton().charge()) / 2));
-      double track_helix_dz_0 = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(0).helix(3);
-      double track_helix_dr_1 = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(1).helix(0);
-      double track_helix_phi0_1 = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(1).helix(1);
-      double track_helix_phi0p_1 = track_helix_phi0p_1 -
-          (pi * ((1 - event_candidate.l0().lepton().charge()) / 2));
-      double track_helix_dz_1 = event_candidate.l0().lepton().relation()
-          .mdstCharged().trk().mhyp(1).helix(3);
-      Hep3Vector track_helix_start_0(track_pivot_position_0_x +
-          track_helix_dr_0 * cos(track_helix_phi0p_0),
-          track_pivot_position_0_y +
-          track_helix_dr_0 * sin(track_helix_phi0p_0),
-          track_pivot_position_0_z + track_helix_dz_0);
-      Hep3Vector track_helix_start_1(track_pivot_position_1_x +
-          track_helix_dr_1 * cos(track_helix_phi0p_1),
-          track_pivot_position_1_y +
-          track_helix_dr_1 * sin(track_helix_phi0p_1),
-          track_pivot_position_1_z + track_helix_dz_1);
-      if (track_helix_start_0 != track_helix_start_1) {
-        cout << "WARNING : helix starting points is mhyp dependent!" << endl;
+      
+      if (basf_parameter_verbose_log_) {
+        cout << "    Passed lepton opening angle check." << endl;
+        cout << "    Commiting event candidate to n-tuple." << endl;
       }
-      if (momentum_position != track_helix_start_0) {
-        cout << "WARNING : track pivot != helix start position" << endl
-             << momentum_position << " != " << track_helix_start_0 << endl;
-      }
+
+      // Add event candidate information to the n-tuple.
+      nTuple_dileptons_->column("evt_type", event_candidate.eventType());
+      nTuple_dileptons_->column("evt_sign", event_candidate.eventSign());
+      nTuple_dileptons_->column("llcostha", event_candidate.cosThetaLL());
+      nTuple_dileptons_->dumpData();
     }
-    
-    // Rebuild the dr and dz track parameters for each lepton using the IP as
-    //   the pivot.
-    IpParameters l0_ip_parameters(
-        event_candidate.l0().lepton().relation().mdstCharged(),
-        interaction_point_, event_candidate.l0().massHypothesis());
-    IpParameters l1_ip_parameters(
-        event_candidate.l1().lepton().relation().mdstCharged(),
-        interaction_point_, event_candidate.l1().massHypothesis());
-    
-    // Write data to the n-tuple. As of 2010.08.25, each row in the n-tuple will
-    //   consist of a single dilepton event candidate.
-    // Column names can be no greater than eight (8) characters long.
-    // Format:      "name    ", value)
-    // Event singular information
-    nTuple_->column("exp_no"  , experiment_number_);
-    nTuple_->column("run_no"  , run_number_);
-    nTuple_->column("evt_no"  , event_number_);
-    nTuple_->column("fw_r2"   , fox_wolfram_r2);
-    nTuple_->column("hadronb" , hadronb_code);
-    
-    // Event candidate information.
-    nTuple_->column("evnttype", event_candidate.eventType());
-    nTuple_->column("llcostha", event_candidate.cosThetaLL());
-    nTuple_->column("pcm_sum" , event_candidate.pSum());
-    nTuple_->column("pcm_dif" , event_candidate.pDifference());
-    
-    // Lepton information.
-    nTuple_->column("l0_chg"  , event_candidate.l0().lepton().charge());
-    nTuple_->column("l1_chg"  , event_candidate.l1().lepton().charge());
-    nTuple_->column("l0_m"    , event_candidate.l0().p().mag());
-    nTuple_->column("l1_m"    , event_candidate.l1().p().mag());
-    nTuple_->column("l0_idasn", event_candidate.l0().idAssigned());
-    nTuple_->column("l1_idasn", event_candidate.l1().idAssigned());
-    nTuple_->column("l0_idtru", event_candidate.l0().idTrue());
-    nTuple_->column("l1_idtru", event_candidate.l1().idTrue());
-    nTuple_->column("l0_idmom", event_candidate.l0().idMom());
-    nTuple_->column("l1_idmom", event_candidate.l1().idMom());
-    nTuple_->column("l0_eidp" , event_candidate.l0().electronProbability());
-    nTuple_->column("l1_eidp" , event_candidate.l1().electronProbability());
-    nTuple_->column("l0_muidp", event_candidate.l0().muonProbability());
-    nTuple_->column("l1_muidp", event_candidate.l1().muonProbability());
-    nTuple_->column("l0_muidr", event_candidate.l0().klmChi2PerHits());
-    nTuple_->column("l1_muidr", event_candidate.l1().klmChi2PerHits());
-    nTuple_->column("l0_pcm"  , event_candidate.l0().pCm().vect().mag());
-    nTuple_->column("l1_pcm"  , event_candidate.l1().pCm().vect().mag());
-    nTuple_->column("l0_plab" , event_candidate.l0().p().vect().mag());
-    nTuple_->column("l1_plab" , event_candidate.l1().p().vect().mag());
-    nTuple_->column("l0_cme"  , event_candidate.l0().pCm().e());
-    nTuple_->column("l1_cme"  , event_candidate.l1().pCm().e());
-    nTuple_->column("l0_cmpx" , event_candidate.l0().pCm().px());
-    nTuple_->column("l1_cmpx" , event_candidate.l1().pCm().px());
-    nTuple_->column("l0_cmpy" , event_candidate.l0().pCm().py());
-    nTuple_->column("l1_cmpy" , event_candidate.l1().pCm().py());
-    nTuple_->column("l0_cmpz" , event_candidate.l0().pCm().pz());
-    nTuple_->column("l1_cmpz" , event_candidate.l1().pCm().pz());
-    nTuple_->column("l0_costh", event_candidate.l0().p().cosTheta());
-    nTuple_->column("l1_costh", event_candidate.l1().p().cosTheta());
-    nTuple_->column("l0_dr"   , l0_ip_parameters.dr());
-    nTuple_->column("l1_dr"   , l1_ip_parameters.dr());
-    nTuple_->column("l0_dz"   , l0_ip_parameters.dz());
-    nTuple_->column("l1_dz"   , l1_ip_parameters.dz());
-    nTuple_->column("l0_svdr" , event_candidate.l0().svdRadialHits());
-    nTuple_->column("l1_svdr" , event_candidate.l1().svdRadialHits());
-    nTuple_->column("l0_svdz" , event_candidate.l0().svdAxialHits());
-    nTuple_->column("l1_svdz" , event_candidate.l1().svdAxialHits());
-    nTuple_->dumpData();
-  }
-  
-  // Print diagnostic information to the log.
-  if (basf_parameter_verbose_log_) {
-    cout << " Passed commit to ntuple." << endl;
   }
   
   return;
@@ -763,56 +546,63 @@ void
 Adcab::hist_def()
 {
   extern BelleTupleManager *BASF_Histogram;   // Define a BASF Histogram
-  BelleTupleManager *tm = BASF_Histogram;   
-  const char *ntList = "exp_no "
-                       "run_no "
-                       "evt_no "
-                       "fw_r2 "
-                       "hadronb "
-                       "evnttype "
-                       "llcostha "
-                       "pcm_sum "
-                       "pcm_dif "
-                       "l0_chg "
-                       "l1_chg "
-                       "l0_m "
-                       "l1_m "
-                       "l0_idasn "
-                       "l1_idasn "
-                       "l0_idtru "
-                       "l1_idtru "
-                       "l0_idmom "
-                       "l1_idmom "
-                       "l0_eidp "
-                       "l1_eidp "
-                       "l0_muidp "
-                       "l1_muidp "
-                       "l0_muidr "
-                       "l1_muidr "
-                       "l0_pcm "
-                       "l1_pcm "
-                       "l0_plab "
-                       "l1_plab "
-                       "l0_cme "
-                       "l1_cme "
-                       "l0_cmpx "
-                       "l1_cmpx "
-                       "l0_cmpy "
-                       "l1_cmpy "
-                       "l0_cmpz "
-                       "l1_cmpz "
-                       "l0_costh "
-                       "l1_costh "
-                       "l0_dr "
-                       "l1_dr "
-                       "l0_dz "
-                       "l1_dz "
-                       "l0_svdr "
-                       "l1_svdr "
-                       "l0_svdz "
-                       "l1_svdz";
+  
+  BelleTupleManager *tm = BASF_Histogram;
+  const char *event_variables = "exp_no "
+                                "run_no "
+                                "evt_no "
+                                "fw_r2 "
+                                "hadronb";
 
-  nTuple_ = tm->ntuple("Dilepton", ntList, 1);
+  const char *lepton_variables = "charge "
+                                 "mass "
+                                 "id_asn "
+                                 "id_tru "
+                                 "id_mom "
+                                 "eid_p "
+                                 "muid_p "
+                                 "muid_r "
+                                 "p_cm_mag "
+                                 "p_lb_mag "
+                                 "e_cm "
+                                 "p_cm_x "
+                                 "p_cm_y "
+                                 "p_cm_z "
+                                 "costheta "
+                                 "ip_dr "
+                                 "ip_dz "
+                                 "svdr_hit "
+                                 "svdz_hit";
+                                 
+                                
+  const char *kaon_variables = "charge "
+                               "mass "
+                               "id_asn "
+                               "id_tru "
+                               "id_mom "
+                               "eid_p "
+                               "muid_p "
+                               "muid_r "
+                               "p_cm_mag "
+                               "p_lb_mag "
+                               "e_cm "
+                               "p_cm_x "
+                               "p_cm_y "
+                               "p_cm_z "
+                               "costheta "
+                               "ip_dr "
+                               "ip_dz "
+                               "svdr_hit "
+                               "svdz_hit";
+                                 
+  const char *dilepton_variables = "evt_type "
+                                   "evt_sign "
+                                   "llcostha";
+
+  nTuple_events_ = tm->ntuple("Events", event_variables, 1);
+  nTuple_leptons_ = tm->ntuple("Leptons", lepton_variables, 2);
+  nTuple_kaons_ = tm->ntuple("Kaons", kaon_variables, 3);
+  nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 4);
   
   return;
 }

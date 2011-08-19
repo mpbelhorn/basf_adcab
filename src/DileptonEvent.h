@@ -1,6 +1,6 @@
 //______________________________________________________________________________
 // Filename: DileptonEvent.h
-// Version: 2011.05.15.A
+// Version: 2011.08.11.A
 // Author: M.P. Belhorn
 // Original Date: 2011.05.15
 // Description: A class for managing information about dilepton events.
@@ -13,7 +13,7 @@
 
 #include "LeptonCandidate.h"
 
-#if defined( BELLE_NAMESPACE )
+#if defined(BELLE_NAMESPACE)
 namespace Belle {
 #endif
 
@@ -23,31 +23,22 @@ DileptonEvent {
 
   // Constructors and destructor.
   DileptonEvent();
-  DileptonEvent( Particle lepton0, Particle lepton1, Hep3Vector cm_boost );
+  DileptonEvent(LeptonCandidate &lepton0, LeptonCandidate &lepton1);
   ~DileptonEvent() {}
-
-  // Mutators.
-  void set_l0( Particle lepton0 );
-  void set_l1( Particle lepton1 );
-  void set_cm_boost( Hep3Vector cm_boost );
   
   // Accessors.
-  LeptonCandidate l0();
-  LeptonCandidate l1();
-  Hep3Vector cm_boost();
+  LeptonCandidate &l0() {return *l0_};
+  LeptonCandidate &l1() {return *l1_};
   
   // Methods
   double eventType();
+  double eventSign();
   double cosThetaLL();
-  double pSum();
-  double pDifference();
-
+  
  private:
   // Attributes.
-  LeptonCandidate l0_;
-  LeptonCandidate l1_;
-  Hep3Vector cm_boost_;
-
+  LeptonCandidate *l0_;
+  LeptonCandidate *l1_;
 };
 
 #if defined(BELLE_NAMESPACE)
