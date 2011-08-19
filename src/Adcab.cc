@@ -559,7 +559,7 @@ Adcab::hist_def()
                               "is_mc "
                               "boost_x "
                               "boost_y "
-                              "boost_z "
+                              "boost_z ";
                                 
   const char *event_variables = "evt_no "
                                 "fw_r2 "
