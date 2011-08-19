@@ -185,6 +185,14 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
        << "____________________________________________________________\n"
        << endl;
 
+  nTuple_runs_->column("exp_no"  , experiment_number_);
+  nTuple_runs_->column("run_no"  , run_number_);
+  nTuple_runs_->column("is_mc"   , flag_mc_);
+  nTuple_runs_->column("boost_x" , cm_boost_.x());
+  nTuple_runs_->column("boost_y" , cm_boost_.y());
+  nTuple_runs_->column("boost_z" , cm_boost_.z());
+  nTuple_runs_->dumpData();
+  
   return;
 }
 
@@ -280,8 +288,6 @@ Adcab::event(BelleEvent* evptr, int* status)
   // Write unique event-level data to the n-tuple. This information is the
   //     first of many rows associated with a physical event.
   // Column names can be no greater than eight (8) characters long.
-  nTuple_events_->column("exp_no"  , experiment_number_);
-  nTuple_events_->column("run_no"  , run_number_);
   nTuple_events_->column("evt_no"  , event_number_);
   nTuple_events_->column("fw_r2"   , fox_wolfram_r2);
   nTuple_events_->column("hadronb" , hadronb_code);
@@ -548,9 +554,14 @@ Adcab::hist_def()
   extern BelleTupleManager *BASF_Histogram;   // Define a BASF Histogram
   
   BelleTupleManager *tm = BASF_Histogram;
-  const char *event_variables = "exp_no "
-                                "run_no "
-                                "evt_no "
+  const char *run_variables = "exp_no "
+                              "run_no "
+                              "is_mc "
+                              "boost_x "
+                              "boost_y "
+                              "boost_z "
+                                
+  const char *event_variables = "evt_no "
                                 "fw_r2 "
                                 "hadronb";
 
@@ -599,10 +610,11 @@ Adcab::hist_def()
                                    "evt_sign "
                                    "llcostha";
 
-  nTuple_events_ = tm->ntuple("Events", event_variables, 1);
-  nTuple_leptons_ = tm->ntuple("Leptons", lepton_variables, 2);
-  nTuple_kaons_ = tm->ntuple("Kaons", kaon_variables, 3);
-  nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 4);
+  nTuple_runs_ = tm->ntuple("Runs", run_variables, 1);
+  nTuple_events_ = tm->ntuple("Events", event_variables, 2);
+  nTuple_leptons_ = tm->ntuple("Leptons", lepton_variables, 3);
+  nTuple_kaons_ = tm->ntuple("Kaons", kaon_variables, 4);
+  nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 5);
   
   return;
 }

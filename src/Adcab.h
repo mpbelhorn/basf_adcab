@@ -110,7 +110,8 @@ Adcab : public Module
   bool flag_mc_;  // Data type flag. 'true' = MC, 'false' = Real Data.
 
  private:
-  BelleTuple *nTuple_events_;  // Pointers for writing to the n-tuples.
+  BelleTuple *nTuple_runs_;  // Pointers for writing to the n-tuples.
+  BelleTuple *nTuple_events_;
   BelleTuple *nTuple_leptons_;
   BelleTuple *nTuple_kaons_;
   BelleTuple *nTuple_dileptons_;
