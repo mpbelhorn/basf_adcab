@@ -28,7 +28,11 @@ LeptonCandidate::LeptonCandidate(const Particle &lepton,
 // Copy Constructor.
 LeptonCandidate::LeptonCandidate(const LeptonCandidate &that)
 {
-  init(*that.lepton_, *that.cm_boost_);
+  if (that.lepton_ && that.cm_boost_) {
+    init(*(that.lepton_), *(that.cm_boost_));
+  } else {
+    init();
+  }
 }
 
 // Assignment operator.
@@ -38,7 +42,11 @@ LeptonCandidate &LeptonCandidate::operator= (const LeptonCandidate &that)
     return *this;
   }
   dispose();
-  init(*that.lepton_, *that.cm_boost_);
+  if (that.lepton_ && that.cm_boost_) {
+    init(*(that.lepton_), *(that.cm_boost_));
+  } else {
+    init();
+  }
   return *this;
 }
 
@@ -69,16 +77,12 @@ void LeptonCandidate::init(const Particle &lepton, const Hep3Vector &cm_boost)
 
 void LeptonCandidate::dispose() throw()
 {
+  if (p_cm_) delete p_cm_;
+  if (p_) delete p_;
+  if (mdst_charged_) delete mdst_charged_;
   if (lepton_) delete lepton_;
   if (cm_boost_) delete cm_boost_;
-  if (mdst_charged_) delete mdst_charged_;
-  if (p_) delete p_;
-  if (p_cm_) delete p_cm_;
-  lepton_ = 0;
-  cm_boost_ = 0;
-  mdst_charged_ = 0;
-  p_ = 0;
-  p_cm_ = 0;
+  init();
 }
 
 // Accessor for lepton_.

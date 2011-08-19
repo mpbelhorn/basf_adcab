@@ -11,7 +11,7 @@ OUTPUTDIR=${ANALYSISDIR}/output
 DATATYPE=SGMC
 SIGMCPATH=/bwf/g68home/louvot/belle/fs/mcprod/mdstfile
 SIGMCMDST=evtgen-u5stobb-0-evt_RL-DECAY_BDlnu.dec-20101108_1839_new_e000067.081110_1846
-OUTPUTNAME=${AMOD}.${DATATYPE}-diagnostic
+OUTPUTNAME=diagnostic
 
 basf<< EOF >& ${OUTPUTDIR}/logs/${OUTPUTNAME}.log
 path create main
@@ -21,7 +21,8 @@ path add_module main fix_mdst
 path create analysis
 module register Adcab
 path add_module analysis Adcab
-!module put_parameter Adcab JPsi_Veto_OS_Only\0
+module put_parameter Adcab JPsi_Veto_OS_Only\0
+module put_parameter Adcab Verbose_Log\2
 
 path add_condition main <=:0:KILL
 path add_condition main >:0:analysis
