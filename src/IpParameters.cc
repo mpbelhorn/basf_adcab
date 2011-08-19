@@ -98,15 +98,13 @@ IpParameters::dz()
 }
 
 // Returns the number of hits in the SVD on the r-phi side.
-double
-IpParameters::svdHitsR()
+int IpParameters::svdHitsR()
 {
   return svd_hits_r_;
 }
 
 // Returns the number of hits in the SVD on the r-phi side.
-double
-IpParameters::svdHitsZ()
+int IpParameters::svdHitsZ()
 {
   return svd_hits_z_;
 }

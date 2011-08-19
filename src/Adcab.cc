@@ -373,7 +373,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     
     // Remove possible pair production and J/Psi daughters.
     for (MdstChargedIterator jpsi_pair_iterator = first_mdst_charged;
-        != last_mdst_charged; ++jpsi_pair_iterator) {
+        jpsi_pair_iterator != last_mdst_charged; ++jpsi_pair_iterator) {
       const Mdst_charged &jpsi_pair_particle = *jpsi_pair_iterator;
 
       // Reject case where pointers point to same object.
@@ -509,11 +509,11 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Determine higher momentum lepton and add it to an event candidate.
       // Reference the higher momentum lepton as "lepton0"
       //  and the lower momentum lepton as "lepton1".
-      LeptonCandidate *lepton0 = i;
-      LeptonCandidate *lepton1 = j;
+      LeptonCandidate *lepton0 = &(*i);
+      LeptonCandidate *lepton1 = &(*j);
       if ((*j).pCm().mag() > (*i).pCm().mag()) {
-        lepton0 = j;
-        lepton1 = i;
+        lepton0 = &(*j);
+        lepton1 = &(*i);
       }
       DileptonEvent event_candidate(*lepton0, *lepton1);
       

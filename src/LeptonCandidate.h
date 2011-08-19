@@ -22,16 +22,20 @@ namespace Belle {
 
 class 
 LeptonCandidate {
- public:
-
-  // Constructors and destructor.
+ protected:
+  // Intrinsic constructor and destructor methods.
   LeptonCandidate();
+  void init()
+  void init(const Particle &lepton, const Hep3Vector &cm_boost);
+  void dispose();
+  
+ private:
+  LeptonCandidate(const LeptonCandidate &that);
+  LeptonCandidate &operator= (const LeptonCandidate &that);
+  
+ public:
   LeptonCandidate(const Particle &lepton, const Hep3Vector &cm_boost);
-  ~LeptonCandidate() {};
-
-  // Mutators.
-  void set_lepton(Particle lepton);
-  void set_cm_boost_vector(Hep3Vector cm_boost);
+  virtual ~LeptonCandidate();
 
   // Accessors.
   Particle &lepton();
@@ -61,7 +65,7 @@ LeptonCandidate {
   HepLorentzVector *p_;
 
   // New objects.
-  HepLorentzVector p_cm_;
+  HepLorentzVector *p_cm_;
 };
 
 #if defined(BELLE_NAMESPACE)

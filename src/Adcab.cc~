@@ -373,7 +373,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     
     // Remove possible pair production and J/Psi daughters.
     for (MdstChargedIterator jpsi_pair_iterator = first_mdst_charged;
-        != last_mdst_charged; ++jpsi_pair_iterator) {
+        jpsi_pair_iterator != last_mdst_charged; ++jpsi_pair_iterator) {
       const Mdst_charged &jpsi_pair_particle = *jpsi_pair_iterator;
 
       // Reject case where pointers point to same object.
@@ -499,8 +499,7 @@ Adcab::event(BelleEvent* evptr, int* status)
   for (LeptonCandidateIterator j = lepton_candidates.begin();
       j != lepton_candidates.end(); ++j) {
     // Loop over remaining leptons in the list to check all lepton pairs.
-    for (LeptonCandidateIterator i = j;
-        i != lepton_candidates.end(); ++i) {
+    for (LeptonCandidateIterator i = j; i != lepton_candidates.end(); ++i) {
       // Exclude the case where both iterators point to the same particle.
       if (i == j) continue;
       if (basf_parameter_verbose_log_) {

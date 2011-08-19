@@ -15,19 +15,70 @@ namespace Belle {
 // Default Contructor.
 LeptonCandidate::LeptonCandidate()
 {
-  // Function is blank.
+  init();
 }
 
 // Lepton Candidate Constructor. 
 LeptonCandidate::LeptonCandidate(const Particle &lepton,
     const Hep3Vector &cm_boost)
 {
-  lepton_ = &lepton;
-  cm_boost_ = &cm_boost;
-  mdst_charged_ = &(lepton.relation().mdstCharged());
-  p_ = &(lepton.p());
-  p_cm_ = lepton.p();
-  p_cm_.boost(cm_boost);
+  init(lepton, cm_boost);
+}
+
+// Copy Constructor.
+LeptonCandidate::LeptonCandidate(const LeptonCandidate &that)
+{
+  init(*that.lepton_, *that.cm_boost_);
+}
+
+// Assignment operator.
+LeptonCandidate &LeptonCandidate::operator= (const LeptonCandidate &that)
+{
+  if (this == &that) {
+    return *this;
+  }
+  dispose();
+  init(*that.lepton_, *that.cm_boost_);
+  return *this;
+}
+
+// Lepton Candidate Destructor.
+LeptonCandidate::~LeptonCandidate()
+{
+  dispose();
+}
+
+void LeptonCandidate::init()
+{
+  lepton_ = 0;
+  cm_boost_ = 0;
+  mdst_charged_ = 0;
+  p_ = 0;
+  p_cm_ = 0;
+}
+
+void LeptonCandidate::init(const Particle &lepton, const Hep3Vector &cm_boost)
+{
+  lepton_ = new Particle(lepton);
+  cm_boost_ = new Hep3Vector(cm_boost);
+  mdst_charged_ = new Mdst_charged(lepton.relation().mdstCharged());
+  p_ = new HepLorentzVector(lepton.p());
+  p_cm_ = new HepLorentzVector(lepton.p());
+  p_cm_->boost(cm_boost);
+}
+
+void LeptonCandidate::dispose() throw()
+{
+  if (lepton_) delete lepton_;
+  if (cm_boost_) delete cm_boost_;
+  if (mdst_charged_) delete mdst_charged_;
+  if (p_) delete p_;
+  if (p_cm_) delete p_cm_;
+  lepton_ = 0;
+  cm_boost_ = 0;
+  mdst_charged_ = 0;
+  p_ = 0;
+  p_cm_ = 0;
 }
 
 // Accessor for lepton_.
@@ -57,7 +108,7 @@ HepLorentzVector &LeptonCandidate::p()
 // Accessor for p_cm_.
 HepLorentzVector &LeptonCandidate::pCm()
 {
-  return p_cm_;
+  return *p_cm_;
 }
 
 // Returns the pythia particle ID code of the assignment given to particle

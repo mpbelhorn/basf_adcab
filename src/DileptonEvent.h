@@ -27,8 +27,8 @@ DileptonEvent {
   ~DileptonEvent() {}
   
   // Accessors.
-  LeptonCandidate &l0() {return *l0_};
-  LeptonCandidate &l1() {return *l1_};
+  LeptonCandidate &l0() {return *l0_;}
+  LeptonCandidate &l1() {return *l1_;}
   
   // Methods
   double eventType();

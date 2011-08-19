@@ -89,8 +89,8 @@ Adcab : public Module
   HepPoint3D interaction_point_;
   HepSymMatrix interaction_point_error_;
   int flag_good_interaction_point_;
-  
-  typedef std::vector<Mdst_charged>::const_iterator MdstChargedConstIterator;
+
+  typedef std::vector<Mdst_charged>::const_iterator MdstChargedIterator;
   typedef std::vector<Particle>::iterator ParticleIterator;
   typedef std::vector<LeptonCandidate>::iterator LeptonCandidateIterator;
   typedef std::vector<DileptonEvent>::iterator DileptonEventIterator;
