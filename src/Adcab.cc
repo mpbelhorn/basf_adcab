@@ -320,9 +320,10 @@ Adcab::event(BelleEvent* evptr, int* status)
 
     // Cut on IP dr and dz and SVD hits.
     // This is to make sure that particles were created near the IP.
-    // TODO - 2010.08.11 - Is mass hypothesis = 3 (kaon) appropriate? Check with
-    //                       authorities!
-    IpParameters ip_parameters(charged_particle, interaction_point_, 3);
+    // Seems there is no differnce in dr or dz using either mass hypothesis = 1
+    //     (muon) vs mass hypothesis = 0 (electron). Mass hypothesis = n (!=0,1)
+    //     does produce different dr and dz values.
+    IpParameters ip_parameters(charged_particle, interaction_point_, 1);
     if (abs(ip_parameters.dr()) > cuts.maxIpDr) continue;
     if (abs(ip_parameters.dz()) > cuts.maxIpDz) continue;
     if (basf_parameter_verbose_log_) {
