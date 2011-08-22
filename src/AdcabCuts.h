@@ -43,6 +43,10 @@ struct AdcabCuts {
   // Pair-production removal cuts.
   static const double minEPlusEMinusMass  = 0.10; // GeV/c
 
+  // Kaon selection cuts.
+  static const double minKaonToPionLikelihood   = 0.6;
+  static const double minKaonToProtonLikelihood = 0.6;
+
   // Dilepton event selection cuts.
   static const double minCosThetaLLCm     = -1.0; // = -0.80;
   static const double maxCosThetaLLCm     =  1.0; // =  0.95;

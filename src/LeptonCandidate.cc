@@ -28,11 +28,11 @@ LeptonCandidate::LeptonCandidate(const Particle &lepton,
     const Hep3Vector &cm_boost)
     : lepton_(new Particle(lepton)),
       cm_boost_(new Hep3Vector(cm_boost)),
-      mdst_charged_(new Mdst_charged(lepton.MdstCharged())),
+      mdst_charged_(new Mdst_charged(lepton.mdstCharged())),
       p_(new HepLorentzVector(lepton.p())),
       p_cm_(new HepLorentzVector(lepton.p()))
 {
-  p_cm_->boost(*cm_boost_);
+  (*p_cm_).boost(cm_boost);
 }
 
 // Copy Constructor.

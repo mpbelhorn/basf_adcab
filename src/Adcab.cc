@@ -60,6 +60,8 @@ Adcab::Adcab()
   particle_e_plus_ = (Ptype("E+"));
   particle_mu_minus_ = (Ptype("MU-"));
   particle_mu_plus_ = (Ptype("MU+"));
+  particle_k_minus_ = (Ptype("K-"));
+  particle_k_plus_ = (Ptype("K+"));
 
   // Initialize BASF parameters.
   basf_parameter_allow_charge_bias_ = 0;
@@ -273,6 +275,9 @@ Adcab::event(BelleEvent* evptr, int* status)
   // Need a list for all mother and daughter particle species.
   // Note that these vectors are static and will persist until BASF is closed.
   //     They therefore must(!) be cleared for each call of Adcab::event().
+  if (basf_parameter_verbose_log_) {
+    cout << "  Initializing particle containers." << endl;
+  }
   static std::vector<LeptonCandidate> lepton_candidates(5);
   static std::vector<DileptonEvent> dilepton_event_candidates(10);
   lepton_candidates.clear();
@@ -303,7 +308,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       lepton_scan_iterator != last_mdst_charged; ++lepton_scan_iterator) {
     
     if (basf_parameter_verbose_log_) {
-      cout << "  >>> New Lepton Candidate <<<" << endl;
+      cout << "  >>> NEW charged Track <<<" << endl;
     }
     // Alias the current particle as "charged_particle".
     const Mdst_charged &charged_particle = *lepton_scan_iterator;
@@ -314,14 +319,15 @@ Adcab::event(BelleEvent* evptr, int* status)
 
     double muid_probability = charged_particle_muid.Muon_likelihood();
     double eid_probability = charged_particle_eid.prob(3, -1, 5);
-    double kaon_to_pion_likelihood pid_kaon_to_pi.prob(charged_particle);
-    double kaon_to_proton_likelihood pid_kaon_to_pr.prob(charged_particle);
+    double kaon_to_pion_likelihood = pid_kaon_to_pi.prob(charged_particle);
+    double kaon_to_proton_likelihood = pid_kaon_to_pr.prob(charged_particle);
     
     // Reject particle if below both electron and muon likelihood cuts.
     bool good_muon = ((muid_probability >= cuts.minMuidProb) &&
         (charged_particle_muid.Chi_2() != 0));
     bool good_electron = eid_probability >= cuts.minEidProb;
-    bool good_kaon = ((kaon_to_pion_likelihood > cuts.minKaonToPionLikelihood) &&
+    bool good_kaon = (
+        (kaon_to_pion_likelihood > cuts.minKaonToPionLikelihood) &&
         (kaon_to_proton_likelihood > cuts.minKaonToProtonLikelihood));
     
     if (!(good_muon || good_electron || good_kaon)) continue;
@@ -472,7 +478,10 @@ Adcab::event(BelleEvent* evptr, int* status)
 
     // Dump lepton candidate information to the ntuple.
     if (good_lepton) {
-      LeptonCandidate lepton((*good_lepton), cm_boost_);
+      if (basf_parameter_verbose_log_) {
+        cout << "    Committing lepton to ntuple." << endl;
+      }
+      LeptonCandidate lepton((*good_lepton));
       lepton_candidates.push_back(lepton);
       
       nTuple_leptons_->column("charge"   , electric_charge);
@@ -501,6 +510,9 @@ Adcab::event(BelleEvent* evptr, int* status)
     }
 
     if (good_kaon && !good_lepton) {
+      if (basf_parameter_verbose_log_) {
+        cout << "    Committing kaon to ntuple." << endl;
+      }
       // Treat the particle as a charged kaon.
       Particle kaon_particle(charged_particle,
           electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
@@ -520,7 +532,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_kaons_->column("pid_k_pi" , kaon_to_pion_likelihood);
       nTuple_kaons_->column("pid_k_pr" , kaon_to_proton_likelihood);
       nTuple_kaons_->column("p_lb_mag" , kaon.p().rho());
-      nTuple_kaons_->column("p_cm_mag" , kaon.pCm()rho());
+      nTuple_kaons_->column("p_cm_mag" , kaon.pCm().rho());
       nTuple_kaons_->column("e_cm"     , kaon.pCm().e());
       nTuple_kaons_->column("p_cm_x"   , kaon.pCm().px());
       nTuple_kaons_->column("p_cm_y"   , kaon.pCm().py());
@@ -629,24 +641,26 @@ Adcab::hist_def()
                                 
   const char *kaon_variables = "charge "
                                "mass "
+                               "good_mu "
+                               "good_el "
+                               "good_k "
                                "id_asn "
                                "id_tru "
                                "id_mom "
-                               "eid_p "
-                               "muid_p "
-                               "muid_r "
-                               "p_cm_mag "
+                               "pid_k_pi "
+                               "pid_k_pr "
                                "p_lb_mag "
+                               "p_cm_mag "
                                "e_cm "
                                "p_cm_x "
                                "p_cm_y "
                                "p_cm_z "
-                               "costheta "
+                               "cos_pol "
                                "ip_dr "
                                "ip_dz "
-                               "svdr_hit "
-                               "svdz_hit";
-                                 
+                               "svd_hitr "
+                               "svd_hitz";
+
   const char *dilepton_variables = "evt_type "
                                    "evt_sign "
                                    "llcostha";
