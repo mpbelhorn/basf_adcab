@@ -14,38 +14,47 @@ namespace Belle {
 
 // Default Contructor.
 LeptonCandidate::LeptonCandidate()
+    : lepton_(new Particle()),
+      cm_boost_(new Hep3Vector()),
+      mdst_charged_(new Mdst_charged()),
+      p_(new HepLorentzVector()),
+      p_cm_(new HepLorentzVector())
 {
-  init();
+  // Intentionally blank.
 }
 
 // Lepton Candidate Constructor. 
 LeptonCandidate::LeptonCandidate(const Particle &lepton,
     const Hep3Vector &cm_boost)
+    : lepton_(new Particle(lepton)),
+      cm_boost_(new Hep3Vector(cm_boost)),
+      mdst_charged_(new Mdst_charged(lepton.MdstCharged())),
+      p_(new HepLorentzVector(lepton.p())),
+      p_cm_(new HepLorentzVector(lepton.p()))
 {
-  init(lepton, cm_boost);
+  p_cm_->boost(*cm_boost_);
 }
 
 // Copy Constructor.
 LeptonCandidate::LeptonCandidate(const LeptonCandidate &that)
+    : lepton_(new Particle(*that.lepton_)),
+      cm_boost_(new Hep3Vector(*that.cm_boost_)),
+      mdst_charged_(new Mdst_charged(*that.mdst_charged_)),
+      p_(new HepLorentzVector(*that.p_)),
+      p_cm_(new HepLorentzVector(*that.p_cm_))
 {
-  if (that.lepton_ && that.cm_boost_) {
-    init(*(that.lepton_), *(that.cm_boost_));
-  } else {
-    init();
-  }
+  // Intentionally blank.
 }
 
 // Assignment operator.
 LeptonCandidate &LeptonCandidate::operator= (const LeptonCandidate &that)
 {
-  if (this == &that) {
-    return *this;
-  }
-  dispose();
-  if (that.lepton_ && that.cm_boost_) {
-    init(*(that.lepton_), *(that.cm_boost_));
-  } else {
-    init();
+  if (this != &that) {
+    *lepton_ = *(that.lepton_);
+    *cm_boost_ = *(that.cm_boost_);
+    *mdst_charged_ = *(that.mdst_charged_);
+    *p_ = *(that.p_);
+    *p_cm_ = *(that.p_cm_);
   }
   return *this;
 }
@@ -53,36 +62,11 @@ LeptonCandidate &LeptonCandidate::operator= (const LeptonCandidate &that)
 // Lepton Candidate Destructor.
 LeptonCandidate::~LeptonCandidate()
 {
-  dispose();
-}
-
-void LeptonCandidate::init()
-{
-  lepton_ = 0;
-  cm_boost_ = 0;
-  mdst_charged_ = 0;
-  p_ = 0;
-  p_cm_ = 0;
-}
-
-void LeptonCandidate::init(const Particle &lepton, const Hep3Vector &cm_boost)
-{
-  lepton_ = new Particle(lepton);
-  cm_boost_ = new Hep3Vector(cm_boost);
-  mdst_charged_ = new Mdst_charged(lepton.relation().mdstCharged());
-  p_ = new HepLorentzVector(lepton.p());
-  p_cm_ = new HepLorentzVector(lepton.p());
-  p_cm_->boost(cm_boost);
-}
-
-void LeptonCandidate::dispose() throw()
-{
-  if (p_cm_) delete p_cm_;
-  if (p_) delete p_;
-  if (mdst_charged_) delete mdst_charged_;
-  if (lepton_) delete lepton_;
-  if (cm_boost_) delete cm_boost_;
-  init();
+  delete p_cm_;
+  delete p_;
+  delete mdst_charged_;
+  delete cm_boost_;
+  delete lepton_;
 }
 
 // Accessor for lepton_.
@@ -128,8 +112,10 @@ LeptonCandidate::idAssigned()
 int
 LeptonCandidate::massHypothesis()
 {
-  int mass_hyp = 0;
-  if (abs(idAssigned()) == 13) {
+  int mass_hyp = -1;
+  if (abs(idAssigned()) == 11) {
+    mass_hyp = 0;
+  } else if (abs(idAssigned()) == 13) {
      mass_hyp = 1;
   }
   return mass_hyp;

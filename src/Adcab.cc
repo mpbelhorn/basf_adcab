@@ -263,6 +263,11 @@ Adcab::event(BelleEvent* evptr, int* status)
   //     they will be needed again and they never change.
   static PDGmasses masses;
   static AdcabCuts cuts;
+
+  // Instantiate PID classes. These are constant and
+  //     should only be initialized once.
+  static atc_pid pid_kaon_to_pi(3, 1, 5, 3, 2);
+  static atc_pid pid_kaon_to_pr(3, 1, 5, 3, 4);
     
   // Define lists (vector template) to store event particles.
   // Need a list for all mother and daughter particle species.
@@ -296,91 +301,95 @@ Adcab::event(BelleEvent* evptr, int* status)
   // Populate the lepton candidate lists.
   for (MdstChargedIterator lepton_scan_iterator = first_mdst_charged;
       lepton_scan_iterator != last_mdst_charged; ++lepton_scan_iterator) {
-
+    
     if (basf_parameter_verbose_log_) {
       cout << "  >>> New Lepton Candidate <<<" << endl;
     }
     // Alias the current particle as "charged_particle".
     const Mdst_charged &charged_particle = *lepton_scan_iterator;
-
+    
     // Get electron and muon likelihoods.
     eid charged_particle_eid(charged_particle);
-    double eid_probability = charged_particle_eid.prob(3, -1, 5);
     Muid_mdst charged_particle_muid(charged_particle);
-    double muid_probability = charged_particle_muid.Muon_likelihood();
 
+    double muid_probability = charged_particle_muid.Muon_likelihood();
+    double eid_probability = charged_particle_eid.prob(3, -1, 5);
+    double kaon_to_pion_likelihood pid_kaon_to_pi.prob(charged_particle);
+    double kaon_to_proton_likelihood pid_kaon_to_pr.prob(charged_particle);
+    
     // Reject particle if below both electron and muon likelihood cuts.
-    bool good_eid = eid_probability >= cuts.minEidProb;
-    bool good_muid = ((muid_probability >= cuts.minMuidProb) &&
+    bool good_muon = ((muid_probability >= cuts.minMuidProb) &&
         (charged_particle_muid.Chi_2() != 0));
-    if (!(good_eid || good_muid)) continue;
+    bool good_electron = eid_probability >= cuts.minEidProb;
+    bool good_kaon = ((kaon_to_pion_likelihood > cuts.minKaonToPionLikelihood) &&
+        (kaon_to_proton_likelihood > cuts.minKaonToProtonLikelihood));
+    
+    if (!(good_muon || good_electron || good_kaon)) continue;
     if (basf_parameter_verbose_log_) {
-      cout << "    Passed PID check." << endl;
+      cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
+           << "PID check." << endl;
     }
+
+    // Create particle class objects of each species.
+    double electric_charge = charged_particle.charge();
+    Particle muon_particle(charged_particle,
+        electric_charge > 0 ? particle_mu_plus_ : particle_mu_minus_);
+    Particle electron_particle(charged_particle,
+        electric_charge > 0 ? particle_e_plus_ : particle_e_minus_);
+    LeptonCandidate muon_candidate(muon_particle, cm_boost_);
+    LeptonCandidate electron_candidate(electron_particle, cm_boost_);
 
     // Cut on IP dr and dz and SVD hits.
     // This is to make sure that particles were created near the IP.
-    // Seems there is no differnce in dr or dz using either mass hypothesis = 1
+    // Seems there is no difference in dr or dz using either mass hypothesis = 1
     //     (muon) vs mass hypothesis = 0 (electron). Mass hypothesis = n (!=0,1)
     //     does produce different dr and dz values.
     IpParameters ip_parameters(charged_particle, interaction_point_, 1);
-    if (abs(ip_parameters.dr()) > cuts.maxIpDr) continue;
-    if (abs(ip_parameters.dz()) > cuts.maxIpDz) continue;
-    if (basf_parameter_verbose_log_) {
-      cout << "    Passed dr/dz check." << endl;
+    if ((abs(ip_parameters.dr()) > cuts.maxIpDr) ||
+        (abs(ip_parameters.dz()) > cuts.maxIpDz) ||
+        (ip_parameters.svdHitsR() < cuts.minSvdRHits) ||
+        (ip_parameters.svdHitsZ() < cuts.minSvdZHits)) {
+      good_muon = false;
+      good_electron = false;
     }
-    if (ip_parameters.svdHitsR() < cuts.minSvdRHits) continue;
-    if (ip_parameters.svdHitsZ() < cuts.minSvdZHits) continue;
     if (basf_parameter_verbose_log_) {
-      cout << "    Passed SVD hits check." << endl;
+      cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
+           << "dr/dz and SVD check." << endl;
     }
 
     // Reject if the particle track has polar angle pointing outside the
     //   barrel (p is given closest to coord. origin - see mdst table).
-    Hep3Vector momentum3_lab(
-        charged_particle.px(), charged_particle.py(), charged_particle.pz());
-    double track_cosine_polar_angle = momentum3_lab.cosTheta();
-    if (track_cosine_polar_angle < cuts.minLeptonCosTheta) continue;
-    if (track_cosine_polar_angle > cuts.maxLeptonCosTheta) continue;
+    //   The lab momentum is the same for each particle candidate, so we use the
+    //   muon's particle instance for the job.
+    double track_cosine_polar_angle = muon_particle.p().cosTheta();
+    if ((track_cosine_polar_angle < cuts.minLeptonCosTheta) ||
+        (track_cosine_polar_angle > cuts.maxLeptonCosTheta)) {
+      good_muon = false;
+      good_electron = false;
+    }
     if (basf_parameter_verbose_log_) {
-      cout << "    Passed Barrel PID check." << endl;
+      cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
+           << "Barrel intersection check." << endl;
     }
 
-    // Create an electron candidate...
-    double electric_charge = charged_particle.charge();
-    Particle electron_candidate(charged_particle,
-        electric_charge > 0 ? particle_e_plus_ : particle_e_minus_);
-    // ... and a muon candidate.
-    Particle muon_candidate(charged_particle,
-        electric_charge > 0 ? particle_mu_plus_ : particle_mu_minus_);
-
     // Check if CM momentum is good assuming muon and electron masses.
-    // First, get the lab-frame 4-momentum assuming each mass
-    //     and boost it to CM frame.
-    HepLorentzVector electron_candidate_p4_cm(electron_candidate.p());
-    HepLorentzVector muon_candidate_p4_cm(muon_candidate.p());
-    electron_candidate_p4_cm.boost(cm_boost_);
-    muon_candidate_p4_cm.boost(cm_boost_);
-    
-    double electron_candidate_p4_cm_mag = electron_candidate_p4_cm.vect().mag();
-    double muon_candidate_p4_cm_mag = muon_candidate_p4_cm.vect().mag();
-    bool good_electron_momentum = !(
-        electron_candidate_p4_cm_mag < cuts.minLeptonMomentumCm ||
-        electron_candidate_p4_cm_mag > cuts.maxLeptonMomentumCm);
-    bool good_muon_momentum = !(
-        muon_candidate_p4_cm_mag < cuts.minLeptonMomentumCm ||
-        electron_candidate_p4_cm_mag > cuts.maxLeptonMomentumCm);
-    bool good_muon(good_muid && good_muon_momentum ? true : false);
-    bool good_electron(good_eid && good_electron_momentum ? true : false);
-
-    if (!(good_muon || good_electron)) continue;
+    if ((muon_candidate.pCm().rho() < cuts.minLeptonMomentumCm) ||
+        (muon_candidate.pCm().rho() > cuts.maxLeptonMomentumCm)) {
+      good_muon = false;
+    }
+    if ((electron_candidate.pCm().rho() < cuts.minLeptonMomentumCm) ||
+        (electron_candidate.pCm().rho() > cuts.maxLeptonMomentumCm)) {
+      good_electron = false;
+    }
     if (basf_parameter_verbose_log_) {
-      cout << "    Passed CM-frame momentum check." << endl;
+      cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
+           << "Passed CM-frame momentum check." << endl;
     }
     
     // Remove possible pair production and J/Psi daughters.
     for (MdstChargedIterator jpsi_pair_iterator = first_mdst_charged;
-        jpsi_pair_iterator != last_mdst_charged; ++jpsi_pair_iterator) {
+        (good_muon || good_electron) &&
+        (jpsi_pair_iterator != last_mdst_charged); ++jpsi_pair_iterator) {
       const Mdst_charged &jpsi_pair_particle = *jpsi_pair_iterator;
 
       // Reject case where pointers point to same object.
@@ -443,41 +452,42 @@ Adcab::event(BelleEvent* evptr, int* status)
         }
       }
     }
+    if (basf_parameter_verbose_log_) {
+      cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
+           << "J/Psi and pair production veto." << endl;
+    }
 
     // While the candidate is still good, add it to the lepton list. Only add
     //     the candidate to the lepton list once! If it is a good muon
     //     candidate, then consider it a muon, otherwise it is deemed an
     //     electron, but flag the verbose log if the particle passes as both.
-    Particle *good_candidate = NULL;
+    LeptonCandidate *good_lepton = NULL;
     if (good_muon) {
-      setMCtruth(muon_candidate);
-      good_candidate = &muon_candidate;
+      setMCtruth(muon_candidate.lepton());
+      good_lepton = &muon_candidate;
     } else if (good_electron) {
-      setMCtruth(electron_candidate);
-      good_candidate = &electron_candidate;
+      setMCtruth(electron_candidate.lepton());
+      good_lepton = &electron_candidate;
     }
 
-    if (good_electron && good_muon && basf_parameter_verbose_log_) {
-      cout << "    WARNING :: Good muon and good electron candidate." << endl;
-    }
-
-    // TODO - Dump lepton candidate information to the ntuple.
-    if (good_candidate) {
-      LeptonCandidate lepton((*good_candidate), cm_boost_);
+    // Dump lepton candidate information to the ntuple.
+    if (good_lepton) {
+      LeptonCandidate lepton((*good_lepton), cm_boost_);
       lepton_candidates.push_back(lepton);
       
       nTuple_leptons_->column("charge"   , electric_charge);
       nTuple_leptons_->column("mass"     , lepton.p().mag());
       nTuple_leptons_->column("good_mu"  , good_muon);
       nTuple_leptons_->column("good_el"  , good_electron);
+      nTuple_leptons_->column("good_k"   , good_kaon);
       nTuple_leptons_->column("id_asn"   , lepton.idAssigned());
       nTuple_leptons_->column("id_tru"   , lepton.idTrue());
       nTuple_leptons_->column("id_mom"   , lepton.idMom());
       nTuple_leptons_->column("eid_prob" , eid_probability);
       nTuple_leptons_->column("muid_prb" , muid_probability);
       nTuple_leptons_->column("muid_rto" , lepton.klmChi2PerHits());
-      nTuple_leptons_->column("p_lb_mag" , lepton.p().vect().mag());
-      nTuple_leptons_->column("p_cm_mag" , lepton.pCm().vect().mag());
+      nTuple_leptons_->column("p_lb_mag" , lepton.p().rho());
+      nTuple_leptons_->column("p_cm_mag" , lepton.pCm().rho());
       nTuple_leptons_->column("e_cm"     , lepton.pCm().e());
       nTuple_leptons_->column("p_cm_x"   , lepton.pCm().px());
       nTuple_leptons_->column("p_cm_y"   , lepton.pCm().py());
@@ -489,6 +499,39 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_leptons_->column("svd_hitz" , ip_parameters.svdHitsZ());
       nTuple_leptons_->dumpData();
     }
+
+    if (good_kaon && !good_lepton) {
+      // Treat the particle as a charged kaon.
+      Particle kaon_particle(charged_particle,
+          electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
+      setMCtruth(kaon_particle);
+      // TODO - Need to fix this by either implementing a KaonCandidate
+      //   class or generalizing the LeptonCandidate class.
+      LeptonCandidate kaon(kaon_particle, cm_boost_);
+
+      nTuple_kaons_->column("charge"   , electric_charge);
+      nTuple_kaons_->column("mass"     , kaon.p().mag());
+      nTuple_kaons_->column("good_mu"  , good_muon);
+      nTuple_kaons_->column("good_el"  , good_electron);
+      nTuple_kaons_->column("good_k"   , good_kaon);
+      nTuple_kaons_->column("id_asn"   , kaon.idAssigned());
+      nTuple_kaons_->column("id_tru"   , kaon.idTrue());
+      nTuple_kaons_->column("id_mom"   , kaon.idMom());
+      nTuple_kaons_->column("pid_k_pi" , kaon_to_pion_likelihood);
+      nTuple_kaons_->column("pid_k_pr" , kaon_to_proton_likelihood);
+      nTuple_kaons_->column("p_lb_mag" , kaon.p().rho());
+      nTuple_kaons_->column("p_cm_mag" , kaon.pCm()rho());
+      nTuple_kaons_->column("e_cm"     , kaon.pCm().e());
+      nTuple_kaons_->column("p_cm_x"   , kaon.pCm().px());
+      nTuple_kaons_->column("p_cm_y"   , kaon.pCm().py());
+      nTuple_kaons_->column("p_cm_z"   , kaon.pCm().pz());
+      nTuple_kaons_->column("cos_pol"  , kaon.p().cosTheta());
+      nTuple_kaons_->column("ip_dr"    , ip_parameters.dr());
+      nTuple_kaons_->column("ip_dz"    , ip_parameters.dz());
+      nTuple_kaons_->column("svd_hitr" , ip_parameters.svdHitsR());
+      nTuple_kaons_->column("svd_hitz" , ip_parameters.svdHitsZ());
+      nTuple_kaons_->dumpData();
+    }
   }
 
   // Print diagnostic information to the log.
@@ -497,9 +540,6 @@ Adcab::event(BelleEvent* evptr, int* status)
     cout << "    Total lepton candidates: " << lepton_candidates.size() << endl;
     cout << "  Searching for dilepton candidates." << endl;
   }
-
-  // TODO - Find the number of kaons in the event.
-  // TODO - Find the number of phi mesons in the event.
  
   // Find dilepton event candidates.
   // Loop over the lepton list.

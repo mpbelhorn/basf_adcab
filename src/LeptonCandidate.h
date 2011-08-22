@@ -25,11 +25,10 @@ LeptonCandidate {
  public:
   // Intrinsic constructor and destructor methods.
   LeptonCandidate();
+  LeptonCandidate(const LeptonCandidate &that);
   void init();
   void init(const Particle &lepton, const Hep3Vector &cm_boost);
   void dispose() throw();
-  
-  LeptonCandidate(const LeptonCandidate &that);
   LeptonCandidate &operator= (const LeptonCandidate &that);
   
   LeptonCandidate(const Particle &lepton, const Hep3Vector &cm_boost);
