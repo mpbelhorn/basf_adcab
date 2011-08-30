@@ -332,11 +332,11 @@ Adcab::event(BelleEvent* evptr, int* status)
         (kaon_to_pion_likelihood > cuts.minKaonToPionLikelihood) &&
         (kaon_to_proton_likelihood > cuts.minKaonToProtonLikelihood));
     
-    if (!(good_muon || good_electron || good_kaon)) continue;
     if (basf_parameter_verbose_log_) {
       cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
            << "PID check." << endl;
     }
+    if (!(good_muon || good_electron || good_kaon)) continue;
 
     // Create particle class objects of each species.
     double electric_charge = charged_particle.charge();
@@ -364,6 +364,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
            << "dr/dz and SVD check." << endl;
     }
+    if (!(good_muon || good_electron || good_kaon)) continue;
 
     // Reject if the particle track has polar angle pointing outside the
     //   barrel (p is given closest to coord. origin - see mdst table).
@@ -379,6 +380,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
            << "Barrel intersection check." << endl;
     }
+    if (!(good_muon || good_electron || good_kaon)) continue;
 
     // Check if CM momentum is good assuming muon and electron masses.
     if ((muon_candidate.pCm().rho() < cuts.minLeptonMomentumCm) ||
@@ -393,7 +395,8 @@ Adcab::event(BelleEvent* evptr, int* status)
       cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
            << "Passed CM-frame momentum check." << endl;
     }
-    
+    if (!(good_muon || good_electron || good_kaon)) continue;
+
     // Remove possible pair production and J/Psi daughters.
     for (MdstChargedIterator jpsi_pair_iterator = first_mdst_charged;
         (good_muon || good_electron) &&
@@ -464,6 +467,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
            << "J/Psi and pair production veto." << endl;
     }
+    if (!(good_muon || good_electron || good_kaon)) continue;
 
     // While the candidate is still good, add it to the lepton list. Only add
     //     the candidate to the lepton list once! If it is a good muon
@@ -614,8 +618,8 @@ Adcab::hist_def()
                               "is_mc "
                               "boost_x "
                               "boost_y "
-                              "boost_z ";
-                                
+                              "boost_z";
+
   const char *event_variables = "evt_no "
                                 "fw_r2 "
                                 "hadronb";
@@ -639,8 +643,7 @@ Adcab::hist_def()
                                  "ip_dz "
                                  "svdr_hit "
                                  "svdz_hit";
-                                 
-                                
+
   const char *kaon_variables = "charge "
                                "mass "
                                "good_mu "
