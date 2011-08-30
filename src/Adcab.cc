@@ -279,8 +279,10 @@ Adcab::event(BelleEvent* evptr, int* status)
     cout << "  Initializing particle containers." << endl;
   }
   static std::vector<LeptonCandidate> lepton_candidates(5);
+  static std::vector<Particle> kaon_candidates(10);
   static std::vector<DileptonEvent> dilepton_event_candidates(10);
   lepton_candidates.clear();
+  kaon_candidates.clear();
   dilepton_event_candidates.clear();
   
   // Alias the MDST charged manager, which contains the measured charged tracks
