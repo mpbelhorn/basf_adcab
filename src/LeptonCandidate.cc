@@ -19,6 +19,8 @@ LeptonCandidate::LeptonCandidate()
       mdst_charged_(new Mdst_charged()),
       p_(new HepLorentzVector()),
       p_cm_(new HepLorentzVector())
+      eid_(new eid())
+      muid_(new Muid_mdst())
 {
   // Intentionally blank.
 }
@@ -31,6 +33,8 @@ LeptonCandidate::LeptonCandidate(const Particle &lepton,
       mdst_charged_(new Mdst_charged(lepton.mdstCharged())),
       p_(new HepLorentzVector(lepton.p())),
       p_cm_(new HepLorentzVector(lepton.p()))
+      eid_(new eid(lepton.mdstCharged()))
+      muid_(new Muid_mdst(lepton.mdstCharged()))
 {
   (*p_cm_).boost(cm_boost);
 }
@@ -42,6 +46,8 @@ LeptonCandidate::LeptonCandidate(const LeptonCandidate &that)
       mdst_charged_(new Mdst_charged(*that.mdst_charged_)),
       p_(new HepLorentzVector(*that.p_)),
       p_cm_(new HepLorentzVector(*that.p_cm_))
+      eid_(new eid(*that.eid_))
+      muid_(new Muid_mdst(*that.muid_))
 {
   // Intentionally blank.
 }
@@ -55,6 +61,8 @@ LeptonCandidate &LeptonCandidate::operator= (const LeptonCandidate &that)
     *mdst_charged_ = *(that.mdst_charged_);
     *p_ = *(that.p_);
     *p_cm_ = *(that.p_cm_);
+    *eid_ = *(that.eid_);
+    *muid_ = *(that.muid_);
   }
   return *this;
 }
@@ -62,6 +70,8 @@ LeptonCandidate &LeptonCandidate::operator= (const LeptonCandidate &that)
 // Lepton Candidate Destructor.
 LeptonCandidate::~LeptonCandidate()
 {
+  delete muid_;
+  delete eid_;
   delete p_cm_;
   delete p_;
   delete mdst_charged_;
@@ -153,16 +163,14 @@ LeptonCandidate::idMom()
 double
 LeptonCandidate::electronProbability()
 {
-  eid leptonEid(mdstCharged());
-  return leptonEid.prob(3, -1, 5);
+  return eid_->prob(3, -1, 5);
 }
 
 // Returns the muid likelihood of lepton_.
 double
 LeptonCandidate::muonProbability()
 {
-  Muid_mdst leptonMuid(mdstCharged());
-  return leptonMuid.Muon_likelihood();
+  return muid_->Muon_likelihood();
 }
 
 // Returns the Chi^2 of the associated hits in the KLM assuming the track is a
@@ -170,8 +178,7 @@ LeptonCandidate::muonProbability()
 double
 LeptonCandidate::klmHitsChi2()
 {
-  Muid_mdst leptonMuid(mdstCharged());
-  return leptonMuid.Chi_2();
+  return muid_->Chi_2();
 }
 
 // Returns the number of the hits in the KLM assuming the track is a
@@ -179,8 +186,7 @@ LeptonCandidate::klmHitsChi2()
 int
 LeptonCandidate::klmHits()
 {
-  Muid_mdst leptonMuid(mdstCharged());
-  return leptonMuid.N_layer_hit_brl() + leptonMuid.N_layer_hit_end();
+  return muid_->N_layer_hit_brl() + muid_->N_layer_hit_end();
 }
 
 // Returns the Chi^2 of the associated hits in the KLM divided by the number of
@@ -190,7 +196,6 @@ LeptonCandidate::klmHits()
 double
 LeptonCandidate::klmChi2PerHits()
 {
-  Muid_mdst leptonMuid(mdstCharged());
   if (klmHits() <= 0) {
     return 0;
   } else {

@@ -60,6 +60,11 @@ LeptonCandidate {
   Hep3Vector *cm_boost_;
   Mdst_charged *mdst_charged_;
   HepLorentzVector *p_;
+  eid *eid_;
+  Muid_mdst *muid_;
+
+    double muid_probability = charged_particle_muid.Muon_likelihood();
+    double eid_probability = charged_particle_eid.prob(3, -1, 5);
 
   // New objects.
   HepLorentzVector *p_cm_;

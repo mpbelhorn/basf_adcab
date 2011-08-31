@@ -71,6 +71,9 @@ Adcab : public Module
   // BASF passable parameters.
   int basf_parameter_allow_charge_bias_;
   int basf_parameter_verbose_log_;
+  int basf_parameter_is_continuum_; // 1 = continuum data, 0 = on resonance.
+  int basf_parameter_mc_stream_number_;
+
 
   // Particle type (Ptype) constants.
   Ptype particle_e_minus_;
@@ -84,6 +87,7 @@ Adcab : public Module
   int experiment_number_;
   int run_number_;
   int event_number_;
+  int stream_number_;
 
   // Interaction point information.
   HepPoint3D interaction_point_;
@@ -110,8 +114,7 @@ Adcab : public Module
   bool flag_mc_;  // Data type flag. 'true' = MC, 'false' = Real Data.
 
  private:
-  BelleTuple *nTuple_runs_;  // Pointers for writing to the n-tuples.
-  BelleTuple *nTuple_events_;
+  // Pointers for writing to the n-tuples.
   BelleTuple *nTuple_leptons_;
   BelleTuple *nTuple_kaons_;
   BelleTuple *nTuple_dileptons_;

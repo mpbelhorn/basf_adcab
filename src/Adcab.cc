@@ -66,6 +66,8 @@ Adcab::Adcab()
   // Initialize BASF parameters.
   basf_parameter_allow_charge_bias_ = 0;
   basf_parameter_verbose_log_ = 0;
+  basf_parameter_is_continuum_ = 0;
+  basf_parameter_mc_stream_number_ = 0;
 
   cout << "\n\n"
        << "____________________________________________________________\n"
@@ -185,16 +187,7 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
        << " Reported Beam Energy: " << kekb_beam_energy_ << " GeV\n"
        << " BE Class cm_boost_: " << cm_boost_ << "\n"
        << "____________________________________________________________\n"
-       << endl;
-
-  nTuple_runs_->column("exp_no"  , experiment_number_);
-  nTuple_runs_->column("run_no"  , run_number_);
-  nTuple_runs_->column("is_mc"   , flag_mc_);
-  nTuple_runs_->column("boost_x" , cm_boost_.x());
-  nTuple_runs_->column("boost_y" , cm_boost_.y());
-  nTuple_runs_->column("boost_z" , cm_boost_.z());
-  nTuple_runs_->dumpData();
-  
+       << endl;  
   return;
 }
 
@@ -270,7 +263,7 @@ Adcab::event(BelleEvent* evptr, int* status)
   //     should only be initialized once.
   static atc_pid pid_kaon_to_pi(3, 1, 5, 3, 2);
   static atc_pid pid_kaon_to_pr(3, 1, 5, 3, 4);
-    
+
   // Define lists (vector template) to store event particles.
   // Need a list for all mother and daughter particle species.
   // Note that these vectors are static and will persist until BASF is closed.
@@ -284,37 +277,29 @@ Adcab::event(BelleEvent* evptr, int* status)
   lepton_candidates.clear();
   kaon_candidates.clear();
   dilepton_event_candidates.clear();
-  
+
   // Alias the MDST charged manager, which contains the measured charged tracks
   //     for each event and make pointers to it's boundaries.
   Mdst_charged_Manager
       &mdst_charged_particles = Mdst_charged_Manager::get_manager();
   MdstChargedIterator first_mdst_charged = mdst_charged_particles.begin();
   MdstChargedIterator last_mdst_charged = mdst_charged_particles.end();
-  
+
   // Print diagnostic information to the log.
   if (basf_parameter_verbose_log_) {
     cout << "  Passed event initialization." << endl;
   }
 
-  // Write unique event-level data to the n-tuple. This information is the
-  //     first of many rows associated with a physical event.
-  // Column names can be no greater than eight (8) characters long.
-  nTuple_events_->column("evt_no"  , event_number_);
-  nTuple_events_->column("fw_r2"   , fox_wolfram_r2);
-  nTuple_events_->column("hadronb" , hadronb_code);
-  nTuple_events_->dumpData();
-  
   // Populate the lepton candidate lists.
   for (MdstChargedIterator lepton_scan_iterator = first_mdst_charged;
       lepton_scan_iterator != last_mdst_charged; ++lepton_scan_iterator) {
-    
+
     if (basf_parameter_verbose_log_) {
       cout << "  >>> NEW charged Track <<<" << endl;
     }
     // Alias the current particle as "charged_particle".
     const Mdst_charged &charged_particle = *lepton_scan_iterator;
-    
+
     // Get electron and muon likelihoods.
     eid charged_particle_eid(charged_particle);
     Muid_mdst charged_particle_muid(charged_particle);
@@ -323,7 +308,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     double eid_probability = charged_particle_eid.prob(3, -1, 5);
     double kaon_to_pion_likelihood = pid_kaon_to_pi.prob(charged_particle);
     double kaon_to_proton_likelihood = pid_kaon_to_pr.prob(charged_particle);
-    
+
     // Reject particle if below both electron and muon likelihood cuts.
     bool good_muon = ((muid_probability >= cuts.minMuidProb) &&
         (charged_particle_muid.Chi_2() != 0));
@@ -331,7 +316,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     bool good_kaon = (
         (kaon_to_pion_likelihood > cuts.minKaonToPionLikelihood) &&
         (kaon_to_proton_likelihood > cuts.minKaonToProtonLikelihood));
-    
+
     if (basf_parameter_verbose_log_) {
       cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
            << "PID check." << endl;
@@ -489,7 +474,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       }
       LeptonCandidate lepton((*good_lepton));
       lepton_candidates.push_back(lepton);
-      
+
       nTuple_leptons_->column("charge"   , electric_charge);
       nTuple_leptons_->column("mass"     , lepton.p().mag());
       nTuple_leptons_->column("good_mu"  , good_muon);
@@ -526,6 +511,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       // TODO - Need to fix this by either implementing a KaonCandidate
       //   class or generalizing the LeptonCandidate class.
       LeptonCandidate kaon(kaon_particle, cm_boost_);
+      kaon_candidates.push_back(kaon);
 
       nTuple_kaons_->column("charge"   , electric_charge);
       nTuple_kaons_->column("mass"     , kaon.p().mag());
@@ -580,8 +566,11 @@ Adcab::event(BelleEvent* evptr, int* status)
         lepton0 = &(*j);
         lepton1 = &(*i);
       }
-      DileptonEvent event_candidate(*lepton0, *lepton1);
+      LeptonCandidate &l0 = *lepton0;
+      LeptonCandidate &l1 = *lepton1;
       
+      DileptonEvent event_candidate(l0, l1);
+
       // Cut on jet-like events where the included angle between the leptons
       //   in the CM frame is near 0 or Pi.
       double cosine_cm_opening_angle = event_candidate.cosThetaLL();
@@ -589,16 +578,75 @@ Adcab::event(BelleEvent* evptr, int* status)
           cosine_cm_opening_angle > cuts.maxCosThetaLLCm) {
         continue;
       }
-      
+
       if (basf_parameter_verbose_log_) {
         cout << "    Passed lepton opening angle check." << endl;
         cout << "    Commiting event candidate to n-tuple." << endl;
       }
+      
+      IpParameters l0_ip_parameters(l0.lepton().relation().mdstCharged(),
+          interaction_point_, l0.massHypothesis());
+      IpParameters l1_ip_parameters(l1.lepton().relation().mdstCharged(),
+          interaction_point_, l1.massHypothesis());
 
-      // Add event candidate information to the n-tuple.
+      // Write run-level data to the n-tuple.
+      // Column names can be no greater than eight (8) characters long.
+      nTuple_dileptons_->column("exp_no"  , experiment_number_);
+      nTuple_dileptons_->column("run_no"  , run_number_);
+      nTuple_dileptons_->column("stream"  , basf_parameter_mc_stream_number_);
+      nTuple_dileptons_->column("is_mc"   , flag_mc_);
+      nTuple_dileptons_->column("is_cntnm", basf_parameter_is_continuum_);
+
+      // Write event-level data to the n-tuple.
+      nTuple_dileptons_->column("evt_no"  , event_number_);
+      nTuple_dileptons_->column("fw_r2"   , fox_wolfram_r2);
+      nTuple_dileptons_->column("hadronb" , hadronb_code);
+
+      // Write event-candidate data to the n-tuple.
       nTuple_dileptons_->column("evt_type", event_candidate.eventType());
       nTuple_dileptons_->column("evt_sign", event_candidate.eventSign());
       nTuple_dileptons_->column("llcostha", event_candidate.cosThetaLL());
+      nTuple_dileptons_->column("n_kaons" , kaon_candidates.size());
+
+      nTuple_dileptons_->column("l0_chrge", l0.lepton().charge());
+      nTuple_dileptons_->column("l0_mass" , l0.p().mag());
+      nTuple_dileptons_->column("l0_idasn", l0.idAssigned());
+      nTuple_dileptons_->column("l0_idtru", l0.idTrue());
+      nTuple_dileptons_->column("l0_idmom", l0.idMom());
+      nTuple_dileptons_->column("l0_eidp" , l0.electronProbability());
+      nTuple_dileptons_->column("l0_muidp", l0.muonProbability());
+      nTuple_dileptons_->column("l0_muidr", l0.klmChi2PerHits());
+      nTuple_dileptons_->column("l0_plab" , l0.p().rho());
+      nTuple_dileptons_->column("l0_pcm"  , l0.pCm().rho());
+      nTuple_dileptons_->column("l0_e_cm" , l0.pCm().e());
+      nTuple_dileptons_->column("l0_px_cm", l0.pCm().px());
+      nTuple_dileptons_->column("l0_py_cm", l0.pCm().py());
+      nTuple_dileptons_->column("l0_pz_cm", l0.pCm().pz());
+      nTuple_dileptons_->column("l0_cospl", l0.p().cosTheta());
+      nTuple_dileptons_->column("l0_ip_dr", l0_ip_parameters.dr());
+      nTuple_dileptons_->column("l0_ip_dz", l0_ip_parameters.dz());
+      nTuple_dileptons_->column("l0_svd_r", l0_ip_parameters.svdHitsR());
+      nTuple_dileptons_->column("l0_svd_z", l0_ip_parameters.svdHitsZ());
+
+      nTuple_dileptons_->column("l1_chrge", l1.lepton().charge());
+      nTuple_dileptons_->column("l1_mass" , l1.p().mag());
+      nTuple_dileptons_->column("l1_idasn", l1.idAssigned());
+      nTuple_dileptons_->column("l1_idtru", l1.idTrue());
+      nTuple_dileptons_->column("l1_idmom", l1.idMom());
+      nTuple_dileptons_->column("l1_eidp" , l1.electronProbability());
+      nTuple_dileptons_->column("l1_muidp", l1.muonProbability());
+      nTuple_dileptons_->column("l1_muidr", l1.klmChi2PerHits());
+      nTuple_dileptons_->column("l1_plab" , l1.p().rho());
+      nTuple_dileptons_->column("l1_pcm"  , l1.pCm().rho());
+      nTuple_dileptons_->column("l1_e_cm" , l1.pCm().e());
+      nTuple_dileptons_->column("l1_px_cm", l1.pCm().px());
+      nTuple_dileptons_->column("l1_py_cm", l1.pCm().py());
+      nTuple_dileptons_->column("l1_pz_cm", l1.pCm().pz());
+      nTuple_dileptons_->column("l1_cospl", l1.p().cosTheta());
+      nTuple_dileptons_->column("l1_ip_dr", l1_ip_parameters.dr());
+      nTuple_dileptons_->column("l1_ip_dz", l1_ip_parameters.dz());
+      nTuple_dileptons_->column("l1_svd_r", l1_ip_parameters.svdHitsR());
+      nTuple_dileptons_->column("l1_svd_z", l1_ip_parameters.svdHitsZ());
       nTuple_dileptons_->dumpData();
     }
   }
@@ -616,13 +664,10 @@ Adcab::hist_def()
   const char *run_variables = "exp_no "
                               "run_no "
                               "is_mc "
+                              "is_cntnm "
                               "boost_x "
                               "boost_y "
                               "boost_z";
-
-  const char *event_variables = "evt_no "
-                                "fw_r2 "
-                                "hadronb";
 
   const char *lepton_variables = "charge "
                                  "mass "
@@ -666,15 +711,60 @@ Adcab::hist_def()
                                "svd_hitr "
                                "svd_hitz";
 
-  const char *dilepton_variables = "evt_type "
+  const char *dilepton_variables = "exp_no "
+                                   "run_no "
+                                   "stream "
+                                   "is_mc "
+                                   "is_cntnm "
+                                   "evt_no "
+                                   "fw_r2 "
+                                   "hadronb "
+                                   "evt_type "
                                    "evt_sign "
-                                   "llcostha";
+                                   "n_kaons "
+                                   "llcostha "
+                                   "l0_chrge "
+                                   "l0_mass "
+                                   "l0_idasn "
+                                   "l0_idtru "
+                                   "l0_idmom "
+                                   "l0_eidp "
+                                   "l0_muidp "
+                                   "l0_muidr "
+                                   "l0_plab "
+                                   "l0_pcm "
+                                   "l0_e_cm "
+                                   "l0_px_cm "
+                                   "l0_py_cm "
+                                   "l0_pz_cm "
+                                   "l0_cospl "
+                                   "l0_ip_dr "
+                                   "l0_ip_dz "
+                                   "l0_svd_r "
+                                   "l0_svd_z"
+                                   "l1_chrge "
+                                   "l1_mass "
+                                   "l1_idasn "
+                                   "l1_idtru "
+                                   "l1_idmom "
+                                   "l1_eidp "
+                                   "l1_muidp "
+                                   "l1_muidr "
+                                   "l1_plab "
+                                   "l1_pcm "
+                                   "l1_e_cm "
+                                   "l1_px_cm "
+                                   "l1_py_cm "
+                                   "l1_pz_cm "
+                                   "l1_cospl "
+                                   "l1_ip_dr "
+                                   "l1_ip_dz "
+                                   "l1_svd_r "
+                                   "l1_svd_z";
 
-  nTuple_runs_ = tm->ntuple("Runs", run_variables, 1);
-  nTuple_events_ = tm->ntuple("Events", event_variables, 2);
-  nTuple_leptons_ = tm->ntuple("Leptons", lepton_variables, 3);
-  nTuple_kaons_ = tm->ntuple("Kaons", kaon_variables, 4);
-  nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 5);
+  nTuple_leptons_ = tm->ntuple("Leptons", lepton_variables, 1);
+  nTuple_kaons_ = tm->ntuple("Kaons", kaon_variables, 2);
+  nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 3);
   
   return;
 }
