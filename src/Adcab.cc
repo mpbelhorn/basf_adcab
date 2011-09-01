@@ -272,7 +272,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     cout << "  Initializing particle containers." << endl;
   }
   static std::vector<LeptonCandidate> lepton_candidates(5);
-  static std::vector<Particle> kaon_candidates(10);
+  static std::vector<LeptonCandidate> kaon_candidates(10);
   static std::vector<DileptonEvent> dilepton_event_candidates(10);
   lepton_candidates.clear();
   kaon_candidates.clear();
@@ -661,14 +661,6 @@ Adcab::hist_def()
   extern BelleTupleManager *BASF_Histogram;   // Define a BASF Histogram
   
   BelleTupleManager *tm = BASF_Histogram;
-  const char *run_variables = "exp_no "
-                              "run_no "
-                              "is_mc "
-                              "is_cntnm "
-                              "boost_x "
-                              "boost_y "
-                              "boost_z";
-
   const char *lepton_variables = "charge "
                                  "mass "
                                  "id_asn "
