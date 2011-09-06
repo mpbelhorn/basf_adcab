@@ -218,7 +218,7 @@ Adcab::event(BelleEvent* evptr, int* status)
 {
   (void)evptr;
   (void)status;
-
+  
   // Get the event number. 
   // The bitwise operation "& ~(0 << 28)" forces the event number to count from 
   //   zero again after EvtNo() reaches 2^28. Not sure why this is necessary?
@@ -289,7 +289,7 @@ Adcab::event(BelleEvent* evptr, int* status)
   if (basf_parameter_verbose_log_) {
     cout << "  Passed event initialization." << endl;
   }
-
+  
   // Populate the lepton candidate lists.
   for (MdstChargedIterator lepton_scan_iterator = first_mdst_charged;
       lepton_scan_iterator != last_mdst_charged; ++lepton_scan_iterator) {
