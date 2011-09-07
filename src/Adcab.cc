@@ -332,14 +332,16 @@ Adcab::event(BelleEvent* evptr, int* status)
         electric_charge > 0 ? particle_mu_plus_ : particle_mu_minus_);
     Particle electron_particle(charged_particle,
         electric_charge > 0 ? particle_e_plus_ : particle_e_minus_);
+    Particle kaon_particle(charged_particle,
+        electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
+    
     LeptonCandidate muon_candidate(muon_particle, cm_boost_);
     LeptonCandidate electron_candidate(electron_particle, cm_boost_);
+    LeptonCandidate kaon_candidate(kaon_particle, cm_boost_);
 
+/*
     // Cut on IP dr and dz and SVD hits.
     // This is to make sure that particles were created near the IP.
-    // Seems there is no difference in dr or dz using either mass hypothesis = 1
-    //     (muon) vs mass hypothesis = 0 (electron). Mass hypothesis = n (!=0,1)
-    //     does produce different dr and dz values.
     IpParameters ip_parameters(charged_particle, interaction_point_, 1);
     if ((abs(ip_parameters.dr()) > cuts.maxIpDr) ||
         (abs(ip_parameters.dz()) > cuts.maxIpDz) ||
@@ -353,6 +355,7 @@ Adcab::event(BelleEvent* evptr, int* status)
            << "dr/dz and SVD check." << endl;
     }
     if (!(good_muon || good_electron || good_kaon)) continue;
+*/
 
     // Reject if the particle track has polar angle pointing outside the
     //   barrel (p is given closest to coord. origin - see mdst table).
@@ -478,28 +481,28 @@ Adcab::event(BelleEvent* evptr, int* status)
       LeptonCandidate lepton((*good_lepton));
       lepton_candidates.push_back(lepton);
 
-      nTuple_leptons_->column("charge"   , electric_charge);
-      nTuple_leptons_->column("mass"     , lepton.p().mag());
-      nTuple_leptons_->column("good_mu"  , good_muon);
-      nTuple_leptons_->column("good_el"  , good_electron);
-      nTuple_leptons_->column("good_k"   , good_kaon);
-      nTuple_leptons_->column("id_asn"   , lepton.idAssigned());
-      nTuple_leptons_->column("id_tru"   , lepton.idTrue());
-      nTuple_leptons_->column("id_mom"   , lepton.idMom());
-      nTuple_leptons_->column("eid_prob" , eid_probability);
-      nTuple_leptons_->column("muid_prb" , muid_probability);
-      nTuple_leptons_->column("muid_rto" , lepton.klmChi2PerHits());
-      nTuple_leptons_->column("p_lb_mag" , lepton.p().rho());
-      nTuple_leptons_->column("p_cm_mag" , lepton.pCm().rho());
-      nTuple_leptons_->column("e_cm"     , lepton.pCm().e());
-      nTuple_leptons_->column("p_cm_x"   , lepton.pCm().px());
-      nTuple_leptons_->column("p_cm_y"   , lepton.pCm().py());
-      nTuple_leptons_->column("p_cm_z"   , lepton.pCm().pz());
-      nTuple_leptons_->column("cos_pol"  , lepton.p().cosTheta());
-      nTuple_leptons_->column("ip_dr"    , ip_parameters.dr());
-      nTuple_leptons_->column("ip_dz"    , ip_parameters.dz());
-      nTuple_leptons_->column("svd_hitr" , ip_parameters.svdHitsR());
-      nTuple_leptons_->column("svd_hitz" , ip_parameters.svdHitsZ());
+      nTuple_leptons_->column("charge"  , electric_charge);
+      nTuple_leptons_->column("mass"    , lepton.p().mag());
+      nTuple_leptons_->column("good_mu" , good_muon);
+      nTuple_leptons_->column("good_el" , good_electron);
+      nTuple_leptons_->column("good_k"  , good_kaon);
+      nTuple_leptons_->column("id_asn"  , lepton.idAssigned());
+      nTuple_leptons_->column("id_tru"  , lepton.idTrue());
+      nTuple_leptons_->column("id_mom"  , lepton.idMom());
+      nTuple_leptons_->column("eid_prob", eid_probability);
+      nTuple_leptons_->column("muid_prb", muid_probability);
+      nTuple_leptons_->column("muid_rto", lepton.klmChi2PerHits());
+      nTuple_leptons_->column("p_lb_mag", lepton.p().rho());
+      nTuple_leptons_->column("p_cm_mag", lepton.pCm().rho());
+      nTuple_leptons_->column("e_cm"    , lepton.pCm().e());
+      nTuple_leptons_->column("p_cm_x"  , lepton.pCm().px());
+      nTuple_leptons_->column("p_cm_y"  , lepton.pCm().py());
+      nTuple_leptons_->column("p_cm_z"  , lepton.pCm().pz());
+      nTuple_leptons_->column("cos_pol" , lepton.p().cosTheta());
+      nTuple_leptons_->column("ip_dr"   , ip_parameters.dr());
+      nTuple_leptons_->column("ip_dz"   , ip_parameters.dz());
+      nTuple_leptons_->column("svd_hitr", ip_parameters.svdHitsR());
+      nTuple_leptons_->column("svd_hitz", ip_parameters.svdHitsZ());
       nTuple_leptons_->dumpData();
     }
 
@@ -516,27 +519,27 @@ Adcab::event(BelleEvent* evptr, int* status)
       LeptonCandidate kaon(kaon_particle, cm_boost_);
       kaon_candidates.push_back(kaon);
 
-      nTuple_kaons_->column("charge"   , electric_charge);
-      nTuple_kaons_->column("mass"     , kaon.p().mag());
-      nTuple_kaons_->column("good_mu"  , good_muon);
-      nTuple_kaons_->column("good_el"  , good_electron);
-      nTuple_kaons_->column("good_k"   , good_kaon);
-      nTuple_kaons_->column("id_asn"   , kaon.idAssigned());
-      nTuple_kaons_->column("id_tru"   , kaon.idTrue());
-      nTuple_kaons_->column("id_mom"   , kaon.idMom());
-      nTuple_kaons_->column("pid_k_pi" , kaon_to_pion_likelihood);
-      nTuple_kaons_->column("pid_k_pr" , kaon_to_proton_likelihood);
-      nTuple_kaons_->column("p_lb_mag" , kaon.p().rho());
-      nTuple_kaons_->column("p_cm_mag" , kaon.pCm().rho());
-      nTuple_kaons_->column("e_cm"     , kaon.pCm().e());
-      nTuple_kaons_->column("p_cm_x"   , kaon.pCm().px());
-      nTuple_kaons_->column("p_cm_y"   , kaon.pCm().py());
-      nTuple_kaons_->column("p_cm_z"   , kaon.pCm().pz());
-      nTuple_kaons_->column("cos_pol"  , kaon.p().cosTheta());
-      nTuple_kaons_->column("ip_dr"    , ip_parameters.dr());
-      nTuple_kaons_->column("ip_dz"    , ip_parameters.dz());
-      nTuple_kaons_->column("svd_hitr" , ip_parameters.svdHitsR());
-      nTuple_kaons_->column("svd_hitz" , ip_parameters.svdHitsZ());
+      nTuple_kaons_->column("charge"  , electric_charge);
+      nTuple_kaons_->column("mass"    , kaon.p().mag());
+      nTuple_kaons_->column("good_mu" , good_muon);
+      nTuple_kaons_->column("good_el" , good_electron);
+      nTuple_kaons_->column("good_k"  , good_kaon);
+      nTuple_kaons_->column("id_asn"  , kaon.idAssigned());
+      nTuple_kaons_->column("id_tru"  , kaon.idTrue());
+      nTuple_kaons_->column("id_mom"  , kaon.idMom());
+      nTuple_kaons_->column("pid_k_pi", kaon_to_pion_likelihood);
+      nTuple_kaons_->column("pid_k_pr", kaon_to_proton_likelihood);
+      nTuple_kaons_->column("p_lb_mag", kaon.p().rho());
+      nTuple_kaons_->column("p_cm_mag", kaon.pCm().rho());
+      nTuple_kaons_->column("e_cm"    , kaon.pCm().e());
+      nTuple_kaons_->column("p_cm_x"  , kaon.pCm().px());
+      nTuple_kaons_->column("p_cm_y"  , kaon.pCm().py());
+      nTuple_kaons_->column("p_cm_z"  , kaon.pCm().pz());
+      nTuple_kaons_->column("cos_pol" , kaon.p().cosTheta());
+      nTuple_kaons_->column("ip_dr"   , ip_parameters.dr());
+      nTuple_kaons_->column("ip_dz"   , ip_parameters.dz());
+      nTuple_kaons_->column("svd_hitr", ip_parameters.svdHitsR());
+      nTuple_kaons_->column("svd_hitz", ip_parameters.svdHitsZ());
       nTuple_kaons_->dumpData();
     }
   }
@@ -632,9 +635,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_dileptons_->column("id_asn"  , lepton.idAssigned());
       nTuple_dileptons_->column("id_tru"  , lepton.idTrue());
       nTuple_dileptons_->column("id_mom"  , lepton.idMom());
-      nTuple_dileptons_->column("eid_p"   , lepton.electronProbability());
-      nTuple_dileptons_->column("muid_p"  , lepton.muonProbability());
-      nTuple_dileptons_->column("muid_r"  , lepton.klmChi2PerHits());
       nTuple_dileptons_->column("p_lb_mag", lepton.p().rho());
       nTuple_dileptons_->column("p_cm_mag", lepton.pCm().rho());
       nTuple_dileptons_->column("e_cm"    , lepton.pCm().e());
@@ -653,7 +653,6 @@ Adcab::event(BelleEvent* evptr, int* status)
     for (LeptonCandidateIterator j = kaon_candidates.begin();
         j != kaon_candidates.end(); ++j) {
       LeptonCandidate &kaon = *j;
-      Mdst_charged kaon_mdst = kaon.lepton().relation().mdstCharged();
       IpParameters ip_parameters(kaon.lepton().relation().mdstCharged(),
           interaction_point_, kaon.massHypothesis());
 
@@ -668,8 +667,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_dileptons_->column("id_asn"  , kaon.idAssigned());
       nTuple_dileptons_->column("id_tru"  , kaon.idTrue());
       nTuple_dileptons_->column("id_mom"  , kaon.idMom());
-      nTuple_dileptons_->column("kid_k2pi", pid_kaon_to_pi.prob(kaon_mdst));
-      nTuple_dileptons_->column("kid_k2pr", pid_kaon_to_pr.prob(kaon_mdst));
       nTuple_dileptons_->column("p_lb_mag", kaon.p().rho());
       nTuple_dileptons_->column("p_cm_mag", kaon.pCm().rho());
       nTuple_dileptons_->column("e_cm"    , kaon.pCm().e());
@@ -751,11 +748,6 @@ Adcab::hist_def()
                                    "id_asn "
                                    "id_tru "
                                    "id_mom "
-                                   "eid_p "
-                                   "muid_p "
-                                   "muid_r "
-                                   "kid_k2pi "
-                                   "kid_k2pr "
                                    "p_lb_mag "
                                    "p_cm_mag "
                                    "e_cm "
