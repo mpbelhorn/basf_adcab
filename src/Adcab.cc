@@ -272,9 +272,9 @@ Adcab::event(BelleEvent* evptr, int* status)
   if (basf_parameter_verbose_log_) {
     cout << "  Initializing particle containers." << endl;
   }
-  static std::vector<LeptonCandidate> lepton_candidates(5);
-  static std::vector<LeptonCandidate> good_event_leptons(5);
-  static std::vector<LeptonCandidate> kaon_candidates(10);
+  static std::vector<ParticleCandidate> lepton_candidates(5);
+  static std::vector<ParticleCandidate> good_event_leptons(5);
+  static std::vector<ParticleCandidate> kaon_candidates(10);
   static std::vector<DileptonEvent> dilepton_event_candidates(10);
   lepton_candidates.clear();
   good_event_leptons.clear();
@@ -335,9 +335,9 @@ Adcab::event(BelleEvent* evptr, int* status)
     Particle kaon_particle(charged_particle,
         electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
     
-    LeptonCandidate muon_candidate(muon_particle, cm_boost_);
-    LeptonCandidate electron_candidate(electron_particle, cm_boost_);
-    LeptonCandidate kaon_candidate(kaon_particle, cm_boost_);
+    ParticleCandidate muon_candidate(muon_particle, cm_boost_);
+    ParticleCandidate electron_candidate(electron_particle, cm_boost_);
+    ParticleCandidate kaon_candidate(kaon_particle, cm_boost_);
 
     // Cut on IP dr and dz and SVD hits.
     // This is to make sure that particles were created near the IP.
@@ -462,7 +462,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     //     the candidate to the lepton list once! If it is a good muon
     //     candidate, then consider it a muon, otherwise it is deemed an
     //     electron, but flag the verbose log if the particle passes as both.
-    LeptonCandidate *good_lepton = NULL;
+    ParticleCandidate *good_lepton = NULL;
     if (good_muon) {
       setMCtruth(muon_candidate.lepton());
       good_lepton = &muon_candidate;
@@ -476,7 +476,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       if (basf_parameter_verbose_log_) {
         cout << "    Committing lepton to ntuple." << endl;
       }
-      LeptonCandidate lepton((*good_lepton));
+      ParticleCandidate lepton((*good_lepton));
       lepton_candidates.push_back(lepton);
 
       nTuple_leptons_->column("charge"  , electric_charge);
@@ -512,9 +512,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       Particle kaon_particle(charged_particle,
           electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
       setMCtruth(kaon_particle);
-      // TODO - Need to fix this by either implementing a KaonCandidate
-      //   class or generalizing the LeptonCandidate class.
-      LeptonCandidate kaon(kaon_particle, cm_boost_);
+      ParticleCandidate kaon(kaon_particle, cm_boost_);
       kaon_candidates.push_back(kaon);
 
       nTuple_kaons_->column("charge"  , electric_charge);
@@ -551,30 +549,30 @@ Adcab::event(BelleEvent* evptr, int* status)
  
   // Exclude leptons in bad event candidates.
   // Loop over the lepton list.
-  for (LeptonCandidateIterator j = lepton_candidates.begin();
+  for (ParticleCandidateIterator j = lepton_candidates.begin();
       j != lepton_candidates.end(); ++j) {
     // Check all lepton candidate pairs.
-    for (LeptonCandidateIterator i = lepton_candidates.begin();
+    for (ParticleCandidateIterator i = lepton_candidates.begin();
         i != lepton_candidates.end(); ++i) {
       // Exclude the case where both iterators point to the same particle.
       if (i == j) continue;
       if (basf_parameter_verbose_log_) {
         cout << "  >>> Checking if lepton in good event candidate <<<" << endl;
       }
-      LeptonCandidate &outer_lepton = *i;
-      LeptonCandidate &inner_lepton = *j;
+      ParticleCandidate &outer_lepton = *i;
+      ParticleCandidate &inner_lepton = *j;
 
       // Determine higher momentum lepton and add it to an event candidate.
       // Reference the higher momentum lepton as "lepton0"
       //  and the lower momentum lepton as "lepton1".
-      LeptonCandidate *lepton0 = &outer_lepton;
-      LeptonCandidate *lepton1 = &inner_lepton;
+      ParticleCandidate *lepton0 = &outer_lepton;
+      ParticleCandidate *lepton1 = &inner_lepton;
       if ((*j).pCm().mag() > (*i).pCm().mag()) {
         lepton0 = &inner_lepton;
         lepton1 = &outer_lepton;
       }
-      LeptonCandidate &l0 = *lepton0;
-      LeptonCandidate &l1 = *lepton1;
+      ParticleCandidate &l0 = *lepton0;
+      ParticleCandidate &l1 = *lepton1;
       
       DileptonEvent event_candidate(l0, l1);
 
@@ -616,9 +614,9 @@ Adcab::event(BelleEvent* evptr, int* status)
     nTuple_dileptons_->dumpData();
     
     // Write the good candidate leptons to the ntuple.
-    for (LeptonCandidateIterator j = good_event_leptons.begin();
+    for (ParticleCandidateIterator j = good_event_leptons.begin();
         j != good_event_leptons.end(); ++j) {
-      LeptonCandidate &lepton = *j;
+      ParticleCandidate &lepton = *j;
       TrackParameters ip_parameters(lepton.lepton(), interaction_point_);
   
       nTuple_dileptons_->column("entry_id", entry_types.lepton);
@@ -647,9 +645,9 @@ Adcab::event(BelleEvent* evptr, int* status)
     }
     
     // Write the kaon candidates to the ntuple.
-    for (LeptonCandidateIterator j = kaon_candidates.begin();
+    for (ParticleCandidateIterator j = kaon_candidates.begin();
         j != kaon_candidates.end(); ++j) {
-      LeptonCandidate &kaon = *j;
+      ParticleCandidate &kaon = *j;
       TrackParameters ip_parameters(kaon.lepton(), interaction_point_);
 
       nTuple_dileptons_->column("entry_id", entry_types.kaon);

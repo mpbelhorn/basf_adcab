@@ -1,13 +1,13 @@
 //______________________________________________________________________________
-// Filename: LeptonCandidate.h
+// Filename: ParticleCandidate.h
 // Version: 2011.05.15.A
 // Author: M.P. Belhorn
 // Original Date: 2011.05.15
-// Description: Class for storing and processing lepton candidates.
+// Description: Class for storing and processing charged particle candidates.
 //______________________________________________________________________________
 
-#ifndef LEPTONCANDIDATE_H
-#define LEPTONCANDIDATE_H
+#ifndef PARTICLECANDIDATE_H
+#define PARTICLECANDIDATE_H
 
 #include "particle/Particle.h"       // The BELLE Particle Class.
 #include "eid/eid.h"                 // For electron identification.
@@ -21,21 +21,21 @@ namespace Belle {
 #endif
 
 class 
-LeptonCandidate {
+ParticleCandidate {
  public:
   // Intrinsic constructor and destructor methods.
-  LeptonCandidate();
-  LeptonCandidate(const LeptonCandidate &that);
+  ParticleCandidate();
+  ParticleCandidate(const ParticleCandidate &that);
   void init();
-  void init(const Particle &lepton, const Hep3Vector &cm_boost);
+  void init(const Particle &particle, const Hep3Vector &cm_boost);
   void dispose() throw();
-  LeptonCandidate &operator= (const LeptonCandidate &that);
+  ParticleCandidate &operator= (const ParticleCandidate &that);
   
-  LeptonCandidate(const Particle &lepton, const Hep3Vector &cm_boost);
-  virtual ~LeptonCandidate();
+  ParticleCandidate(const Particle &particle, const Hep3Vector &cm_boost);
+  virtual ~ParticleCandidate();
 
   // Accessors.
-  Particle &lepton();
+  Particle &particle();
   Hep3Vector &cm_boost();
   Mdst_charged &mdstCharged();
   HepLorentzVector &p();
@@ -56,7 +56,7 @@ LeptonCandidate {
 
  private:
   // Existing objects.
-  Particle *lepton_;
+  Particle *particle_;
   Hep3Vector *cm_boost_;
   Mdst_charged *mdst_charged_;
   HepLorentzVector *p_;
