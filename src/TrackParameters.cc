@@ -16,8 +16,6 @@ namespace Belle {
 TrackParameters::TrackParameters()
     : dr_(new double(-3000)), // Units of cm. Initilized way outside detector.
       dz_(new double(-3000)), // Value of dr & dz can be used track errors.
-      svd_hits_r_(new int(0)),
-      svd_hits_z_(new int(0)),
       mass_hypothesis_(new int(2)),
       helix_(new Helix(HepPoint3D(0, 0, 0), Hep3Vector(0, 0, 1), 1))
 { 
@@ -28,8 +26,6 @@ TrackParameters::TrackParameters()
 TrackParameters::TrackParameters(const Particle& particle, HepPoint3D new_pivot)
     : dr_(new double(-3000)), // Units of cm. Initilized way outside detector.
       dz_(new double(-3000)), // Value of dr & dz can be used track errors.
-      svd_hits_r_(new int(0)),
-      svd_hits_z_(new int(0)),
       mass_hypothesis_(new int(2)),
       helix_(new Helix(HepPoint3D(0, 0, 0), Hep3Vector(0, 0, 1), 1))
 {
@@ -87,16 +83,6 @@ TrackParameters::TrackParameters(const Particle& particle, HepPoint3D new_pivot)
 
       *dr_ = helix.dr();
       *dz_ = helix.dz();
-
-      // Mdst_trk_fit member function nhits( int detID) returns the number of
-      //   associated hits the detector labeled by detID. Values are:
-      //   detID = 0:axial-wire; 1:stereo-wire; 2:cathode; 3:SVD-rphi; 4:SVD-z.
-      // Note that nhits(SVD)=0 indicates that the track fit is performed using
-      //   only information from the CDC.
-      // See mdst.tdf for information about what information is contained in the
-      //   mdst files.
-      *svd_hits_r_ = track_fit.nhits(3);
-      *svd_hits_z_ = track_fit.nhits(4);
     }
   }
 }
@@ -105,8 +91,6 @@ TrackParameters::TrackParameters(const Particle& particle, HepPoint3D new_pivot)
 TrackParameters::TrackParameters(const TrackParameters &that)
     : dr_(new double(*that.dr_)),
       dz_(new double(*that.dz_)),
-      svd_hits_r_(new int(*that.svd_hits_r_)),
-      svd_hits_z_(new int(*that.svd_hits_z_)),
       mass_hypothesis_(new int(*that.mass_hypothesis_)),
       helix_(new Helix(*that.helix_))
 {
@@ -119,8 +103,6 @@ TrackParameters &TrackParameters::operator= (const TrackParameters &that)
   if (this != &that) {
     *dr_ = *(that.dr_);
     *dz_ = *(that.dz_);
-    *svd_hits_r_ = *(that.svd_hits_r_);
-    *svd_hits_z_ = *(that.svd_hits_z_);
     *mass_hypothesis_ = *(that.mass_hypothesis_);
     *helix_ = *(that.helix_);
   }
@@ -132,8 +114,6 @@ TrackParameters::~TrackParameters()
 {
   delete helix_;
   delete mass_hypothesis_;
-  delete svd_hits_z_;
-  delete svd_hits_r_;
   delete dz_;
   delete dr_;
 }
@@ -148,18 +128,6 @@ double &TrackParameters::dr()
 double &TrackParameters::dz()
 {
   return *dz_;
-}
-
-// Returns the number of hits in the SVD on the r-phi side.
-int &TrackParameters::svdHitsR()
-{
-  return *svd_hits_r_;
-}
-
-// Returns the number of hits in the SVD on the r-phi side.
-int &TrackParameters::svdHitsZ()
-{
-  return *svd_hits_z_;
 }
 
 #if defined(BELLE_NAMESPACE)

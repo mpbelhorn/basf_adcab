@@ -11,8 +11,8 @@
 
 #include "particle/Particle.h"       // The BELLE Particle Class.
 #include "eid/eid.h"                 // For electron identification.
-#include "mdst/Muid_mdst.h"           // For muon identification. 
-
+#include "mdst/Muid_mdst.h"          // For muon identification.
+#include "TrackParameters.h"         // For checking track parameters.
 #include HEPEVT_H                    // Panther.
 #include MDST_H                      // Panther.
 
@@ -23,15 +23,20 @@ namespace Belle {
 class 
 ParticleCandidate {
  public:
-  // Intrinsic constructor and destructor methods.
+  // Default constructor.
   ParticleCandidate();
+
+  // Copy constructor.
   ParticleCandidate(const ParticleCandidate &that);
-  void init();
-  void init(const Particle &particle, const Hep3Vector &cm_boost);
-  void dispose() throw();
+
+  // Assignment operator.
   ParticleCandidate &operator= (const ParticleCandidate &that);
-  
-  ParticleCandidate(const Particle &particle, const Hep3Vector &cm_boost);
+
+  // Useful constructor.
+  ParticleCandidate(const Particle &particle, const Hep3Vector &cm_boost,
+      const HepPoint3D &interaction_point);
+
+  // Destructor.
   virtual ~ParticleCandidate();
 
   // Accessors.
@@ -40,6 +45,7 @@ ParticleCandidate {
   Mdst_charged &mdstCharged();
   HepLorentzVector &p();
   HepLorentzVector &pCm();
+  TrackParameters &track();
 
   // Methods.
   double idAssigned();
@@ -51,8 +57,8 @@ ParticleCandidate {
   double klmHitsChi2();
   int klmHits();
   double klmChi2PerHits();
-  double svdRadialHits();
-  double svdAxialHits();
+  double svdRHits();
+  double svdZHits();
 
  private:
   // Existing objects.
@@ -63,6 +69,7 @@ ParticleCandidate {
 
   // New objects.
   HepLorentzVector *p_cm_;
+  TrackParameters *track_;
 };
 
 #if defined(BELLE_NAMESPACE)

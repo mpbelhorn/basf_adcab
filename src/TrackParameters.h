@@ -31,15 +31,11 @@ TrackParameters {
   // Accessors
   double &dr();
   double &dz();
-  int &svdHitsR();
-  int &svdHitsZ();
   
  private:
   // Attributes.
   double *dr_;
   double *dz_;
-  int *svd_hits_r_;
-  int *svd_hits_z_;
   int *mass_hypothesis_;
   Helix *helix_;
 };

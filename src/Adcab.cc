@@ -341,12 +341,16 @@ Adcab::event(BelleEvent* evptr, int* status)
 
     // Cut on IP dr and dz and SVD hits.
     // This is to make sure that particles were created near the IP.
-    TrackParameters ip_parameters(muon_particle, interaction_point_);
-    if ((abs(ip_parameters.dr()) > cuts.maxIpDr) ||
-        (abs(ip_parameters.dz()) > cuts.maxIpDz) ||
-        (ip_parameters.svdHitsR() < cuts.minSvdRHits) ||
-        (ip_parameters.svdHitsZ() < cuts.minSvdZHits)) {
+    if ((abs(muon_candidate.track().dr()) > cuts.maxIpDr) ||
+        (abs(muon_candidate.track().dz()) > cuts.maxIpDz) ||
+        (muon_candidate.svdRHits() < cuts.minSvdRHits) ||
+        (muon_candidate.svdZHits() < cuts.minSvdZHits)) {
       good_muon = false;
+    }
+    if ((abs(electron_candidate.track().dr()) > cuts.maxIpDr) ||
+        (abs(electron_candidate.track().dz()) > cuts.maxIpDz) ||
+        (electron_candidate.svdRHits() < cuts.minSvdRHits) ||
+        (electron_candidate.svdZHits() < cuts.minSvdZHits)) {
       good_electron = false;
     }
     if (basf_parameter_verbose_log_) {
@@ -497,10 +501,10 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_leptons_->column("p_cm_y"  , lepton.pCm().py());
       nTuple_leptons_->column("p_cm_z"  , lepton.pCm().pz());
       nTuple_leptons_->column("cos_pol" , lepton.p().cosTheta());
-      nTuple_leptons_->column("ip_dr"   , ip_parameters.dr());
-      nTuple_leptons_->column("ip_dz"   , ip_parameters.dz());
-      nTuple_leptons_->column("svd_hitr", ip_parameters.svdHitsR());
-      nTuple_leptons_->column("svd_hitz", ip_parameters.svdHitsZ());
+      nTuple_leptons_->column("ip_dr"   , lepton.track().dr());
+      nTuple_leptons_->column("ip_dz"   , lepton.track().dz());
+      nTuple_leptons_->column("svd_hitr", lepton.svdRHits());
+      nTuple_leptons_->column("svd_hitz", lepton.svdZHits());
       nTuple_leptons_->dumpData();
     }
 
@@ -532,10 +536,10 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_kaons_->column("p_cm_y"  , kaon.pCm().py());
       nTuple_kaons_->column("p_cm_z"  , kaon.pCm().pz());
       nTuple_kaons_->column("cos_pol" , kaon.p().cosTheta());
-      nTuple_kaons_->column("ip_dr"   , ip_parameters.dr());
-      nTuple_kaons_->column("ip_dz"   , ip_parameters.dz());
-      nTuple_kaons_->column("svd_hitr", ip_parameters.svdHitsR());
-      nTuple_kaons_->column("svd_hitz", ip_parameters.svdHitsZ());
+      nTuple_kaons_->column("ip_dr"   , kaon.track().dr());
+      nTuple_kaons_->column("ip_dz"   , kaon.track().dz());
+      nTuple_kaons_->column("svd_hitr", kaon.svdRHits());
+      nTuple_kaons_->column("svd_hitz", kaon.svdZHits());
       nTuple_kaons_->dumpData();
     }
   }
@@ -617,8 +621,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     for (ParticleCandidateIterator j = good_event_leptons.begin();
         j != good_event_leptons.end(); ++j) {
       ParticleCandidate &lepton = *j;
-      TrackParameters ip_parameters(lepton.particle(), interaction_point_);
-  
+
       nTuple_dileptons_->column("entry_id", entry_types.lepton);
       nTuple_dileptons_->column("stm_no"  , basf_parameter_mc_stream_number_);
       nTuple_dileptons_->column("exp_no"  , experiment_number_);
@@ -637,10 +640,10 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_dileptons_->column("p_cm_y"  , lepton.pCm().py());
       nTuple_dileptons_->column("p_cm_z"  , lepton.pCm().pz());
       nTuple_dileptons_->column("polr_cos", lepton.p().cosTheta());
-      nTuple_dileptons_->column("ip_dr"   , ip_parameters.dr());
-      nTuple_dileptons_->column("ip_dz"   , ip_parameters.dz());
-      nTuple_dileptons_->column("svdr_hit", ip_parameters.svdHitsR());
-      nTuple_dileptons_->column("svdz_hit", ip_parameters.svdHitsZ());
+      nTuple_dileptons_->column("ip_dr"   , lepton.track().dr());
+      nTuple_dileptons_->column("ip_dz"   , lepton.track().dz());
+      nTuple_dileptons_->column("svdr_hit", lepton.svdRHits());
+      nTuple_dileptons_->column("svdz_hit", lepton.svdZHits());
       nTuple_dileptons_->dumpData();
     }
     
@@ -668,10 +671,10 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_dileptons_->column("p_cm_y"  , kaon.pCm().py());
       nTuple_dileptons_->column("p_cm_z"  , kaon.pCm().pz());
       nTuple_dileptons_->column("polr_cos", kaon.p().cosTheta());
-      nTuple_dileptons_->column("ip_dr"   , ip_parameters.dr());
-      nTuple_dileptons_->column("ip_dz"   , ip_parameters.dz());
-      nTuple_dileptons_->column("svdr_hit", ip_parameters.svdHitsR());
-      nTuple_dileptons_->column("svdz_hit", ip_parameters.svdHitsZ());
+      nTuple_dileptons_->column("ip_dr"   , kaon.track().dr());
+      nTuple_dileptons_->column("ip_dz"   , kaon.track().dz());
+      nTuple_dileptons_->column("svdr_hit", kaon.svdRHits());
+      nTuple_dileptons_->column("svdz_hit", kaon.svdZHits());
       nTuple_dileptons_->dumpData();
     }
   }

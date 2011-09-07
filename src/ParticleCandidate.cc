@@ -18,19 +18,21 @@ ParticleCandidate::ParticleCandidate()
       cm_boost_(new Hep3Vector()),
       mdst_charged_(new Mdst_charged()),
       p_(new HepLorentzVector()),
-      p_cm_(new HepLorentzVector())
+      p_cm_(new HepLorentzVector()),
+      track_(new TrackParameters())
 {
   // Intentionally blank.
 }
 
-// Lepton Candidate Constructor. 
+// Useful Constructor.
 ParticleCandidate::ParticleCandidate(const Particle &particle,
-    const Hep3Vector &cm_boost)
+    const Hep3Vector &cm_boost, const HepPoint3D &interaction_point)
     : particle_(new Particle(particle)),
       cm_boost_(new Hep3Vector(cm_boost)),
       mdst_charged_(new Mdst_charged(particle.mdstCharged())),
       p_(new HepLorentzVector(particle.p())),
-      p_cm_(new HepLorentzVector(particle.p()))
+      p_cm_(new HepLorentzVector(particle.p())),
+      track_(new TrackParameters(particle, interaction_point))
 {
   (*p_cm_).boost(cm_boost);
 }
@@ -41,7 +43,8 @@ ParticleCandidate::ParticleCandidate(const ParticleCandidate &that)
       cm_boost_(new Hep3Vector(*that.cm_boost_)),
       mdst_charged_(new Mdst_charged(*that.mdst_charged_)),
       p_(new HepLorentzVector(*that.p_)),
-      p_cm_(new HepLorentzVector(*that.p_cm_))
+      p_cm_(new HepLorentzVector(*that.p_cm_)),
+      track_(new TrackParameters(*that.track_))
 {
   // Intentionally blank.
 }
@@ -55,6 +58,7 @@ ParticleCandidate &ParticleCandidate::operator= (const ParticleCandidate &that)
     *mdst_charged_ = *(that.mdst_charged_);
     *p_ = *(that.p_);
     *p_cm_ = *(that.p_cm_);
+    *track_ = *(that.track_);
   }
   return *this;
 }
@@ -62,6 +66,7 @@ ParticleCandidate &ParticleCandidate::operator= (const ParticleCandidate &that)
 // Lepton Candidate Destructor.
 ParticleCandidate::~ParticleCandidate()
 {
+  delete track_;
   delete p_cm_;
   delete p_;
   delete mdst_charged_;
@@ -97,6 +102,12 @@ HepLorentzVector &ParticleCandidate::p()
 HepLorentzVector &ParticleCandidate::pCm()
 {
   return *p_cm_;
+}
+
+// Accessor for track_.
+TrackParameters &ParticleCandidate::track()
+{
+  return *track_;
 }
 
 // Returns the pythia particle ID code of the assignment given to particle
@@ -202,18 +213,28 @@ ParticleCandidate::klmChi2PerHits()
   }
 }
 
-// Returns the number of hits in the r-side of the SVD for particle_.
+// Returns the number of hits in the r-phi side of the SVD for particle_.
 double
-ParticleCandidate::svdRadialHits()
+ParticleCandidate::svdRHits()
 {
-  return mdstCharged().trk().mhyp(1).nhits(3);
+  int mass_hypothesis = massHypothesis();
+  if (mass_hypothesis > -1) {
+    return mdstCharged().trk().mhyp(mass_hypothesis).nhits(3);
+  } else {
+    return 0;
+  }
 }
 
 // Returns the number of hits in the z-side of the SVD for particle_.
 double
-ParticleCandidate::svdAxialHits()
+ParticleCandidate::svdZHits()
 {
-  return mdstCharged().trk().mhyp(1).nhits(4);
+  int mass_hypothesis = massHypothesis();
+  if (mass_hypothesis > -1) {
+    return mdstCharged().trk().mhyp(mass_hypothesis).nhits(4);
+  } else {
+    return 0;
+  }
 }
 
 #if defined(BELLE_NAMESPACE)
