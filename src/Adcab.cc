@@ -339,8 +339,6 @@ Adcab::event(BelleEvent* evptr, int* status)
         interaction_point_);
     ParticleCandidate electron_candidate(electron_particle, cm_boost_,
         interaction_point_);
-    ParticleCandidate kaon_candidate(kaon_particle, cm_boost_,
-        interaction_point_);
 
     // Cut on IP dr and dz and SVD hits.
     // This is to make sure that particles were created near the IP.
@@ -519,7 +517,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       Particle kaon_particle(charged_particle,
           electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
       setMCtruth(kaon_particle);
-      ParticleCandidate kaon(kaon_particle, cm_boost_);
+      ParticleCandidate kaon(kaon_particle, cm_boost_, interaction_point_);
       kaon_candidates.push_back(kaon);
 
       nTuple_kaons_->column("charge"  , electric_charge);
