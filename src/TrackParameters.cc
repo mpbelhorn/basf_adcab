@@ -15,11 +15,11 @@ namespace Belle {
 // Default constructor.
 TrackParameters::TrackParameters()
     : dr_(new double(-3000)), // Units of cm. Initilized way outside detector.
-      dz_(new double(-3000)), // Units of cm. Initilized way outside detector.
+      dz_(new double(-3000)), // Value of dr & dz can be used track errors.
       svd_hits_r_(new int(0)),
       svd_hits_z_(new int(0)),
       mass_hypothesis_(new int(2)),
-      helix_(new helix())
+      helix_(new Helix(HepPoint3D(0, 0, 0), Hep3Vector(0, 0, 1), 1))
 { 
   // Intentionally blank.
 }
@@ -31,7 +31,7 @@ TrackParameters::TrackParameters(const Particle& particle, HepPoint3D new_pivot)
       svd_hits_r_(new int(0)),
       svd_hits_z_(new int(0)),
       mass_hypothesis_(new int(2)),
-      helix_(new helix())
+      helix_(new Helix(HepPoint3D(0, 0, 0), Hep3Vector(0, 0, 1), 1))
 {
   // Get Mdst_trk from particle object if it exists.
   Mdst_trk &mdst_track = particle.mdstCharged().trk();
@@ -48,7 +48,7 @@ TrackParameters::TrackParameters(const Particle& particle, HepPoint3D new_pivot)
     else if (abs(particle.lund()) == 321) *mass_hypothesis_ = 3;
     else if (abs(particle.lund()) == 2212) *mass_hypothesis_ = 4;
 
-    Mdst_trk_fit &track_fit = trk.mhyp(*mass_hypothesis_);
+    Mdst_trk_fit &track_fit = mdst_track.mhyp(*mass_hypothesis_);
     if (!track_fit) {
       *dr_ = -1000;
       *dz_ = -1000;
@@ -108,7 +108,7 @@ TrackParameters::TrackParameters(const TrackParameters &that)
       svd_hits_r_(new int(*that.svd_hits_r_)),
       svd_hits_z_(new int(*that.svd_hits_z_)),
       mass_hypothesis_(new int(*that.mass_hypothesis_)),
-      helix_(new helix(*that.helix_))
+      helix_(new Helix(*that.helix_))
 {
   // Intentionally blank.
 }
@@ -122,7 +122,7 @@ TrackParameters &TrackParameters::operator= (const TrackParameters &that)
     *svd_hits_r_ = *(that.svd_hits_r_);
     *svd_hits_z_ = *(that.svd_hits_z_);
     *mass_hypothesis_ = *(that.mass_hypothesis_);
-    *helix_ = *(that.helix_)
+    *helix_ = *(that.helix_);
   }
   return *this;
 }

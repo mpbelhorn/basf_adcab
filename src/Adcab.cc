@@ -341,7 +341,7 @@ Adcab::event(BelleEvent* evptr, int* status)
 
     // Cut on IP dr and dz and SVD hits.
     // This is to make sure that particles were created near the IP.
-    TrackParameters ip_parameters(muon_candidate, interaction_point_);
+    TrackParameters ip_parameters(muon_particle, interaction_point_);
     if ((abs(ip_parameters.dr()) > cuts.maxIpDr) ||
         (abs(ip_parameters.dz()) > cuts.maxIpDz) ||
         (ip_parameters.svdHitsR() < cuts.minSvdRHits) ||
