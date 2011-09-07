@@ -33,7 +33,7 @@
   
 #include "HEPconstants.h"       // PDG masses and constants.
 #include "TrackParameters.h"    // Custom class managing the track parameters.
-#include "LeptonCandidate.h"    // Class for managing lepton candidate info.
+#include "ParticleCandidate.h"    // Class for managing lepton candidate info.
 #include "DileptonEvent.h"      // Class for managing dilepton event info.
 #include "EntryTypes.h"         // Structure for managing ntuple line data.
 #include "AdcabCuts.h"          // Analysis specfic selection cut constants.
@@ -97,7 +97,7 @@ Adcab : public Module
 
   typedef std::vector<Mdst_charged>::const_iterator MdstChargedIterator;
   typedef std::vector<Particle>::iterator ParticleIterator;
-  typedef std::vector<LeptonCandidate>::iterator LeptonCandidateIterator;
+  typedef std::vector<ParticleCandidate>::iterator ParticleCandidateIterator;
   typedef std::vector<DileptonEvent>::iterator DileptonEventIterator;
 
   // Beam Information.

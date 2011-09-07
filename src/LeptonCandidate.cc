@@ -1,20 +1,20 @@
 //______________________________________________________________________________
-// Filename: LeptonCandidate.cc
+// Filename: ParticleCandidate.cc
 // Version: 2011.05.15.A
 // Author: M.P. Belhorn
 // Original Date: 2011.05.15
-// Description: Definitions of LeptonCandidate class members.
+// Description: Definitions of ParticleCandidate class members.
 //______________________________________________________________________________
 
-#include "LeptonCandidate.h"
+#include "ParticleCandidate.h"
 
 #if defined(BELLE_NAMESPACE)
 namespace Belle {
 #endif
 
 // Default Contructor.
-LeptonCandidate::LeptonCandidate()
-    : lepton_(new Particle()),
+ParticleCandidate::ParticleCandidate()
+    : particle_(new Particle()),
       cm_boost_(new Hep3Vector()),
       mdst_charged_(new Mdst_charged()),
       p_(new HepLorentzVector()),
@@ -24,20 +24,20 @@ LeptonCandidate::LeptonCandidate()
 }
 
 // Lepton Candidate Constructor. 
-LeptonCandidate::LeptonCandidate(const Particle &lepton,
+ParticleCandidate::ParticleCandidate(const Particle &particle,
     const Hep3Vector &cm_boost)
-    : lepton_(new Particle(lepton)),
+    : particle_(new Particle(particle)),
       cm_boost_(new Hep3Vector(cm_boost)),
-      mdst_charged_(new Mdst_charged(lepton.mdstCharged())),
-      p_(new HepLorentzVector(lepton.p())),
-      p_cm_(new HepLorentzVector(lepton.p()))
+      mdst_charged_(new Mdst_charged(particle.mdstCharged())),
+      p_(new HepLorentzVector(particle.p())),
+      p_cm_(new HepLorentzVector(particle.p()))
 {
   (*p_cm_).boost(cm_boost);
 }
 
 // Copy Constructor.
-LeptonCandidate::LeptonCandidate(const LeptonCandidate &that)
-    : lepton_(new Particle(*that.lepton_)),
+ParticleCandidate::ParticleCandidate(const ParticleCandidate &that)
+    : particle_(new Particle(*that.particle_)),
       cm_boost_(new Hep3Vector(*that.cm_boost_)),
       mdst_charged_(new Mdst_charged(*that.mdst_charged_)),
       p_(new HepLorentzVector(*that.p_)),
@@ -47,10 +47,10 @@ LeptonCandidate::LeptonCandidate(const LeptonCandidate &that)
 }
 
 // Assignment operator.
-LeptonCandidate &LeptonCandidate::operator= (const LeptonCandidate &that)
+ParticleCandidate &ParticleCandidate::operator= (const ParticleCandidate &that)
 {
   if (this != &that) {
-    *lepton_ = *(that.lepton_);
+    *particle_ = *(that.particle_);
     *cm_boost_ = *(that.cm_boost_);
     *mdst_charged_ = *(that.mdst_charged_);
     *p_ = *(that.p_);
@@ -60,106 +60,111 @@ LeptonCandidate &LeptonCandidate::operator= (const LeptonCandidate &that)
 }
 
 // Lepton Candidate Destructor.
-LeptonCandidate::~LeptonCandidate()
+ParticleCandidate::~ParticleCandidate()
 {
   delete p_cm_;
   delete p_;
   delete mdst_charged_;
   delete cm_boost_;
-  delete lepton_;
+  delete particle_;
 }
 
-// Accessor for lepton_.
-Particle &LeptonCandidate::lepton()
+// Accessor for particle_.
+Particle &ParticleCandidate::particle()
 {
-  return *lepton_;
+  return *particle_;
 }
 
 // Accessor for cm_boost_.
-Hep3Vector &LeptonCandidate::cm_boost()
+Hep3Vector &ParticleCandidate::cm_boost()
 {
   return *cm_boost_;
 }
 
 // Accessor for mdst_charged_.
-Mdst_charged &LeptonCandidate::mdstCharged()
+Mdst_charged &ParticleCandidate::mdstCharged()
 {
   return *mdst_charged_;
 }
 
 // Accessor for p_.
-HepLorentzVector &LeptonCandidate::p()
+HepLorentzVector &ParticleCandidate::p()
 {
   return *p_;
 }
 
 // Accessor for p_cm_.
-HepLorentzVector &LeptonCandidate::pCm()
+HepLorentzVector &ParticleCandidate::pCm()
 {
   return *p_cm_;
 }
 
 // Returns the pythia particle ID code of the assignment given to particle
-//   lepton_ at its creation.
+//   particle_ at its creation.
 double
-LeptonCandidate::idAssigned()
+ParticleCandidate::idAssigned()
 {
-  return lepton().pType().lund();
+  return particle().pType().lund();
 }
 
 // Returns the mass hypothesis needed for the interaction point parameters.
-// mass_hyp = 1 for muons, mass_hyp = 0 for electrons.
 int
-LeptonCandidate::massHypothesis()
+ParticleCandidate::massHypothesis()
 {
-  int mass_hyp = -1;
-  if (abs(idAssigned()) == 11) {
-    mass_hyp = 0;
-  } else if (abs(idAssigned()) == 13) {
-     mass_hyp = 1;
+  int mass_hypothesis = -1;
+  if (abs(idAssigned())) == 11) {
+    mass_hypothesis = 0;
+  } else if (abs(idAssigned())) == 13) {
+    mass_hypothesis = 1;
+  } else if (abs(idAssigned())) == 211) {
+    mass_hypothesis = 2;
+  } else if (abs(idAssigned())) == 321) {
+    mass_hypothesis = 3;
+  } else if (abs(idAssigned())) == 2212) {
+    mass_hypothesis = 4;
   }
-  return mass_hyp;
+  return mass_hypothesis;
 }
 
-// Returns the pythia particle ID code of lepton_ as determined by the MC truth
-//   table. Returns 0 if truth table is unavailable.
+// Returns the pythia particle ID code of particle_ from the MC truth table.
+//   Returns 0 if truth table is unavailable.
 double
-LeptonCandidate::idTrue()
+ParticleCandidate::idTrue()
 {
   double id = 0;
-  if (lepton().relation().genHepevt()) {
-    if (lepton().relation().genHepevt().idhep()) {
-      id = lepton().relation().genHepevt().idhep();
+  if (particle().relation().genHepevt()) {
+    if (particle().relation().genHepevt().idhep()) {
+      id = particle().relation().genHepevt().idhep();
     }
   }
   return id;
 }
 
-// Returns the pythia code of the lepton mother as determined from the truth
+// Returns the pythia code of the particle mother as determined from the truth
 //   table. Returns 0 if truth table is unavailable.
 double
-LeptonCandidate::idMom()
+ParticleCandidate::idMom()
 {
   double id = 0;
-  if (lepton().relation().genHepevt()) {
-    if (lepton().relation().genHepevt().mother()) {
-      id = lepton().relation().genHepevt().mother().idhep();
+  if (particle().relation().genHepevt()) {
+    if (particle().relation().genHepevt().mother()) {
+      id = particle().relation().genHepevt().mother().idhep();
     }
   }
   return id;
 }
 
-// Returns the eid likelihood of lepton_.
+// Returns the eid likelihood of particle_.
 double
-LeptonCandidate::electronProbability()
+ParticleCandidate::electronProbability()
 {
   eid eid_mdst(*mdst_charged_);
   return eid_mdst.prob(3, -1, 5);
 }
 
-// Returns the muid likelihood of lepton_.
+// Returns the muid likelihood of particle_.
 double
-LeptonCandidate::muonProbability()
+ParticleCandidate::muonProbability()
 {
   Muid_mdst muid_mdst(*mdst_charged_);
   return muid_mdst.Muon_likelihood();
@@ -168,7 +173,7 @@ LeptonCandidate::muonProbability()
 // Returns the Chi^2 of the associated hits in the KLM assuming the track is a
 //   muon. If the track is not in Muid_mdst, the function returns 0.
 double
-LeptonCandidate::klmHitsChi2()
+ParticleCandidate::klmHitsChi2()
 {
   Muid_mdst muid_mdst(*mdst_charged_);
   return muid_mdst.Chi_2();
@@ -177,7 +182,7 @@ LeptonCandidate::klmHitsChi2()
 // Returns the number of the hits in the KLM assuming the track is a
 //   muon. If the track is not in Muid_mdst, the function returns 0.
 int
-LeptonCandidate::klmHits()
+ParticleCandidate::klmHits()
 {
   Muid_mdst muid_mdst(*mdst_charged_);
   return muid_mdst.N_layer_hit_brl() + muid_mdst.N_layer_hit_end();
@@ -188,7 +193,7 @@ LeptonCandidate::klmHits()
 //   associated hits in the KLM layers, the function returns 0 (consistant with 
 //   an electron).
 double
-LeptonCandidate::klmChi2PerHits()
+ParticleCandidate::klmChi2PerHits()
 {
   if (klmHits() <= 0) {
     return 0;
@@ -197,16 +202,16 @@ LeptonCandidate::klmChi2PerHits()
   }
 }
 
-// Returns the number of hits in the r-side of the SVD for lepton_.
+// Returns the number of hits in the r-side of the SVD for particle_.
 double
-LeptonCandidate::svdRadialHits()
+ParticleCandidate::svdRadialHits()
 {
   return mdstCharged().trk().mhyp(1).nhits(3);
 }
 
-// Returns the number of hits in the z-side of the SVD for lepton_.
+// Returns the number of hits in the z-side of the SVD for particle_.
 double
-LeptonCandidate::svdAxialHits()
+ParticleCandidate::svdAxialHits()
 {
   return mdstCharged().trk().mhyp(1).nhits(4);
 }
