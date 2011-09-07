@@ -19,7 +19,8 @@ DileptonEvent::DileptonEvent()
 }
 
 // Dilepton constructor.
-DileptonEvent::DileptonEvent(LeptonCandidate &lepton0, LeptonCandidate &lepton1)
+DileptonEvent::DileptonEvent(ParticleCandidate &lepton0,
+                             ParticleCandidate &lepton1)
 {
   l0_ = &lepton0;
   l1_ = &lepton1;
@@ -50,7 +51,7 @@ DileptonEvent::eventType()
 double
 DileptonEvent::eventSign()
 {
-  return (abs(l0().lepton().charge()) + abs(l1().lepton().charge())) / 2;
+  return (abs(l0().particle().charge()) + abs(l1().particle().charge())) / 2;
 }
 
 // Calculates the cosine of the opening angle theta_ll between the two leptons

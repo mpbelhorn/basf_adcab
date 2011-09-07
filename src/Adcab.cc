@@ -464,10 +464,10 @@ Adcab::event(BelleEvent* evptr, int* status)
     //     electron, but flag the verbose log if the particle passes as both.
     ParticleCandidate *good_lepton = NULL;
     if (good_muon) {
-      setMCtruth(muon_candidate.lepton());
+      setMCtruth(muon_candidate.particle());
       good_lepton = &muon_candidate;
     } else if (good_electron) {
-      setMCtruth(electron_candidate.lepton());
+      setMCtruth(electron_candidate.particle());
       good_lepton = &electron_candidate;
     }
 
@@ -617,7 +617,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     for (ParticleCandidateIterator j = good_event_leptons.begin();
         j != good_event_leptons.end(); ++j) {
       ParticleCandidate &lepton = *j;
-      TrackParameters ip_parameters(lepton.lepton(), interaction_point_);
+      TrackParameters ip_parameters(lepton.particle(), interaction_point_);
   
       nTuple_dileptons_->column("entry_id", entry_types.lepton);
       nTuple_dileptons_->column("stm_no"  , basf_parameter_mc_stream_number_);
@@ -625,7 +625,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_dileptons_->column("run_no"  , run_number_);
       nTuple_dileptons_->column("evt_no"  , event_number_);
   
-      nTuple_dileptons_->column("charge"  , lepton.lepton().charge());
+      nTuple_dileptons_->column("charge"  , lepton.particle().charge());
       nTuple_dileptons_->column("mass"    , lepton.p().mag());
       nTuple_dileptons_->column("id_asn"  , lepton.idAssigned());
       nTuple_dileptons_->column("id_tru"  , lepton.idTrue());
@@ -648,7 +648,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     for (ParticleCandidateIterator j = kaon_candidates.begin();
         j != kaon_candidates.end(); ++j) {
       ParticleCandidate &kaon = *j;
-      TrackParameters ip_parameters(kaon.lepton(), interaction_point_);
+      TrackParameters ip_parameters(kaon.particle(), interaction_point_);
 
       nTuple_dileptons_->column("entry_id", entry_types.kaon);
       nTuple_dileptons_->column("stm_no"  , basf_parameter_mc_stream_number_);
@@ -656,7 +656,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_dileptons_->column("run_no"  , run_number_);
       nTuple_dileptons_->column("evt_no"  , event_number_);
 
-      nTuple_dileptons_->column("charge"  , kaon.lepton().charge());
+      nTuple_dileptons_->column("charge"  , kaon.particle().charge());
       nTuple_dileptons_->column("mass"    , kaon.p().mag());
       nTuple_dileptons_->column("id_asn"  , kaon.idAssigned());
       nTuple_dileptons_->column("id_tru"  , kaon.idTrue());

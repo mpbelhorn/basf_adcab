@@ -11,7 +11,7 @@
 
 #include <cmath>                     // Uses cmath functions.
 
-#include "LeptonCandidate.h"
+#include "ParticleCandidate.h"
 
 #if defined(BELLE_NAMESPACE)
 namespace Belle {
@@ -23,12 +23,12 @@ DileptonEvent {
 
   // Constructors and destructor.
   DileptonEvent();
-  DileptonEvent(LeptonCandidate &lepton0, LeptonCandidate &lepton1);
+  DileptonEvent(ParticleCandidate &lepton0, ParticleCandidate &lepton1);
   ~DileptonEvent() {}
   
   // Accessors.
-  LeptonCandidate &l0() {return *l0_;}
-  LeptonCandidate &l1() {return *l1_;}
+  ParticleCandidate &l0() {return *l0_;}
+  ParticleCandidate &l1() {return *l1_;}
   
   // Methods
   double eventType();
@@ -37,8 +37,8 @@ DileptonEvent {
   
  private:
   // Attributes.
-  LeptonCandidate *l0_;
-  LeptonCandidate *l1_;
+  ParticleCandidate *l0_;
+  ParticleCandidate *l1_;
 };
 
 #if defined(BELLE_NAMESPACE)
