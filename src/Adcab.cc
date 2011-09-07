@@ -258,6 +258,7 @@ Adcab::event(BelleEvent* evptr, int* status)
   //     they will be needed again and they never change.
   static PDGmasses masses;
   static AdcabCuts cuts;
+  static EntryTypes entry_types;
 
   // Instantiate PID classes. These are constant and
   //     should only be initialized once.
@@ -652,7 +653,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     for (LeptonCandidateIterator j = kaon_candidates.begin();
         j != kaon_candidates.end(); ++j) {
       LeptonCandidate &kaon = *j;
-      Mdst_charged &kaon_mdst = kaon.lepton().relation().mdstCharged();
+      Mdst_charged kaon_mdst = kaon.lepton().relation().mdstCharged();
       IpParameters ip_parameters(kaon.lepton().relation().mdstCharged(),
           interaction_point_, kaon.massHypothesis());
 
@@ -736,12 +737,13 @@ Adcab::hist_def()
                                "svd_hitr "
                                "svd_hitz";
 
-  const char *dilepton_variables = "exp_no "
+  const char *dilepton_variables = "entry_id "
+                                   "stm_no "
+                                   "exp_no "
                                    "run_no "
-                                   "stream "
+                                   "evt_no "
                                    "is_mc "
                                    "is_cntnm "
-                                   "evt_no "
                                    "fw_r2 "
                                    "hadronb "
                                    "charge "

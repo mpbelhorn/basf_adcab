@@ -35,6 +35,7 @@
 #include "IpParameters.h"       // Custom class managing the IP.
 #include "LeptonCandidate.h"    // Class for managing lepton candidate info.
 #include "DileptonEvent.h"      // Class for managing dilepton event info.
+#include "EntryTypes.h"         // Structure for managing ntuple line data.
 #include "AdcabCuts.h"          // Analysis specfic selection cut constants.
 #include "geninfo.h"            // Custom analysis functions to use Zupanc's MC.
 #include "userinfo.h"           // Custom analysis functions to use Zupanc's MC.
