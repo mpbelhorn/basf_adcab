@@ -112,15 +112,15 @@ int
 ParticleCandidate::massHypothesis()
 {
   int mass_hypothesis = -1;
-  if (abs(idAssigned())) == 11) {
+  if (abs(idAssigned()) == 11) {
     mass_hypothesis = 0;
-  } else if (abs(idAssigned())) == 13) {
+  } else if (abs(idAssigned()) == 13) {
     mass_hypothesis = 1;
-  } else if (abs(idAssigned())) == 211) {
+  } else if (abs(idAssigned()) == 211) {
     mass_hypothesis = 2;
-  } else if (abs(idAssigned())) == 321) {
+  } else if (abs(idAssigned()) == 321) {
     mass_hypothesis = 3;
-  } else if (abs(idAssigned())) == 2212) {
+  } else if (abs(idAssigned()) == 2212) {
     mass_hypothesis = 4;
   }
   return mass_hypothesis;
