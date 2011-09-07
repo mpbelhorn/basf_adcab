@@ -339,10 +339,9 @@ Adcab::event(BelleEvent* evptr, int* status)
     LeptonCandidate electron_candidate(electron_particle, cm_boost_);
     LeptonCandidate kaon_candidate(kaon_particle, cm_boost_);
 
-/*
     // Cut on IP dr and dz and SVD hits.
     // This is to make sure that particles were created near the IP.
-    IpParameters ip_parameters(charged_particle, interaction_point_, 1);
+    TrackParameters ip_parameters(muon_candidate, interaction_point_);
     if ((abs(ip_parameters.dr()) > cuts.maxIpDr) ||
         (abs(ip_parameters.dz()) > cuts.maxIpDz) ||
         (ip_parameters.svdHitsR() < cuts.minSvdRHits) ||
@@ -355,7 +354,6 @@ Adcab::event(BelleEvent* evptr, int* status)
            << "dr/dz and SVD check." << endl;
     }
     if (!(good_muon || good_electron || good_kaon)) continue;
-*/
 
     // Reject if the particle track has polar angle pointing outside the
     //   barrel (p is given closest to coord. origin - see mdst table).
@@ -621,8 +619,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     for (LeptonCandidateIterator j = good_event_leptons.begin();
         j != good_event_leptons.end(); ++j) {
       LeptonCandidate &lepton = *j;
-      IpParameters ip_parameters(lepton.lepton().relation().mdstCharged(),
-          interaction_point_, lepton.massHypothesis());
+      TrackParameters ip_parameters(lepton.lepton(), interaction_point_);
   
       nTuple_dileptons_->column("entry_id", entry_types.lepton);
       nTuple_dileptons_->column("stm_no"  , basf_parameter_mc_stream_number_);
@@ -653,8 +650,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     for (LeptonCandidateIterator j = kaon_candidates.begin();
         j != kaon_candidates.end(); ++j) {
       LeptonCandidate &kaon = *j;
-      IpParameters ip_parameters(kaon.lepton().relation().mdstCharged(),
-          interaction_point_, kaon.massHypothesis());
+      TrackParameters ip_parameters(kaon.lepton(), interaction_point_);
 
       nTuple_dileptons_->column("entry_id", entry_types.kaon);
       nTuple_dileptons_->column("stm_no"  , basf_parameter_mc_stream_number_);

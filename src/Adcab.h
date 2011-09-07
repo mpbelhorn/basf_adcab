@@ -32,7 +32,7 @@
 #include EVTCLS_H               // Panther - event classification tables.
   
 #include "HEPconstants.h"       // PDG masses and constants.
-#include "IpParameters.h"       // Custom class managing the IP.
+#include "TrackParameters.h"    // Custom class managing the track parameters.
 #include "LeptonCandidate.h"    // Class for managing lepton candidate info.
 #include "DileptonEvent.h"      // Class for managing dilepton event info.
 #include "EntryTypes.h"         // Structure for managing ntuple line data.
