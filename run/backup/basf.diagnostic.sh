@@ -10,7 +10,7 @@ ANALYSISDIR=/bwf/g64home/mbelhorn/analysis/adcab
 OUTPUTDIR=${ANALYSISDIR}/output
 DATATYPE=SGMC
 DATAPATH=/bwf/g64home/mbelhorn/analysis/MC/signalmc-u5s-mix/mdst
-DATAMDST=Y5S_to_BdBdX_to_semileptonic-e69-f0.mdst
+DATAMDST=fs19299.s0.e53.mBdBd.n0019123.mdst
 OUTPUTNAME=diagnostic
 
 basf<< EOF >& ${OUTPUTDIR}/logs/${OUTPUTNAME}.log

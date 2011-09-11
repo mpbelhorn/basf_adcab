@@ -3,7 +3,7 @@
 # Author: M.P. Belhorn
 # Date: 2011.05.09
 
-if [ $# -ne 3 ]
+if [ $# -ne 2 ]
   then
     echo "Wrong number of arguments."
     echo " Usage: $0 exp stream"
@@ -29,17 +29,19 @@ path add_module main fix_mdst
 path create analysis
 module register Adcab
 path add_module analysis Adcab
-module put_parameter Adcab JPsi_Veto_OS_Only\0
-module put_parameter Adcab Verbose_Log\0
+module put_parameter Adcab JPsi_Veto_OS_Only\ 0
+module put_parameter Adcab Verbose_Log\ 0
+module put_parameter Adcab MC_Stream_Number\ ${STREAMNO}
 
 path add_condition main <=:0:KILL
 path add_condition main >:0:analysis
 
 initialize
 histogram define ${OUTPUTDIR}/hbks/${OUTPUTNAME}.hbk
-process_event ${MDSTPATH}/Y5S_to_BsBs_to_semileptonic-e${EXPNO}-f${STREAMNO}.mdst
-process_event ${MDSTPATH}/Y5S_to_BdBdX_to_semileptonic-e${EXPNO}-f${STREAMNO}.mdst
-process_event ${MDSTPATH}/Y5S_to_BdBuX_to_semileptonic-e${EXPNO}-f${STREAMNO}.mdst
-process_event ${MDSTPATH}/Y5S_to_BuBuX_to_semileptonic-e${EXPNO}-f${STREAMNO}.mdst
+
+process_event ${MDSTPATH}/fs19299.s${STREAMNO}.e${EXPNO}.mBsBs.n0039586.mdst
+process_event ${MDSTPATH}/fs19299.s${STREAMNO}.e${EXPNO}.mBdBd.n0019123.mdst
+process_event ${MDSTPATH}/fs19299.s${STREAMNO}.e${EXPNO}.mBdBu.n0003395.mdst
+process_event ${MDSTPATH}/fs19299.s${STREAMNO}.e${EXPNO}.mBuBu.n0022932.mdst
 terminate
 EOF

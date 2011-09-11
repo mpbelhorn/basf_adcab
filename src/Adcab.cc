@@ -38,6 +38,9 @@ extern "C" Module_descr
   dscr->define_param ("Verbose_Log",
       "Writes diagnotic information to the log",
       &module->basf_parameter_verbose_log_);
+  dscr->define_param ("MC_Stream_Number",
+      "Allows the MC stream number to be used to avoid name collisions",
+      &module->basf_parameter_mc_stream_number_);
 
   // Provide path to pass paramaters to BeamEnergy class.
   BeamEnergy::define_global(dscr);
@@ -69,16 +72,6 @@ Adcab::Adcab()
   basf_parameter_is_continuum_ = 0;
   basf_parameter_mc_stream_number_ = 0;
 
-  cout << "\n\n"
-       << "____________________________________________________________\n"
-       << " Adcab Analysis Module loaded successfully \n\n"
-       << " BASF Parameter Flags Settings:\n"
-       << "   basf_parameter_allow_charge_bias_ = " 
-       << basf_parameter_allow_charge_bias_ << "\n"
-       << "   basf_parameter_verbose_log_ = " 
-       << basf_parameter_verbose_log_ << "\n"
-       << endl;
-  
   return;
 }
 
@@ -86,7 +79,19 @@ Adcab::Adcab()
 void
 Adcab::init(int *)
 {
-  // Body is intentionally blank.
+  cout << "\n\n"
+       << "____________________________________________________________\n"
+       << " Adcab Analysis Module loaded successfully \n\n"
+       << " BASF Parameter Flags Settings:\n"
+       << "   basf_parameter_allow_charge_bias_ = "
+       << basf_parameter_allow_charge_bias_ << "\n"
+       << "   basf_parameter_verbose_log_ = " 
+       << basf_parameter_verbose_log_ << "\n"
+       << "   basf_parameter_is_continuum_ = "
+       << basf_parameter_is_continuum_ << "\n"
+       << "   basf_parameter_mc_stream_number_ = "
+       << basf_parameter_mc_stream_number_ << "\n"
+       << endl;
 }
 
 // Function run at termination of BASF module.
@@ -179,7 +184,8 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
     cout << " Data is Real." << endl;
   } else {
     flag_mc_ = true;  // Set Data type flag to Monte Carlo.
-    cout << " Data is Monte Carlo." << endl;
+    cout << " Data is Monte Carlo - Stream " << basf_parameter_mc_stream_number_
+         << endl;
   }
   
   cout << " Actual Beam Energy: " << beam_energy_cm_frame_ 
@@ -239,7 +245,7 @@ Adcab::event(BelleEvent* evptr, int* status)
 
   // Print hadron flag to the log.
   if (basf_parameter_verbose_log_ && hadronb_code < 10) {
-    cout << "  BAD EVENT :: Fails hadronB criteria." << endl;
+    cout << "    BAD EVENT :: Fails hadronB criteria." << endl;
   }
 
   // Get the Fox-wolfram R2 value for the event. Spherical events accepted (Low
@@ -269,8 +275,8 @@ Adcab::event(BelleEvent* evptr, int* status)
   // Need a list for all mother and daughter particle species.
   // Note that these vectors are static and will persist until BASF is closed.
   //     They therefore must(!) be cleared for each call of Adcab::event().
-  if (basf_parameter_verbose_log_) {
-    cout << "  Initializing particle containers." << endl;
+  if (basf_parameter_verbose_log_ > 1) {
+    cout << "    Initializing particle containers." << endl;
   }
   static std::vector<ParticleCandidate> lepton_candidates(5);
   static std::vector<ParticleCandidate> good_event_leptons(5);
@@ -290,15 +296,15 @@ Adcab::event(BelleEvent* evptr, int* status)
 
   // Print diagnostic information to the log.
   if (basf_parameter_verbose_log_) {
-    cout << "  Passed event initialization." << endl;
+    cout << "    Passed event initialization." << endl;
   }
   
   // Populate the lepton candidate lists.
   for (MdstChargedIterator lepton_scan_iterator = first_mdst_charged;
       lepton_scan_iterator != last_mdst_charged; ++lepton_scan_iterator) {
 
-    if (basf_parameter_verbose_log_) {
-      cout << "  >>> NEW charged Track <<<" << endl;
+    if (basf_parameter_verbose_log_ > 1) {
+      cout << "    New charged Track" << endl;
     }
     // Alias the current particle as "charged_particle".
     const Mdst_charged &charged_particle = *lepton_scan_iterator;
@@ -320,8 +326,8 @@ Adcab::event(BelleEvent* evptr, int* status)
         (kaon_to_pion_likelihood > cuts.minKaonToPionLikelihood) &&
         (kaon_to_proton_likelihood > cuts.minKaonToProtonLikelihood));
 
-    if (basf_parameter_verbose_log_) {
-      cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
+    if (basf_parameter_verbose_log_ > 1) {
+      cout << "        ["<< good_muon << good_electron << good_kaon << "] "
            << "PID check." << endl;
     }
     if (!(good_muon || good_electron || good_kaon)) continue;
@@ -354,8 +360,8 @@ Adcab::event(BelleEvent* evptr, int* status)
         (electron_candidate.svdZHits() < cuts.minSvdZHits)) {
       good_electron = false;
     }
-    if (basf_parameter_verbose_log_) {
-      cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
+    if (basf_parameter_verbose_log_ > 1) {
+      cout << "        ["<< good_muon << good_electron << good_kaon << "] "
            << "dr/dz and SVD check." << endl;
     }
     if (!(good_muon || good_electron || good_kaon)) continue;
@@ -370,8 +376,8 @@ Adcab::event(BelleEvent* evptr, int* status)
       good_muon = false;
       good_electron = false;
     }
-    if (basf_parameter_verbose_log_) {
-      cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
+    if (basf_parameter_verbose_log_ > 1) {
+      cout << "        ["<< good_muon << good_electron << good_kaon << "] "
            << "Barrel intersection check." << endl;
     }
     if (!(good_muon || good_electron || good_kaon)) continue;
@@ -385,9 +391,9 @@ Adcab::event(BelleEvent* evptr, int* status)
         (electron_candidate.pCm().rho() > cuts.maxLeptonMomentumCm)) {
       good_electron = false;
     }
-    if (basf_parameter_verbose_log_) {
-      cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
-           << "Passed CM-frame momentum check." << endl;
+    if (basf_parameter_verbose_log_ > 1) {
+      cout << "        ["<< good_muon << good_electron << good_kaon << "] "
+           << "CM-frame momentum check." << endl;
     }
     if (!(good_muon || good_electron || good_kaon)) continue;
 
@@ -422,8 +428,8 @@ Adcab::event(BelleEvent* evptr, int* status)
         double delta_mass = pair_invariant_mass - cuts.massJPsi;
         if (cuts.minMuMuJPsiCandidate < delta_mass &&
             delta_mass < cuts.maxMuMuJPsiCandidate) {
-          if (basf_parameter_verbose_log_) {
-            cout << "    BAD MU CANDIDATE :: Likely J/Psi daughter." << endl;
+          if (basf_parameter_verbose_log_ > 1) {
+            cout << "            Bad muon: Likely J/Psi daughter." << endl;
           }
           good_muon = false;
         }
@@ -444,21 +450,21 @@ Adcab::event(BelleEvent* evptr, int* status)
   
         // Cut possible pair production electrons or J/Psi daughters.
         if (pair_invariant_mass < cuts.minEPlusEMinusMass) {
-          if (basf_parameter_verbose_log_) {
-            cout << "    BAD E CANDIDATE :: Likely pair production." << endl;
+          if (basf_parameter_verbose_log_ > 1) {
+            cout << "            Bad electron: Likely pair production." << endl;
           }
           good_electron = false;
         } else if (cuts.minElElJPsiCandidate < delta_mass &&
             delta_mass < cuts.maxElElJPsiCandidate) {
-          if (basf_parameter_verbose_log_) {
-            cout << "    BAD E CANDIDATE :: Likely J/Psi daughter." << endl;
+          if (basf_parameter_verbose_log_ > 1) {
+            cout << "            Bad electron: Likely J/Psi daughter." << endl;
           }
           good_electron = false;
         }
       }
     }
-    if (basf_parameter_verbose_log_) {
-      cout << "    COMPLETED["<< good_muon << good_electron << good_kaon << "] "
+    if (basf_parameter_verbose_log_ > 1) {
+      cout << "        ["<< good_muon << good_electron << good_kaon << "] "
            << "J/Psi and pair production veto." << endl;
     }
     if (!(good_muon || good_electron || good_kaon)) continue;
@@ -478,8 +484,8 @@ Adcab::event(BelleEvent* evptr, int* status)
 
     // Dump lepton candidate information to the ntuple.
     if (good_lepton) {
-      if (basf_parameter_verbose_log_) {
-        cout << "    Committing lepton to ntuple." << endl;
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "        Committing lepton to ntuple." << endl;
       }
       ParticleCandidate lepton((*good_lepton));
       lepton_candidates.push_back(lepton);
@@ -510,8 +516,8 @@ Adcab::event(BelleEvent* evptr, int* status)
     }
 
     if (good_kaon && !good_lepton) {
-      if (basf_parameter_verbose_log_) {
-        cout << "    Committing kaon to list." << endl;
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "        Committing kaon to list." << endl;
       }
       // Treat the particle as a charged kaon.
       Particle kaon_particle(charged_particle,
@@ -547,9 +553,9 @@ Adcab::event(BelleEvent* evptr, int* status)
 
   // Print diagnostic information to the log.
   if (basf_parameter_verbose_log_) {
-    cout << "  Passed lepton candidate selection." << endl;
-    cout << "    Total lepton candidates: " << lepton_candidates.size() << endl;
-    cout << "  Searching for dilepton candidates." << endl;
+    cout << "    Passed track selection." << endl;
+    cout << "      Lepton candidates: " << lepton_candidates.size() << endl;
+    cout << "      Kaon candidates: " << kaon_candidates.size() << endl;
   }
  
   // Exclude leptons in bad event candidates.
@@ -561,8 +567,8 @@ Adcab::event(BelleEvent* evptr, int* status)
         i != lepton_candidates.end(); ++i) {
       // Exclude the case where both iterators point to the same particle.
       if (i == j) continue;
-      if (basf_parameter_verbose_log_) {
-        cout << "  >>> Checking if lepton in good event candidate <<<" << endl;
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "    New event lepton candidate" << endl;
       }
       ParticleCandidate &outer_lepton = *i;
       ParticleCandidate &inner_lepton = *j;
@@ -589,8 +595,8 @@ Adcab::event(BelleEvent* evptr, int* status)
         continue;
       }
 
-      if (basf_parameter_verbose_log_) {
-        cout << "    Found good event lepton." << endl;
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "        It is a good event lepton." << endl;
       }
       // Save the good outer lepton to the good event lepton list.
       good_event_leptons.push_back(outer_lepton);
@@ -603,6 +609,9 @@ Adcab::event(BelleEvent* evptr, int* status)
   //   ROOT directly. Could save a whole mess of work....
   // The method dumpData resets the value of all branches after it's call.
   if (good_event_leptons.size() > 1) {
+    if (basf_parameter_verbose_log_) {
+      cout << "    Commiting Event Candidates to Ntuple" << endl;
+    }
 
     // Write event-level data to the n-tuple.
     // Column names can be no greater than eight (8) characters long.
