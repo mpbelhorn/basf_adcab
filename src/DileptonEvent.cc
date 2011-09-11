@@ -33,9 +33,25 @@ DileptonEvent::DileptonEvent(ParticleCandidate &lepton0,
 //            3: Electron-muon.
 // The Lund values as of 2010/08/12 are e(+/-) = (+/-)11, mu(+/-) = (+/-)13.
 double
-DileptonEvent::eventType()
+DileptonEvent::eventTypeAssigned()
 {
   double lund_sum = abs(l0().idAssigned()) + abs(l1().idAssigned());
+  double type = 0;
+  if (lund_sum == 22) {
+    type = 1;
+  } else if (lund_sum == 24) {
+    type = 2;
+  } else if (lund_sum == 26) {
+    type = 3;
+  }
+  return type;
+}
+
+// Same as eventTypeAssigned except uses truth-table 
+double
+DileptonEvent::eventTypeAssigned()
+{
+  double lund_sum = abs(l0().idTrue()) + abs(l1().idTrue());
   double type = 0;
   if (lund_sum == 22) {
     type = 1;
@@ -74,6 +90,16 @@ DileptonEvent::cosThetaLL()
     if (cosine_theta_ll < -1.0) cosine_theta_ll = -1.0;
   }
   return cosine_theta_ll;
+}
+
+// Calculates the invariant mass of the two leptons.
+double
+DileptonEvent::invariantMass()
+{
+  HepLorentzVector l0_p_cm = l0().p();
+  HepLorentzVector l1_p_cm = l1().p();
+
+  return (l0_p_cm + l1_p_cm).m();
 }
 
 #if defined(BELLE_NAMESPACE)

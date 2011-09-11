@@ -31,9 +31,11 @@ DileptonEvent {
   ParticleCandidate &l1() {return *l1_;}
   
   // Methods
-  double eventType();
+  double eventTypeAssigned();
+  double eventTypeTrue();
   double eventSign();
   double cosThetaLL();
+  double invariantMass();
   
  private:
   // Attributes.
