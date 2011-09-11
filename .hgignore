@@ -4,6 +4,7 @@ syntax: glob
 *.o
 *.orig
 *.kate-swp
+*.swp
 
 syntax: regexp
 (.*/)?\#[^/]*\#$
