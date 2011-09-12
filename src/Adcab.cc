@@ -576,29 +576,28 @@ Adcab::event(BelleEvent* evptr, int* status)
  
   // Find good dilepton event candidates.
   // Check all lepton pairs.
-  for (ParticleCandidateIterator j = lepton_candidates.begin();
-      j != lepton_candidates.end(); ++j) {
-    for (ParticleCandidateIterator i = j;
-        i != lepton_candidates.end(); ++i) {
+  for (ParticleCandidateIterator outer_lepton = lepton_candidates.begin();
+      outer_lepton != lepton_candidates.end(); ++outer_lepton) {
+    for (ParticleCandidateIterator inner_lepton = outer_lepton;
+        inner_lepton != lepton_candidates.end(); ++inner_lepton) {
       // Exclude the case where both iterators point to the same particle.
-      if (i == j) continue;
+      if (outer_lepton == inner_lepton) continue;
       if (basf_parameter_verbose_log_ > 1) {
         cout << "    New dilepton event candidate" << endl;
       }
-      ParticleCandidate &outer_lepton = *i;
-      ParticleCandidate &inner_lepton = *j;
 
       // Determine higher momentum lepton and add it to an event candidate.
       // Reference the higher momentum lepton as "lepton0"
-      //  and the lower momentum lepton as "lepton1".
-      ParticleCandidate *lepton0 = &outer_lepton;
-      ParticleCandidate *lepton1 = &inner_lepton;
-      if ((*j).pCm().mag() > (*i).pCm().mag()) {
-        lepton0 = &inner_lepton;
-        lepton1 = &outer_lepton;
+      //  and the lower momentum lepton as "lepton1". First, assume the outer
+      //  loop lepton has the greater momentum, then check that.
+      ParticleCandidate *greater_p_lepton = &(*outer_lepton);
+      ParticleCandidate *lesser_p_lepton = &(*inner_lepton);
+      if ((*inner_lepton).pCm().mag() > (*outer_lepton).pCm().mag()) {
+        greater_p_lepton = &(*inner_lepton);
+        lesser_p_lepton = &(*outer_lepton);
       }
-      ParticleCandidate &l0 = *lepton0;
-      ParticleCandidate &l1 = *lepton1;
+      ParticleCandidate &l0 = *greater_p_lepton;
+      ParticleCandidate &l1 = *lesser_p_lepton;
       
       DileptonEvent event_candidate(l0, l1);
 
