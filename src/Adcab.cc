@@ -474,7 +474,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     //     candidate, then consider it a muon, otherwise it is deemed an
     //     electron, but flag the verbose log if the particle passes as both.
     ParticleCandidate *good_lepton = NULL;
-    vetoed_lepton = false;
+    bool vetoed_lepton = false;
     if (good_muon) {
       if (vetoed_muon) vetoed_lepton = true;
       setMCtruth(muon_candidate.particle());
@@ -645,7 +645,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     nTuple_dileptons_->column("typ_asn" , event_candidate.eventTypeAssigned());
     nTuple_dileptons_->column("typ_tru" , event_candidate.eventTypeTrue());
     nTuple_dileptons_->column("evt_sign", event_candidate.eventSign());
-    nTuple_dileptons_->column("costhall", event_candidate.cosThetaLL());
+    nTuple_dileptons_->column("cos_thta", event_candidate.cosThetaLL());
     nTuple_dileptons_->column("inv_mass", event_candidate.invariantMass());
 
     // Write lepton-level data to the n-tuple.
@@ -746,8 +746,7 @@ Adcab::hist_def()
                                "svd_hitr "
                                "svd_hitz";
 
-  const char *dilepton_variables = "entry_id "
-                                   "stm_no "
+  const char *dilepton_variables = "stm_no "
                                    "exp_no "
                                    "run_no "
                                    "evt_no "
@@ -757,6 +756,11 @@ Adcab::hist_def()
                                    "hadronb "
                                    "cm_enrgy "
                                    "n_kaons "
+                                   "typ_asn "
+                                   "typ_tru "
+                                   "evt_sign "
+                                   "cos_thta "
+                                   "inv_mass "
                                    "l0_chrge " "l1_chrge "
                                    "l0_idasn " "l1_idasn "
                                    "l0_idtru " "l1_idtru "

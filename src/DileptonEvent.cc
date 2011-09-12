@@ -49,7 +49,7 @@ DileptonEvent::eventTypeAssigned()
 
 // Same as eventTypeAssigned except uses truth-table 
 double
-DileptonEvent::eventTypeAssigned()
+DileptonEvent::eventTypeTrue()
 {
   double lund_sum = abs(l0().idTrue()) + abs(l1().idTrue());
   double type = 0;
