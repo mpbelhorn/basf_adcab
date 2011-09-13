@@ -497,6 +497,13 @@ Adcab::event(BelleEvent* evptr, int* status)
         lepton_candidates.push_back(lepton);
       }
 
+      nTuple_leptons_->column("stm_no"  , basf_parameter_mc_stream_number_);
+      nTuple_leptons_->column("exp_no"  , experiment_number_);
+      nTuple_leptons_->column("run_no"  , run_number_);
+      nTuple_leptons_->column("evt_no"  , event_number_);
+      nTuple_leptons_->column("is_mc"   , flag_mc_);
+      nTuple_leptons_->column("is_cntnm", basf_parameter_is_continuum_);
+      nTuple_leptons_->column("cm_enrgy", beam_energy_cm_frame_);
       nTuple_leptons_->column("charge"  , electric_charge);
       nTuple_leptons_->column("mass"    , lepton.p().mag());
       nTuple_leptons_->column("good_mu" , good_muon);
@@ -537,6 +544,14 @@ Adcab::event(BelleEvent* evptr, int* status)
       ParticleCandidate kaon(kaon_particle, cm_boost_, interaction_point_);
       kaon_candidates.push_back(kaon);
 
+      nTuple_kaons_->column("stm_no"  , basf_parameter_mc_stream_number_);
+      nTuple_kaons_->column("exp_no"  , experiment_number_);
+      nTuple_kaons_->column("run_no"  , run_number_);
+      nTuple_kaons_->column("evt_no"  , event_number_);
+      nTuple_kaons_->column("is_mc"   , flag_mc_);
+      nTuple_kaons_->column("is_cntnm", basf_parameter_is_continuum_);
+      nTuple_kaons_->column("cm_enrgy", beam_energy_cm_frame_);
+      nTuple_kaons_->column("charge"  , electric_charge);
       nTuple_kaons_->column("charge"  , electric_charge);
       nTuple_kaons_->column("mass"    , kaon.p().mag());
       nTuple_kaons_->column("good_mu" , good_muon);
@@ -617,6 +632,11 @@ Adcab::event(BelleEvent* evptr, int* status)
     }
   }
 
+  // TODO - Scan through the dilepton event list and see if two kaon candidates
+  //   "vertex" well with the lepton candidates. Different kaons with smallest
+  //   vertex error for each lepton should be added to the dilepton event and
+  //   dumped out with the dilepton event below.
+
   // Write all dilepton event candidates to the ntuple.
   for (DileptonEventIterator i = dilepton_event_candidates.begin();
       i != dilepton_event_candidates.end(); i++) {
@@ -691,59 +711,39 @@ Adcab::hist_def()
   extern BelleTupleManager *BASF_Histogram;   // Define a BASF Histogram
   
   BelleTupleManager *tm = BASF_Histogram;
-  const char *lepton_variables = "charge "
-                                 "mass "
-                                 "good_mu "
-                                 "veto_mu "
-                                 "good_el "
-                                 "veto_el "
-                                 "good_k "
-                                 "pid_k_pi"
-                                 "pid_k_pr"
-                                 "id_asn "
-                                 "id_tru "
-                                 "id_mom "
-                                 "eid_prob "
-                                 "muid_prb "
-                                 "muid_rto "
-                                 "p_lb_mag "
-                                 "p_cm_mag "
-                                 "e_cm "
-                                 "p_cm_x "
-                                 "p_cm_y "
-                                 "p_cm_z "
-                                 "cos_pol "
-                                 "ip_dr "
-                                 "ip_dz "
-                                 "svd_hitr "
-                                 "svd_hitz";
-
-  const char *kaon_variables = "charge "
-                               "mass "
-                               "good_mu "
-                               "veto_mu "
-                               "good_el "
-                               "veto_el "
-                               "good_k "
-                               "pid_k_pi"
-                               "pid_k_pr"
-                               "id_asn "
-                               "id_tru "
-                               "id_mom "
-                               "eid_prob "
-                               "muid_prb "
-                               "muid_rto "
-                               "p_lb_mag "
-                               "p_cm_mag "
-                               "e_cm "
-                               "p_cm_x "
-                               "p_cm_y "
-                               "p_cm_z "
-                               "cos_pol "
-                               "ip_dr "
-                               "ip_dz "
-                               "svd_hitr "
-                               "svd_hitz";
+  const char *charged_particle_variables = "stm_no "
+                                           "exp_no "
+                                           "run_no "
+                                           "evt_no "
+                                           "is_mc "
+                                           "is_cntnm "
+                                           "cm_enrgy "
+                                           "charge "
+                                           "mass "
+                                           "good_mu "
+                                           "veto_mu "
+                                           "good_el "
+                                           "veto_el "
+                                           "good_k "
+                                           "pid_k_pi"
+                                           "pid_k_pr"
+                                           "id_asn "
+                                           "id_tru "
+                                           "id_mom "
+                                           "eid_prob "
+                                           "muid_prb "
+                                           "muid_rto "
+                                           "p_lb_mag "
+                                           "p_cm_mag "
+                                           "e_cm "
+                                           "p_cm_x "
+                                           "p_cm_y "
+                                           "p_cm_z "
+                                           "cos_pol "
+                                           "ip_dr "
+                                           "ip_dz "                                            
+                                           "svd_hitr "
+                                           "svd_hitz";
 
   const char *dilepton_variables = "stm_no "
                                    "exp_no "
@@ -775,8 +775,8 @@ Adcab::hist_def()
                                    "l0_svdr "  "l1_svdr "
                                    "l0_svdz "  "l1_svdz";
 
-  nTuple_leptons_ = tm->ntuple("Leptons", lepton_variables, 1);
-  nTuple_kaons_ = tm->ntuple("Kaons", kaon_variables, 2);
+  nTuple_leptons_ = tm->ntuple("Leptons", charged_particle_variables, 1);
+  nTuple_kaons_ = tm->ntuple("Kaons", charged_particle_variables, 2);
   nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 3);
   
   return;
