@@ -27,7 +27,7 @@ DileptonEvent::DileptonEvent(ParticleCandidate &lepton0,
 }
 
 // Determines the type of dilepton event and returns an integer for the
-//   cases of 0: Unidentified/Error,
+//   cases of 0: Unidentified/Error - includes false lepton events,
 //            1: Dielectron,
 //            2: Dimuon,
 //            3: Electron-muon.
@@ -67,7 +67,7 @@ DileptonEvent::eventTypeTrue()
 double
 DileptonEvent::eventSign()
 {
-  return (abs(l0().particle().charge()) + abs(l1().particle().charge())) / 2;
+  return (l0().particle().charge() + l1().particle().charge()) / 2;
 }
 
 // Calculates the cosine of the opening angle theta_ll between the two leptons
