@@ -41,6 +41,9 @@ extern "C" Module_descr
   dscr->define_param ("MC_Stream_Number",
       "Allows the MC stream number to be used to avoid name collisions",
       &module->basf_parameter_mc_stream_number_);
+  dscr->define_param ("Is_Continuum",
+      "Flags data as being continuum",
+      &module->basf_parameter_is_continuum_);
 
   // Provide path to pass paramaters to BeamEnergy class.
   BeamEnergy::define_global(dscr);
@@ -725,8 +728,8 @@ Adcab::hist_def()
                                            "good_el "
                                            "veto_el "
                                            "good_k "
-                                           "pid_k_pi"
-                                           "pid_k_pr"
+                                           "pid_k_pi "
+                                           "pid_k_pr "
                                            "id_asn "
                                            "id_tru "
                                            "id_mom "
@@ -741,7 +744,7 @@ Adcab::hist_def()
                                            "p_cm_z "
                                            "cos_pol "
                                            "ip_dr "
-                                           "ip_dz "                                            
+                                           "ip_dz "
                                            "svd_hitr "
                                            "svd_hitz";
 

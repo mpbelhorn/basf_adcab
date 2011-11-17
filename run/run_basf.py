@@ -62,7 +62,7 @@ if process_type == [0, 0, 0, 0]:
   options.experiment_number = 43
   if os.path.isfile(diagnostic_mdst):
     print('on ' + diagnostic_mdst)
-    process_files.append(diagnostic_mdst + ' 800')
+    process_files.append('process_event ' + diagnostic_mdst + ' 800')
   else:
     print('except mdst does not exist!')
   output_name = 'Adcab.diagnostic'
@@ -79,7 +79,7 @@ elif process_type == [1, 1, 0, 0]:
   for file in os.listdir(mdst_directory):
     if fnmatch.fnmatch(file, mdst_base_filename):
       print('Found:', file)
-      process_files.append(mdst_directory + '/' + str(file))
+      process_files.append('process_event ' + mdst_directory + '/' + str(file))
   output_name = ('Adcab.SGMC.fs' + str(options.fs)
       + '.s' + str(options.stream_number)
       + '.e' + str(options.experiment_number))
@@ -89,6 +89,11 @@ elif process_type == [1, 1, 0, 0]:
 elif process_type == [1, 0, 1, 0]:
   print('Processing continuum.')
   output_name = ('Adcab.SGMC.udsc.e' + str(options.experiment_number))
+  process_files.append('process_url ' + 
+      'http://bweb3/mdst.php?' + 
+      'ex=45&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB&dv=zfserv')
+  for url in process_files:
+    print(url)
 
 elif ((process_type == [1, 1, 1, 0]) or (process_type == [1, 1, 1, 1])):
   print('Processing generic MC continuum.')
@@ -102,7 +107,7 @@ elif ((process_type == [1, 1, 1, 0]) or (process_type == [1, 1, 1, 1])):
     for file in os.listdir(mdst_directory):
       if fnmatch.fnmatch(file, mdst_base_filename):
         print('Found:', file)
-        process_files.append(mdst_directory + '/' + str(file))
+        process_files.append('process_event ' + mdst_directory + '/' + str(file))
   output_name = ('Adcab.GNMC.udsc.s' + str(options.stream_number) +
       '.e' + str(options.experiment_number))
 
@@ -118,7 +123,7 @@ elif process_type == [1, 1, 0, 1]:
     for file in os.listdir(mdst_directory):
       if fnmatch.fnmatch(file, mdst_base_filename):
         print('Found:', file)
-        process_files.append(mdst_directory + '/' + str(file))
+        process_files.append('process_event ' + mdst_directory + '/' + str(file))
   output_name = ('Adcab.GNMC.fs19299.s' + str(options.stream_number) +
       '.e' + str(options.experiment_number))
 
@@ -149,46 +154,45 @@ analysis_path_commands = [
 analysis_parameters = [
     ['JPsi_Veto_OS_Only', str(int(options.jpsi_veto_os_only))],
     ['Verbose_Log',       str(int(options.verbose_log))],
-    ['MC_Stream_Number',  str(int(options.stream_number))]]
+    ['MC_Stream_Number',  str(int(options.stream_number))],
+    ['Is_Continuum',      str(int(options.continuum))]]
 
 # Test runs must exit before calling BASF.
 if options.test_run:
   sys.exit()
 
-# Set the log and BASF output paths.
-# Warning! No safety check yet on whether these dirs exist!
-basf_log = open(output_directory + '/logs/' + output_name + '.log', 'w') 
-histogram_name = output_directory + '/hbks/' + output_name + '.hbk'
-
-# Fire up BASF, with proper logs and a pipe to send it commands.
-basf = subprocess.Popen('basf', stdin=subprocess.PIPE, stdout = basf_log,
-    stderr = subprocess.STDOUT, shell = True)
-basf_in = basf.stdin
-
-# Send the initialization commands.
-for command in analysis_path_commands:
-  basf_in.write((command + '\n').encode('utf-8'))
+for file_index, file in enumerate(process_files):
+  file_number = str(file_index).zfill(5)
+  file_basename = output_name + '.p' + file_number
+  # Set the log and BASF output paths.
+  # Warning! No safety check yet on whether these dirs exist!
+  basf_log = open((output_directory + '/logs/' + file_basename + '.log'), 'w')
+  histogram_name = (output_directory + '/hbks/' + file_basename + '.hbk')
+  # Fire up BASF, with proper logs and a pipe to send it commands.
+  basf = subprocess.Popen('basf', stdin=subprocess.PIPE, stdout = basf_log,
+      stderr = subprocess.STDOUT, shell = True)
+  basf_in = basf.stdin
+  # Send the initialization commands.
+  for command in analysis_path_commands:
+    basf_in.write((command + '\n').encode('utf-8'))
+    basf_in.flush()
+  # Send the module parameter settings.
+  for parameter in analysis_parameters:
+    basf_in.write(
+        ('module put_parameter Adcab ' + parameter[0] + '\\' + 
+        parameter[1]+ '\n').encode('utf-8'))
+    basf_in.flush()
+  # Finalize BASF's initialization.
+  basf_in.write(('initialize\n').encode('utf-8'))
   basf_in.flush()
-
-# Send the module parameter settings.
-for parameter in analysis_parameters:
-  basf_in.write(
-      ('module put_parameter Adcab ' + parameter[0] + '\\' + 
-      parameter[1]+ '\n').encode('utf-8'))
+  # Define the output hbook.
+  basf_in.write(('histogram define ' + histogram_name + '\n').encode('utf-8'))
   basf_in.flush()
-
-# Finalize BASF's initialization.
-basf_in.write(('initialize\n').encode('utf-8'))
-basf_in.flush()
-basf_in.write(('histogram define ' + histogram_name + '\n').encode('utf-8'))
-basf_in.flush()
-
-# Send the list of data files to process.
-for file in process_files:
-  basf_in.write(('process_event ' + file + '\n').encode('utf-8'))
+  # Send the list of data files to process.
+  basf_in.write((file + '\n').encode('utf-8'))
   basf_in.flush()
-
-# Close BASF and close the stream to the log. We're done here.
-basf_in.write(('terminate\n').encode('utf-8'))
-basf_in.flush()
-basf_log.close()
+  # Close BASF and close the stream to the log. We're done here.
+  basf_in.write(('terminate\n').encode('utf-8'))
+  basf_in.flush()
+  basf.wait()
+  basf_log.close()
