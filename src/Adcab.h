@@ -74,6 +74,7 @@ Adcab : public Module
   int basf_parameter_verbose_log_;
   int basf_parameter_is_continuum_; // 1 = continuum data, 0 = on resonance.
   int basf_parameter_mc_stream_number_;
+  int basf_parameter_scale_momentum_;
 
 
   // Particle type (Ptype) constants.

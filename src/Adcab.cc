@@ -44,6 +44,9 @@ extern "C" Module_descr
   dscr->define_param ("Is_Continuum",
       "Flags data as being continuum",
       &module->basf_parameter_is_continuum_);
+  dscr->define_param ("Scale_Momentum",
+      "Flag the analysis to scale momentum to the Y(5S) energy",
+      &module->basf_parameter_scale_momentum_);
 
   // Provide path to pass paramaters to BeamEnergy class.
   BeamEnergy::define_global(dscr);
@@ -72,8 +75,9 @@ Adcab::Adcab()
   // Initialize BASF parameters.
   basf_parameter_allow_charge_bias_ = 0;
   basf_parameter_verbose_log_ = 0;
-  basf_parameter_is_continuum_ = 0;
   basf_parameter_mc_stream_number_ = 0;
+  basf_parameter_is_continuum_ = 0;
+  basf_parameter_scale_momentum_ = 0;
 
   return;
 }
@@ -90,10 +94,12 @@ Adcab::init(int *)
        << basf_parameter_allow_charge_bias_ << "\n"
        << "   basf_parameter_verbose_log_ = " 
        << basf_parameter_verbose_log_ << "\n"
-       << "   basf_parameter_is_continuum_ = "
-       << basf_parameter_is_continuum_ << "\n"
        << "   basf_parameter_mc_stream_number_ = "
        << basf_parameter_mc_stream_number_ << "\n"
+       << "   basf_parameter_is_continuum_ = "
+       << basf_parameter_is_continuum_ << "\n"
+       << "   basf_parameter_scale_momentum_ = "
+       << basf_parameter_scale_momentum_ << "\n"
        << endl;
 }
 
@@ -343,9 +349,9 @@ Adcab::event(BelleEvent* evptr, int* status)
         electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
     
     ParticleCandidate muon_candidate(muon_particle, cm_boost_,
-        interaction_point_);
+        interaction_point_, basf_parameter_scale_momentum_);
     ParticleCandidate electron_candidate(electron_particle, cm_boost_,
-        interaction_point_);
+        interaction_point_, basf_parameter_scale_momentum_);
 
     // Cut on IP dr and dz and SVD hits.
     // This is to make sure that particles were created near the IP.
@@ -608,11 +614,14 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Reference the higher momentum lepton as "lepton0"
       //  and the lower momentum lepton as "lepton1". First, assume the outer
       //  loop lepton has the greater momentum, then check that.
-      ParticleCandidate *greater_p_lepton = &(*outer_lepton);
-      ParticleCandidate *lesser_p_lepton = &(*inner_lepton);
+      ParticleCandidate *greater_p_lepton;
+      ParticleCandidate *lesser_p_lepton;
       if ((*inner_lepton).pCm().mag() > (*outer_lepton).pCm().mag()) {
-        greater_p_lepton = &(*inner_lepton);
-        lesser_p_lepton = &(*outer_lepton);
+        greater_p_lepton = inner_lepton;
+        lesser_p_lepton = outer_lepton;
+      } else {
+        greater_p_lepton = outer_lepton;
+        lesser_p_lepton = inner_lepton;
       }
       ParticleCandidate &l0 = *greater_p_lepton;
       ParticleCandidate &l1 = *lesser_p_lepton;

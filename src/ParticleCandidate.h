@@ -34,7 +34,7 @@ ParticleCandidate {
 
   // Useful constructor.
   ParticleCandidate(const Particle &particle, const Hep3Vector &cm_boost,
-      const HepPoint3D &interaction_point);
+      const HepPoint3D &interaction_point, const bool &scale_momentum = false);
 
   // Destructor.
   virtual ~ParticleCandidate();

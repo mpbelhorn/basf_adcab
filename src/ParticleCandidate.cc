@@ -26,7 +26,8 @@ ParticleCandidate::ParticleCandidate()
 
 // Useful Constructor.
 ParticleCandidate::ParticleCandidate(const Particle &particle,
-    const Hep3Vector &cm_boost, const HepPoint3D &interaction_point)
+    const Hep3Vector &cm_boost, const HepPoint3D &interaction_point,
+    const bool &scale_momentum = false)
     : particle_(new Particle(particle)),
       cm_boost_(new Hep3Vector(cm_boost)),
       mdst_charged_(new Mdst_charged(particle.mdstCharged())),
@@ -35,6 +36,22 @@ ParticleCandidate::ParticleCandidate(const Particle &particle,
       track_(new TrackParameters(particle, interaction_point))
 {
   (*p_cm_).boost(cm_boost);
+
+  // Scale the momentum, if necessary.
+  if (scale_momentum) {
+    // Get the PID. 11 == electron, 13 == muon.
+    if (abs((*particle_).pType().lund()) == 11) {
+      (*p_cm_) = (*p_cm_) * 1.03290;
+      (*p_) = (*p_cm_);
+      (*p_).boost(-cm_boost);
+    } else if (abs((*particle_).pType().lund()) == 13) {
+      (*p_cm_) = (*p_cm_) * 1.03291;
+      (*p_) = (*p_cm_);
+      (*p_).boost(-cm_boost);
+    } else {
+      // Neither an electron or muon. Do not scale the momentum.
+    }
+  }
 }
 
 // Copy Constructor.
