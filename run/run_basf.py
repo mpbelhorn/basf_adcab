@@ -1,4 +1,4 @@
-#!/bwf/g64home/mbelhorn/.local/bin/python3
+#!/usr/bin/python3
 from array import array
 import os
 import fnmatch
@@ -48,9 +48,9 @@ process_type = [
     options.generic_mc]
 
 # Set the directories and instantiate processing variables.
-analysis_directory = '/bwf/g64home/mbelhorn/analysis/adcab'
+analysis_directory = '/home/belle/mbelhorn/analysis/adcab'
 output_directory = analysis_directory + '/output'
-mdst_directory = '/bwf/g64home/mbelhorn/analysis/MC/signalmc-u5s-mix/mdst'
+mdst_directory = '/home/belle/mbelhorn/analysis/MC/signalmc-u5s-mix/mdst'
 process_files = []
 output_name = 'Adcab.OOPS'
 
@@ -70,11 +70,11 @@ if process_type == [0, 0, 0, 0]:
 elif process_type == [1, 0, 0, 0]:
   print('Processing real data.')
   output_name = ('Adcab.DATA.e' + str(options.experiment_number))
-  
+
 elif process_type == [1, 1, 0, 0]:
   print('Processing signal MC.')
   mdst_base_filename = (
-      'fs' + str(options.fs) + '.s' + str(options.stream_number) + 
+      'fs' + str(options.fs) + '.s' + str(options.stream_number) +
       '.e' + str(options.experiment_number) + '.m*.n*.mdst')
   for file in os.listdir(mdst_directory):
     if fnmatch.fnmatch(file, mdst_base_filename):
@@ -89,8 +89,8 @@ elif process_type == [1, 1, 0, 0]:
 elif process_type == [1, 0, 1, 0]:
   print('Processing continuum.')
   output_name = ('Adcab.SGMC.udsc.e' + str(options.experiment_number))
-  process_files.append('process_url ' + 
-      'http://bweb3/mdst.php?' + 
+  process_files.append('process_url ' +
+      'http://bweb3/mdst.php?' +
       'ex=45&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB&dv=zfserv')
   for url in process_files:
     print(url)
@@ -98,11 +98,11 @@ elif process_type == [1, 0, 1, 0]:
 elif ((process_type == [1, 1, 1, 0]) or (process_type == [1, 1, 1, 1])):
   print('Processing generic MC continuum.')
   for event_type in ('charm', 'uds'):
-    mdst_base_filename = ('dilepskim-e*' + str(options.experiment_number) + 
+    mdst_base_filename = ('dilepskim-e*' + str(options.experiment_number) +
         'r*r*-s*' + str(options.stream_number) + '-evtgen-' +
         event_type + '-5S_onresonance-b*.index')
-    mdst_directory = ('/bwf/g89home/g0mc/skim/skim5S/index/' + 
-        'dilepskim/5S_onresonance/e0000' + str(options.experiment_number) + 
+    mdst_directory = ('/group/belle/bdata-files/g0mc/skim/skim5S/index/' +
+        'dilepskim/5S_onresonance/e0000' + str(options.experiment_number) +
         '/evtgen-' + event_type + '/s0' + str(options.stream_number))
     for file in os.listdir(mdst_directory):
       if fnmatch.fnmatch(file, mdst_base_filename):
@@ -114,11 +114,11 @@ elif ((process_type == [1, 1, 1, 0]) or (process_type == [1, 1, 1, 1])):
 elif process_type == [1, 1, 0, 1]:
   print('Processing generic MC B-Bbar events.')
   for event_type in ('bsbs', 'nonbsbs'):
-    mdst_base_filename = ('dilepskim-e*' + str(options.experiment_number) + 
+    mdst_base_filename = ('dilepskim-e*' + str(options.experiment_number) +
         'r*r*-s*' + str(options.stream_number) + '-evtgen-' +
         event_type + '-5S_onresonance-b*.index')
-    mdst_directory = ('/bwf/g89home/g0mc/skim/skim5S/index/' + 
-        'dilepskim/5S_onresonance/e0000' + str(options.experiment_number) + 
+    mdst_directory = ('/group/belle/bdata-files/g0mc/skim/skim5S/index/' +
+        'dilepskim/5S_onresonance/e0000' + str(options.experiment_number) +
         '/evtgen-' + event_type + '/s0' + str(options.stream_number))
     for file in os.listdir(mdst_directory):
       if fnmatch.fnmatch(file, mdst_base_filename):
@@ -179,7 +179,7 @@ for file_index, file in enumerate(process_files):
   # Send the module parameter settings.
   for parameter in analysis_parameters:
     basf_in.write(
-        ('module put_parameter Adcab ' + parameter[0] + '\\' + 
+        ('module put_parameter Adcab ' + parameter[0] + '\\' +
         parameter[1]+ '\n').encode('utf-8'))
     basf_in.flush()
   # Finalize BASF's initialization.

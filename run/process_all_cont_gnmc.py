@@ -1,9 +1,9 @@
-#!/bwf/g64home/mbelhorn/.local/bin/python3
+#!/usr/bin/python3
 import subprocess
 
 experiments = [43, 53, 67, 69, 71]
-streams = range(3)
-queue = 'index'
+streams = range(3,6)
+queue = 'b_a'
 
 for experiment in experiments:
   for stream in streams:
