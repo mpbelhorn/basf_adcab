@@ -23,14 +23,14 @@ namespace Belle {               //  compatibility with older versions of
 
 // Registers analysis module in BASF.
 extern "C" Module_descr
-*mdcl_Adcab() 
-{ 
+*mdcl_Adcab()
+{
   // Creates pointer to allocated Adcab class object.
   Adcab *module = new Adcab;
-  
+
   // Creates pointer "dscr" to description of Adcab module.
   Module_descr *dscr = new Module_descr("Adcab", module);
-  
+
   // Set up module parameters.
   dscr->define_param ("JPsi_Veto_OS_Only",
       "Apply J/Psi veto to opposite-sign pairs only",
@@ -58,10 +58,10 @@ extern "C" Module_descr
 
 // Adcab constructor definition. Loaded at the line
 //   "path add_module analysis Adcab" in a BASF script. Place BASF passable
-//   parameter initializations here, as they will apply for the entire 
+//   parameter initializations here, as they will apply for the entire
 //   analysis run.
 Adcab::Adcab()
-{ 
+{
   // Define particle types (Ptype) constants for particle class objects.
   // Valid names are those in the qq98 decay file located at
   // $BELLE_TOP_DIR/share/data-files/qq98/decay.dec
@@ -92,7 +92,7 @@ Adcab::init(int *)
        << " BASF Parameter Flags Settings:\n"
        << "   basf_parameter_allow_charge_bias_ = "
        << basf_parameter_allow_charge_bias_ << "\n"
-       << "   basf_parameter_verbose_log_ = " 
+       << "   basf_parameter_verbose_log_ = "
        << basf_parameter_verbose_log_ << "\n"
        << "   basf_parameter_mc_stream_number_ = "
        << basf_parameter_mc_stream_number_ << "\n"
@@ -125,35 +125,35 @@ Adcab::term()
 //   beam and interaction point information. A basic run summery is dumped to
 //   the log for the record.
 void
-Adcab::begin_run(BelleEvent* evptr, int *status) 
+Adcab::begin_run(BelleEvent* evptr, int *status)
 {
   (void)evptr;
   (void)status;
-  
+
   // Set run information to default values.
   experiment_number_ = 0;
   run_number_ = 0;
 
   // Set default flags.
   flag_mc_ = false;
-  
+
   // Set interaction point and error to default values.
   interaction_point_ = HepPoint3D(0, 0, 0);
   interaction_point_error_ = HepSymMatrix(3, 0);
   flag_good_interaction_point_ = 0;
 
-  // Get BELLE_EVENT runhead manager. This is the data stored in the 
+  // Get BELLE_EVENT runhead manager. This is the data stored in the
   //   belletdf.tdf panther table.
   Belle_runhead_Manager &runhead_manager = Belle_runhead_Manager::get_manager();
   Belle_runhead &runhead = runhead_manager((Panther_ID) 1);
   experiment_number_ = runhead.ExpNo();
   run_number_ = runhead.RunNo();
-  
+
   // Initialise BeamEnergy class.
   BeamEnergy::begin_run();
-  
+
   // Set beam energy related class variables.
-  beam_energy_cm_frame_ = BeamEnergy::E_beam_corr();  
+  beam_energy_cm_frame_ = BeamEnergy::E_beam_corr();
   beam_energy_error_ = BeamEnergy::E_beam_err();
   ler_beam_energy_  = BeamEnergy::E_LER();
   her_beam_energy_ = BeamEnergy::E_HER();
@@ -165,10 +165,10 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
 
   // Initialize PID functions.
   eid::init_data();
-  
-  // Get interaction point profile data from $BELLE_POSTGRES_SERVER. 
+
+  // Get interaction point profile data from $BELLE_POSTGRES_SERVER.
   IpProfile::begin_run();
-  
+
   // Set interaction point and error to run values.
   if (IpProfile::usable()) {
     interaction_point_ = IpProfile::e_position();
@@ -178,14 +178,14 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
     interaction_point_ = HepPoint3D(0, 0, 0);
     interaction_point_error_ = HepSymMatrix(3, 0);
   }
-  
+
   // Print run information to the log.
   cout << "\n\n"
        << "____________________________________________________________\n"
        << " New Run: "
-       << "Experiment " << experiment_number_ 
-       << ", Run " << run_number_ 
-       << "\n" 
+       << "Experiment " << experiment_number_
+       << ", Run " << run_number_
+       << "\n"
        << endl;
 
   if (runhead.ExpMC() == 1) {
@@ -196,13 +196,13 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
     cout << " Data is Monte Carlo - Stream " << basf_parameter_mc_stream_number_
          << endl;
   }
-  
-  cout << " Actual Beam Energy: " << beam_energy_cm_frame_ 
+
+  cout << " Actual Beam Energy: " << beam_energy_cm_frame_
        << " +/- " << beam_energy_error_ << " GeV\n"
        << " Reported Beam Energy: " << kekb_beam_energy_ << " GeV\n"
        << " BE Class cm_boost_: " << cm_boost_ << "\n"
        << "____________________________________________________________\n"
-       << endl;  
+       << endl;
   return;
 }
 
@@ -211,10 +211,10 @@ Adcab::begin_run(BelleEvent* evptr, int *status)
 //   although MPB believes it should.
 void
 Adcab::end_run(BelleEvent* evptr, int *status)
-{ 
+{
   (void) evptr;
   (void) status;
-  
+
   cout << "\n\n"
        << "***************************************************\n"
        << "* WHERE IS THIS FUNCTION end_run() EXECUTED?!?!?! *\n"
@@ -225,7 +225,7 @@ Adcab::end_run(BelleEvent* evptr, int *status)
 }
 
 // This is function contains the core of the analysis module and is run
-//   for each event in a data run. Each event is analyized to find 
+//   for each event in a data run. Each event is analyized to find
 //   signal dilepton event candidates and records information
 //   about those events to the n-tuple.
 void
@@ -233,9 +233,9 @@ Adcab::event(BelleEvent* evptr, int* status)
 {
   (void)evptr;
   (void)status;
-  
-  // Get the event number. 
-  // The bitwise operation "& ~(0 << 28)" forces the event number to count from 
+
+  // Get the event number.
+  // The bitwise operation "& ~(0 << 28)" forces the event number to count from
   //   zero again after EvtNo() reaches 2^28. Not sure why this is necessary?
   Belle_event_Manager& EvMgr = Belle_event_Manager::get_manager();
   event_number_ = EvMgr[0].EvtNo() & ~(~0 << 28);
@@ -262,12 +262,12 @@ Adcab::event(BelleEvent* evptr, int* status)
   //   be accepted by default with an R2 of -1 to point out in the ntuple that
   //   the cut is "effectively off".
   double fox_wolfram_r2 = -1;
-  Evtcls_hadron_info_Manager& 
+  Evtcls_hadron_info_Manager&
       hadron_info_manager = Evtcls_hadron_info_Manager::get_manager();
   if (hadron_info_manager.count()) {
     fox_wolfram_r2 = hadron_info_manager[0].R2();
   }
-  
+
   // Instantiate constant data structures stored in external header files.
   // Might as well make them static since
   //     they will be needed again and they never change.
@@ -305,7 +305,7 @@ Adcab::event(BelleEvent* evptr, int* status)
   if (basf_parameter_verbose_log_) {
     cout << "    Passed event initialization." << endl;
   }
-  
+
   // Populate the lepton candidate lists.
   for (MdstChargedIterator lepton_scan_iterator = first_mdst_charged;
       lepton_scan_iterator != last_mdst_charged; ++lepton_scan_iterator) {
@@ -347,7 +347,7 @@ Adcab::event(BelleEvent* evptr, int* status)
         electric_charge > 0 ? particle_e_plus_ : particle_e_minus_);
     Particle kaon_particle(charged_particle,
         electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
-    
+
     ParticleCandidate muon_candidate(muon_particle, cm_boost_,
         interaction_point_, basf_parameter_scale_momentum_);
     ParticleCandidate electron_candidate(electron_particle, cm_boost_,
@@ -456,7 +456,7 @@ Adcab::event(BelleEvent* evptr, int* status)
         double pair_invariant_mass = abs(
             (electron_candidate.p() + other_electron.p()).m());
         double delta_mass = pair_invariant_mass - cuts.massJPsi;
-  
+
         // Cut possible pair production electrons or J/Psi daughters.
         if (pair_invariant_mass < cuts.minEPlusEMinusMass) {
           if (basf_parameter_verbose_log_ > 1) {
@@ -597,7 +597,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     cout << "      Lepton candidates: " << lepton_candidates.size() << endl;
     cout << "      Kaon candidates: " << kaon_candidates.size() << endl;
   }
- 
+
   // Find good dilepton event candidates.
   // Check all lepton pairs.
   for (ParticleCandidateIterator outer_lepton = lepton_candidates.begin();
@@ -617,15 +617,15 @@ Adcab::event(BelleEvent* evptr, int* status)
       ParticleCandidate *greater_p_lepton;
       ParticleCandidate *lesser_p_lepton;
       if ((*inner_lepton).pCm().mag() > (*outer_lepton).pCm().mag()) {
-        greater_p_lepton = inner_lepton;
-        lesser_p_lepton = outer_lepton;
+        greater_p_lepton = &(*inner_lepton);
+        lesser_p_lepton = &(*outer_lepton);
       } else {
-        greater_p_lepton = outer_lepton;
-        lesser_p_lepton = inner_lepton;
+        greater_p_lepton = &(*outer_lepton);
+        lesser_p_lepton = &(*inner_lepton);
       }
       ParticleCandidate &l0 = *greater_p_lepton;
       ParticleCandidate &l1 = *lesser_p_lepton;
-      
+
       DileptonEvent event_candidate(l0, l1);
 
       // Cut on jet-like events where the included angle between the leptons
@@ -694,7 +694,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     nTuple_dileptons_->column("l0_ip_dz", l0.track().dz());
     nTuple_dileptons_->column("l0_svdr" , l0.svdRHits());
     nTuple_dileptons_->column("l0_svdz" , l0.svdZHits());
-    
+
     nTuple_dileptons_->column("l1_chrge", l1.particle().charge());
     nTuple_dileptons_->column("l1_idasn", l1.idAssigned());
     nTuple_dileptons_->column("l1_idtru", l1.idTrue());
@@ -709,10 +709,10 @@ Adcab::event(BelleEvent* evptr, int* status)
     nTuple_dileptons_->column("l1_ip_dz", l1.track().dz());
     nTuple_dileptons_->column("l1_svdr" , l1.svdRHits());
     nTuple_dileptons_->column("l1_svdz" , l1.svdZHits());
-    
+
     nTuple_dileptons_->dumpData();
   }
-  
+
   return;
 }
 
@@ -721,7 +721,7 @@ void
 Adcab::hist_def()
 {
   extern BelleTupleManager *BASF_Histogram;   // Define a BASF Histogram
-  
+
   BelleTupleManager *tm = BASF_Histogram;
   const char *charged_particle_variables = "stm_no "
                                            "exp_no "
@@ -790,7 +790,7 @@ Adcab::hist_def()
   nTuple_leptons_ = tm->ntuple("Leptons", charged_particle_variables, 1);
   nTuple_kaons_ = tm->ntuple("Kaons", charged_particle_variables, 2);
   nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 3);
-  
+
   return;
 }
 

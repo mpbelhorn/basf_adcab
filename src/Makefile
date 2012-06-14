@@ -2,9 +2,9 @@
 # $Xorg: imake.c,v 1.6 2001/02/09 02:03:15 xorgcvs Exp $
 
 # ----------------------------------------------------------------------
-# Makefile generated from "Imake.tmpl" and </tmp/IIf.J3jZik>
+# Makefile generated from "Imake.tmpl" and </tmp/IIf.I5jIaj>
 # $Xorg: Imake.tmpl,v 1.4 2000/08/17 19:41:46 cpqbld Exp $
-# $XdotOrg: xc/config/cf/Imake.tmpl,v 1.6 2004/07/28 03:24:29 gisburn Exp $
+# $XdotOrg: util/cf/Imake.tmpl,v 1.17 2006/04/15 15:55:25 herrb Exp $
 #
 #
 #
@@ -16,7 +16,7 @@ all::
 
 .SUFFIXES: .i
 
-# $XdotOrg: xc/config/cf/Imake.cf,v 1.4 2004/08/11 21:14:01 kem Exp $
+# $XdotOrg: util/cf/Imake.cf,v 1.12 2005/11/08 06:33:24 jkj Exp $
 # $Xorg: Imake.cf,v 1.4 2000/08/17 19:41:45 cpqbld Exp $
 
 # $XFree86: xc/config/cf/Imake.cf,v 3.88 2003/12/16 21:30:21 herrb Exp $
@@ -34,23 +34,23 @@ all::
 # ----------------------------------------------------------------------
 # platform-specific configuration parameters - edit linux.cf to change
 
-# $XdotOrg: xc/config/cf/linux.cf,v 1.13 2004/08/11 21:14:01 kem Exp $
+# $XdotOrg: util/cf/linux.cf,v 1.31 2005/10/21 19:10:27 ajax Exp $
 # platform:  $Xorg: linux.cf,v 1.3 2000/08/17 19:41:47 cpqbld Exp $
 
 # platform:  $XFree86: xc/config/cf/linux.cf,v 3.220 2003/12/30 22:38:33 tsi Exp $
 
-# operating system:  Linux 2.6.9-42.0.10.ELsmp x86_64 [ELF] (2.6.9)
-# libc:	(6.3.4)
-# binutils:	(215)
+# operating system:  Linux 2.6.18-238.9.1.el5 x86_64 [ELF] (2.6.18)
+# libc:	(6.5.0)
+# binutils:	(217)
 
 # $Xorg: lnxLib.rules,v 1.3 2000/08/17 19:41:47 cpqbld Exp $
 # $XFree86: xc/config/cf/lnxLib.rules,v 3.52 2003/10/31 20:49:03 herrb Exp $
 
-# $XdotOrg: xc/config/cf/xorg.cf,v 1.27.2.6 2005/01/24 03:11:42 gisburn Exp $
+# $XdotOrg: util/cf/xorg.cf,v 1.53 2005/10/03 16:08:44 alanc Exp $
 
 # $Xorg: xfree86.cf,v 1.4 2000/08/17 19:41:49 cpqbld Exp $
 
-XORG_VERSION_CURRENT = (((6) * 10000000) + ((8) * 100000) + ((2) * 1000) + 0)
+XORG_VERSION_CURRENT = (((6) * 10000000) + ((8) * 100000) + ((99) * 1000) + 903)
 RELEASE_VERSION = RELEASE-1
 
 AFB_DEFS = -DUSE_AFB
@@ -87,7 +87,7 @@ XFREE86JAPANESEDOCDIR = $(DOCDIR)/Japanese
 # ---------------------------------------------------------------------
 # Imake rules for building libraries, programs, scripts, and data files
 # rules:  $Xorg: Imake.rules,v 1.3 2000/08/17 19:41:46 cpqbld Exp $
-# rules:  $XdotOrg: xc/config/cf/Imake.rules,v 1.6 2004/08/13 17:21:43 krh Exp $
+# rules:  $XdotOrg: util/cf/Imake.rules,v 1.11 2005/11/08 06:33:24 jkj Exp $
 #
 #
 #
@@ -125,30 +125,28 @@ TCLIBDIR =
         MKDIRHIER = mkdir -p
           REVPATH = revpath
     EXPORTLISTGEN =
-             RMAN = rman
+             RMAN = RmanCmd
      RMANBASENAME = rman
-      RMANOPTIONS = -f HTML
+      RMANOPTIONS = RmanOptions
         CONFIGSRC = $(TOP)/config
          IMAKESRC = $(CONFIGSRC)/imake
         DEPENDSRC = $(CONFIGSRC)/util
 
-          INCROOT = /usr/X11R6/include
-        USRLIBDIR = /usr/X11R6/lib64
+          INCROOT = /usr/include
+        USRLIBDIR = /usr/lib64
            VARDIR = /var
         VARLIBDIR = $(VARDIR)/lib
   SYSTEMUSRLIBDIR = /usr/lib64
   SYSTEMUSRINCDIR = /usr/include
-         SHLIBDIR = /usr/X11R6/lib64
+         SHLIBDIR = /usr/lib64
        LINTLIBDIR = $(USRLIBDIR)/lint
-          MANPATH = /usr/X11R6/man
+          MANPATH = /usr/share/man
     MANSOURCEPATH = $(MANPATH)/man
            MANDIR = $(MANSOURCEPATH)1
         LIBMANDIR = $(MANSOURCEPATH)3
        FILEMANDIR = $(MANSOURCEPATH)5
-       MISCMANDIR = $(MANSOURCEPATH)7
-     DRIVERMANDIR = $(MANSOURCEPATH)4
-          ICONDIR = /usr/share/icons
-      XCURSORPATH = "~/.icons:/usr/share/icons:/usr/share/pixmaps"
+       MISCMANDIR = $(MANSOURCEPATH)$(MISCMANSUFFIX)
+     DRIVERMANDIR = $(MANSOURCEPATH)$(DRIVERMANSUFFIX)
      LOGDIRECTORY = $(VARDIR)/log
 
         VARRUNDIR = $(VARDIR)/run
@@ -159,10 +157,10 @@ TCLIBDIR =
 
 # Nice try but useless: make will inherit BOOTSTRAPCFLAGS
 # from  top Makefile
-  BOOTSTRAPCFLAGS = -O2  -pipe -m64 -pipe
+  BOOTSTRAPCFLAGS =
 
                CC = gcc
-               AS = gcc -c -x assembler -Wa,--noexecstack
+               AS = gcc -c -x assembler
 
 .SUFFIXES: .cc
 
@@ -176,7 +174,7 @@ TCLIBDIR =
 CXXDEPENDINCLUDES =
  CXXEXTRA_DEFINES =
 CXXEXTRA_INCLUDES =
-   CXXSTD_DEFINES = -Dlinux -D__amd64__ -D_POSIX_C_SOURCE=199309L 				-D_POSIX_SOURCE -D_XOPEN_SOURCE 				-D_BSD_SOURCE -D_SVID_SOURCE 				  				 $(CXXPROJECT_DEFINES)
+   CXXSTD_DEFINES = -Dlinux -D__amd64__ -D_POSIX_C_SOURCE=199309L 				-D_POSIX_SOURCE -D_XOPEN_SOURCE 				-D_BSD_SOURCE -D_SVID_SOURCE                                 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 				  				 $(CXXPROJECT_DEFINES)
        CXXOPTIONS =
       CXXINCLUDES = $(INCLUDES) $(TOP_INCLUDES) $(CXXEXTRA_INCLUDES)
        CXXDEFINES = $(CXXINCLUDES) $(CXXSTD_DEFINES) $(THREADS_CXXDEFINES) $(DEFINES) $(CXXEXTRA_DEFINES)
@@ -221,8 +219,8 @@ CXXEXTRA_INCLUDES =
         MANSUFFIX = 1x
      LIBMANSUFFIX = 3x
     FILEMANSUFFIX = 5x
-    MISCMANSUFFIX = 7x
-  DRIVERMANSUFFIX = 4x
+    MISCMANSUFFIX = 7
+  DRIVERMANSUFFIX = 4
    ADMINMANSUFFIX = 8
      MANSRCSUFFIX = man
      MANNEWSUFFIX = _man
@@ -245,7 +243,7 @@ CXXEXTRA_INCLUDES =
 
            MODCPP = cpp
         MODCFLAGS = $(CFLAGS)
-            MODAS = gcc -c -x assembler -Wa,--noexecstack
+            MODAS = gcc -c -x assembler
        MODASFLAGS =
 
             MODLD = gcc -nostdlib
@@ -258,8 +256,8 @@ MODLDCOMBINEFLAGS = -r
 
      STD_INCLUDES =
   STD_CPP_OPTIONS = -traditional
-  STD_CPP_DEFINES = -traditional -Dlinux -D__amd64__ -D_POSIX_C_SOURCE=199309L 				-D_POSIX_SOURCE -D_XOPEN_SOURCE 				-D_BSD_SOURCE -D_SVID_SOURCE 				  				 $(PROJECT_DEFINES)
-      STD_DEFINES = -Dlinux -D__amd64__ -D_POSIX_C_SOURCE=199309L 				-D_POSIX_SOURCE -D_XOPEN_SOURCE 				-D_BSD_SOURCE -D_SVID_SOURCE 				  				 $(PROJECT_DEFINES)
+  STD_CPP_DEFINES = -traditional -Dlinux -D__amd64__ -D_POSIX_C_SOURCE=199309L 				-D_POSIX_SOURCE -D_XOPEN_SOURCE 				-D_BSD_SOURCE -D_SVID_SOURCE                                 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 				  				 $(PROJECT_DEFINES)
+      STD_DEFINES = -Dlinux -D__amd64__ -D_POSIX_C_SOURCE=199309L 				-D_POSIX_SOURCE -D_XOPEN_SOURCE 				-D_BSD_SOURCE -D_SVID_SOURCE                                 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 				  				 $(PROJECT_DEFINES)
  EXTRA_LOAD_FLAGS =
   EXTRA_LDOPTIONS =
   EXTRA_LIBRARIES =
@@ -271,6 +269,9 @@ MODLDCOMBINEFLAGS = -r
          SHLIBDEF =
 
      SHLIBLDFLAGS = -shared $(SHLIBGLOBALSFLAGS)
+
+         NOSTDLIB = -nostdlib
+     POSTNOSTDLIB = -Wl,-Bstatic -lgcc -Wl,-Bdynamic
 
          PICFLAGS = -fPIC
 
@@ -288,7 +289,7 @@ MODLDCOMBINEFLAGS = -r
      INSTDATFLAGS = -m 0444
     INSTKMEMFLAGS = -m 4711
 
-      PROJECTROOT = /usr/X11R6
+      PROJECTROOT = /usr
 
       CDEBUGFLAGS = -O2 -fno-strength-reduce -fno-strict-aliasing
         CCOPTIONS =
@@ -340,13 +341,16 @@ MODLDCOMBINEFLAGS = -r
 
 # ----------------------------------------------------------------------
 # X Window System Build Parameters and Rules
-# $XdotOrg: xc/config/cf/X11.tmpl,v 1.35.2.3 2005/02/01 04:07:39 gisburn Exp $
+# $XdotOrg: util/cf/X11.tmpl,v 1.54 2006/04/15 15:55:25 herrb Exp $
 # $Xorg: X11.tmpl,v 1.6 2000/08/17 19:41:46 cpqbld Exp $
 #
 #
 #
 #
 # $XFree86: xc/config/cf/X11.tmpl,v 1.248 2004/02/16 04:07:37 dawes Exp $
+
+XORGRELSTRING = `echo 6 8 99 903 | sed -e 's/ /./g' -e 's/^/Version\\\ /'`
+  XORGMANNAME = X Version 11
 
 STICKY_DEFINES = -DHAS_STICKY_DIR_BIT
 
@@ -356,7 +360,7 @@ FCHOWN_DEFINES = -DHAS_FCHOWN
 # X Window System make variables; these need to be coordinated with rules
 
              XTOP = $(TOP)
-           BINDIR = /usr/X11R6/bin
+           BINDIR = /usr/bin
      BUILDINCROOT = $(TOP)/exports
       BUILDINCDIR = $(BUILDINCROOT)/include
       BUILDINCTOP = ../..
@@ -372,14 +376,15 @@ FCHOWN_DEFINES = -DHAS_FCHOWN
      XBUILDINCTOP = ../../..
      XBUILDBINDIR = $(XBUILDINCROOT)/bin
            INCDIR = $(INCROOT)
-           ADMDIR = /var/log
-           LIBDIR = /usr/X11R6/lib/X11
-       LIBEXECDIR = /usr/X11R6/libexec
+           ADMDIR = /usr/adm
+           LIBDIR = /usr/lib/X11
+         SHAREDIR = /usr/share/X11
+       LIBEXECDIR = /usr/libexec
         MODULEDIR = $(USRLIBDIR)/modules
    TOP_X_INCLUDES =
           XBINDIR = $(PROJECTROOT)/bin
 
-       INSTSRCDIR = /usr/X11R6/src
+       INSTSRCDIR = /usr/src
 
         ETCX11DIR = /etc/X11
 
@@ -390,18 +395,18 @@ FCHOWN_DEFINES = -DHAS_FCHOWN
          DOCPSDIR = $(DOCDIR)/PostScript
         DOCPDFDIR = $(DOCDIR)/PDF
           FONTDIR = $(LIBDIR)/fonts
-     ENCODINGSDIR = $(FONTDIR)/encodings
-         XINITDIR = /etc/X11/xinit
-           XDMDIR = /etc/X11/xdm
+     ENCODINGSDIR = $(LIBDIR)/fonts/encodings
+         XINITDIR = $(LIBDIR)/xinit
+           XDMDIR = $(LIBDIR)/xdm
         XDMVARDIR = $(VARLIBDIR)/xdm
            TWMDIR = $(LIBDIR)/twm
            XSMDIR = $(LIBDIR)/xsm
            NLSDIR = $(LIBDIR)/nls
        XLOCALEDIR = $(LIBDIR)/locale
-      LBXPROXYDIR = /etc/X11/lbxproxy
-  PROXYMANAGERDIR = /etc/X11/proxymngr
-        XPRINTDIR = /etc/X11/xserver
-      XAPPLOADDIR = $(LIBDIR)/app-defaults
+      LBXPROXYDIR = $(LIBDIR)/lbxproxy
+  PROXYMANAGERDIR = $(LIBDIR)/proxymngr
+        XPRINTDIR = $(LIBDIR)/xserver
+      XAPPLOADDIR = /usr/share/X11/app-defaults
        FONTCFLAGS = -t
 
      INSTAPPFLAGS = $(INSTDATFLAGS)
@@ -447,11 +452,11 @@ FCHOWN_DEFINES = -DHAS_FCHOWN
      TRANSCOMMSRC = $(LIBSRC)/xtrans
    TRANS_INCLUDES = -I$(TRANSCOMMSRC)
  CONNECTION_FLAGS = -DUNIXCONN -DTCPCONN $(STICKY_DEFINES) $(FCHOWN_DEFINES) -DIPv6
-XTRANS_FAILDEFINES =
+XTRANS_FAILDEFINES = -DFAIL_HARD
 
     VENDORMANNAME = X.Org
- VENDORMANVERSION = `echo 6 8 2 | sed -e 's/ /./g' -e 's/^/Version\\\ /'`
-      XORGMANDEFS = -D__xorgversion__='"$(XORGRELSTRING)" "$(XORGMANNAME)"'
+ VENDORMANVERSION = `echo 6 8 99 903 | sed -e 's/ /./g' -e 's/^/Version\\\ /'`
+      XORGMANDEFS = -D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\""
     VENDORMANDEFS = -D__vendorversion__="$(VENDORMANVERSION) $(VENDORMANNAME)"
        VENDORNAME = The X.Org Foundation
   VENDORNAMESHORT = X.Org
@@ -464,7 +469,7 @@ VENDORSUPPORTDEFS = -D__VENDORDWEBSUPPORT__='"$(VENDORWEBSUPPORT)"'
   XKBDEFRULESDEFS = -D__XKBDEFRULES__='"$(XKBDEFRULES)"'
 
      XCONFIGFILE = xorg.conf
-      XCONFIGDIR = /etc/X11
+      XCONFIGDIR = $(LIBDIR)
         XLOGFILE = Xorg
      XSERVERNAME = Xorg
 
@@ -580,24 +585,21 @@ LINTDMX = $(LINTLIBDIR)/llib-ldmx.ln
 
     DPSLIBSRC = $(LIBSRC)/dps
 
-SODPSREV = 1.0
-DEPDPSLIB =
+DEPDPSLIB = $(USRLIBDIR)/libdps.a
 DPSLIB =  -ldps
 
 LINTDPS = $(LINTLIBDIR)/llib-ldps.ln
 
     DPSTKLIBSRC = $(LIBSRC)/dpstk
 
-SODPSTKREV = 1.0
-DEPDPSTKLIB =
+DEPDPSTKLIB = $(USRLIBDIR)/libdpstk.a
 DPSTKLIB =  -ldpstk
 
 LINTDPSTK = $(LINTLIBDIR)/llib-ldpstk.ln
 
     PSRESLIBSRC = $(LIBSRC)/psres
 
-SOPSRESREV = 1.0
-DEPPSRESLIB =
+DEPPSRESLIB = $(USRLIBDIR)/libpsres.a
 PSRESLIB =  -lpsres
 
 LINTPSRES = $(LINTLIBDIR)/llib-lpsres.ln
@@ -706,14 +708,16 @@ LINTXFONTCACHE = $(LINTLIBDIR)/llib-lXfontcache.ln
 
          XAUTHSRC = $(LIBSRC)/Xau
 
-DEPXAUTHLIB = $(USRLIBDIR)/libXau.a
+SOXAUTHREV = 6.0
+DEPXAUTHLIB =
 XAUTHLIB =  -lXau
 
 LINTXAUTH = $(LINTLIBDIR)/llib-lXau.ln
 
       XDMCPLIBSRC = $(LIBSRC)/Xdmcp
 
-DEPXDMCPLIB = $(USRLIBDIR)/libXdmcp.a
+SOXDMCPREV = 6.0
+DEPXDMCPLIB =
 XDMCPLIB =  -lXdmcp
 
 LINTXDMCP = $(LINTLIBDIR)/llib-lXdmcp.ln
@@ -771,6 +775,12 @@ LINTXA = $(LINTLIBDIR)/llib-lXa.ln
 
        AWIDGETSRC = $(LIBSRC)/Xaw
 
+SOXAWREV = 8.0
+DEPXAWLIB =
+XAWLIB =  -lXaw
+
+LINTXAW = $(LINTLIBDIR)/llib-lXaw.ln
+
        AWIDGET7SRC = $(LIBSRC)/Xaw7
 
 SOXAW7REV = 7.0
@@ -778,12 +788,6 @@ DEPXAW7LIB =
 XAW7LIB =  -lXaw
 
 LINTXAW7 = $(LINTLIBDIR)/llib-lXaw.ln
-
-SOXAWREV = SharedXawRev
-DEPXAWLIB =
-XAWLIB =  -lXaw
-
-LINTXAW = $(LINTLIBDIR)/llib-lXaw.ln
 
        AWIDGET6SRC = $(LIBSRC)/Xaw6
 
@@ -816,7 +820,7 @@ LINTXBSD = $(LINTLIBDIR)/llib-lXbsd.ln
 
            ICESRC = $(LIBSRC)/ICE
 
-SOICEREV = 6.3
+SOICEREV = 6.4
 DEPICELIB =
 ICELIB =  -lICE
 
@@ -929,16 +933,19 @@ XFTLIB =  -lXft
 
 LINTXFT = $(LINTLIBDIR)/llib-lXft.ln
 
-FONTCONFIGDIR = /usr
-FONTCONFIGLIBDIR = /usr/lib64
-FONTCONFIGINCDIR = /usr/include
-FONTCONFIGBINDIR = /usr/bin
+          FONTCONFIGLIBSRC = $(LIBSRC)/fontconfig
 
-FONTCONFIGLIB = -lfontconfig
+SOFONTCONFIGREV = 1.0.4
+DEPFONTCONFIGLIB =
+FONTCONFIGLIB =  -lfontconfig
 
-FONTCONFIGINCLUDES =
+LINTFONTCONFIG = $(LINTLIBDIR)/llib-lfontconfig.ln
 
-FCCACHE = $(FONTCONFIGBINDIR)/fc-cache
+FONTCONFIGINCDIR=$(INCDIR)
+
+FONTCONFIGINCLUDES = -I$(FONTCONFIGINCDIR)
+
+FCCACHE = $(BINDIR)/fc-cache
 
 FONTCONFIGDEFINES = -DFONTCONFIG
 
@@ -999,6 +1006,8 @@ LINTXTRAP = $(LINTLIBDIR)/llib-lXTrap.ln
          DEPLIBS9 = $(DEPLIBS)
          DEPLIBS10 = $(DEPLIBS)
 
+       FCPRELOADPATTERN = libfontconfig.so.?
+
       XFTPRELOADPATTERN = libXft.so.?
   XRENDERPRELOADPATTERN = libXrender.so.?
     XFONTPRELOADPATTERN = libXfont*.so.?
@@ -1006,7 +1015,7 @@ LINTXTRAP = $(LINTLIBDIR)/llib-lXTrap.ln
 XMULIBONLY = -lXmu
 XMULIB = $(XMULIBONLY) $(XTOOLLIB) $(XLIB)
 
-        CONFIGDIR = $(LIBDIR)/config
+        CONFIGDIR = /usr/share/X11/config
 
     USRLIBDIRPATH = $(USRLIBDIR)
         LDPRELIBS = -L$(USRLIBDIR)  $(INSTALLED_LIBS)
@@ -1024,27 +1033,8 @@ CXXPROJECT_DEFINES =
 # Imakefile
 #
 
-TARGET1  = Adcab.so
-TARGET2  =
-TARGET3  =
-TARGET4  =
-TARGET5  =
-TARGET6  =
-TARGET6a =
-TARGET7  =
-TARGET8  =
-TARGET9  =
-OBJS1  = Adcab.o TrackParameters.o ParticleCandidate.o DileptonEvent.o userinfo.o geninfo.o
-OBJS2  =
-OBJS3  =
-OBJS4  =
-OBJS5  =
-OBJS6  =
-OBJS6a =
-OBJS7  =
-OBJS8  =
-OBJS9  =
-
+TARGET1 = Adcab.so
+OBJS1 = Adcab.o TrackParameters.o ParticleCandidate.o DileptonEvent.o userinfo.o geninfo.o
 BUILD_TOP_DIR    = $(BELLE_RUN_DIR)
 RELATIVE_TOP_DIR = $(BELLE_TOP_DIR)
 BELLE_INC_DIR    = $(BELLE_TOP_DIR)/include
@@ -1052,18 +1042,20 @@ BBSTABLE         = $(BELLE_TOP_DIR)/src/config/panther/bbstable
 
 include $(BELLE_TOP_DIR)/src/config/Makefile.panther
 
-BELLE_LIB = -lcabs3 -lip -lkid -lmdst -lparticle -lhelix -lbenergy  -lhamlet -ltagv -lbelleCLHEP  -lip -lqqutil -ltuple   -leid -licpv_skim
+BELLE_LIB = -lip -lkid -lmdst -lparticle -lhelix -lbenergy -lbelleCLHEP -leid
 PANTHER_LIB = -L$(BELLE_RUN_DIR)/lib/so -lpanther
+NEUROBAYES_LIB = -lEG -lNeuroBayesExpertCPP -L$(NEUROBAYES)/lib
+# EXTRA_LIB =
 .SUFFIXES: .c .cc .so
 
-LIBS = -L. $(PANTHER_LIB) $(BELLE_LIB) $(EXTRA_LIB) `root-config --libs`
-INCS = -I. -I$(BELLE_INC_DIR) `root-config --cflags`
+LIBS = -L. $(PANTHER_LIB) $(BELLE_LIB) `root-config --libs` $(NEUROBAYES_LIB) #$(EXTRA_LIB)
+INCS = -I. -I$(MY_TOP_DIR)/include -I$(BELLE_INC_DIR) -I /usr/local/include/boost-1_37 `root-config --cflags` -I./Experte/src -I$(NEUROBAYES)/include
 
 CC  = gcc
 CXX = g++
 OPT = -g
 CFLAGS   = $(OPT) -DHEP_SHORT_NAMES -DBELLE_SHORT_NAMES -DDSTXX_NOINLINE -fPIC
-CXXFLAGS = $(OPT) -DHEP_SHORT_NAMES -DBELLE_SHORT_NAMES -DDSTXX_NOINLINE -fPIC
+CXXFLAGS = $(OPT) -DHEP_SHORT_NAMES -DBELLE_SHORT_NAMES -DDSTXX_NOINLINE -fPIC -Wall -Wno-non-virtual-dtor
 SOFLAGS  = $(OPT) -shared -Wl,-export-dynamic
 
 .cc.o:
@@ -1074,56 +1066,22 @@ SOFLAGS  = $(OPT) -shared -Wl,-export-dynamic
 
 # ------------------------------------------------------------------------
 
-all:: $(TARGET1) $(TARGET2) $(TARGET3) $(TARGET4) $(TARGET5)       $(TARGET6) $(TARGET7) $(TARGET8) $(TARGET9)       $(TARGET6a)
-
 $(TARGET1): $(OBJS1)
 	$(CXX) $(SOFLAGS) -o $@ $(OBJS1) $(LIBS)
 
-$(TARGET2): $(OBJS2)
-	$(CXX) $(SOFLAGS) -o $@ $(OBJS2) $(LIBS)
+all:: $(TARGET1)
 
-$(TARGET3): $(OBJS3)
-	$(CXX) $(SOFLAGS) -o $@ $(OBJS3) $(LIBS)
+cleandir::
+	rm -f Makefile Makefile.bak *.root *.mdst
+	rm -f $(OBJS1)
 
-$(TARGET4): $(OBJS4)
-	$(CXX) $(SOFLAGS) -o $@ $(OBJS4) $(LIBS)
-
-$(TARGET5): $(OBJS5)
-	$(CXX) $(SOFLAGS) -o $@ $(OBJS5) $(LIBS)
-
-$(TARGET6): $(OBJS6)
-	$(CXX) $(SOFLAGS) -o $@ $(OBJS6) $(LIBS)
-
-$(TARGET6a): $(OBJS6a)
-	$(CXX) $(SOFLAGS) -o $@ $(OBJS6a) $(LIBS)
-
-$(TARGET7): $(OBJS7)
-	$(CXX) $(SOFLAGS) -o $@ $(OBJS7) $(LIBS)
-
-$(TARGET8): $(OBJS8)
-	$(CXX) $(SOFLAGS) -o $@ $(OBJS8) $(LIBS)
-
-$(TARGET9): $(OBJS9)
-	$(CXX) $(SOFLAGS) -o $@ $(OBJS9) $(LIBS)
-
-panther_example6p.o: panther_example6p.c
-
-panther_example6p.c: tables/example6p.h
-
-example6p.cc: tables/example6p.h
-
-example6p.o: example6p.cc
-
-example6p.cc: tables/example6p.h
-
-tables/example6p.h: example6p.tdf
-	@-mkdir tables
-	@-rm -rf tables/example6p.h
-	$(BBSTABLE) example6p.tdf
-	ln -s ../example6p.h tables/example6p.h
-
-mystat.o: mystat.cc mystat.h
-	$(CXX) -c -O4 $(CXXFLAGS) $(INCS) -o $@ $<
+svnclean::
+	rm -f Makefile Makefile.bak
+	rm -f *.root *.mdst
+	rm -f $(OBJS1)
+	rm -rf hbk/ index/
+	rm -f *.hbk *.index
+	rm -f $(TARGET1)
 
 # ----------------------------------------------------------------------
 # common rules for all Makefiles - do not edit

@@ -27,7 +27,7 @@ ParticleCandidate::ParticleCandidate()
 // Useful Constructor.
 ParticleCandidate::ParticleCandidate(const Particle &particle,
     const Hep3Vector &cm_boost, const HepPoint3D &interaction_point,
-    const bool &scale_momentum = false)
+    const bool &scale_momentum)
     : particle_(new Particle(particle)),
       cm_boost_(new Hep3Vector(cm_boost)),
       mdst_charged_(new Mdst_charged(particle.mdstCharged())),
@@ -41,11 +41,15 @@ ParticleCandidate::ParticleCandidate(const Particle &particle,
   if (scale_momentum) {
     // Get the PID. 11 == electron, 13 == muon.
     if (abs((*particle_).pType().lund()) == 11) {
-      (*p_cm_) = (*p_cm_) * 1.03290;
+      double s(1.03290);
+      HepLorentzVector p_cm_s(p_cm_->x() * s, p_cm_->y() * s, p_cm_->z() * s, p_cm_->t() * s);
+      *p_cm_ = p_cm_s;
       (*p_) = (*p_cm_);
       (*p_).boost(-cm_boost);
     } else if (abs((*particle_).pType().lund()) == 13) {
-      (*p_cm_) = (*p_cm_) * 1.03291;
+      double s(1.03291);
+      HepLorentzVector p_cm_s(p_cm_->x() * s, p_cm_->y() * s, p_cm_->z() * s, p_cm_->t() * s);
+      *p_cm_ = p_cm_s;
       (*p_) = (*p_cm_);
       (*p_).boost(-cm_boost);
     } else {
@@ -218,7 +222,7 @@ ParticleCandidate::klmHits()
 
 // Returns the Chi^2 of the associated hits in the KLM divided by the number of
 //   the hits in the KLM assuming the track is a muon. If the track has no
-//   associated hits in the KLM layers, the function returns 0 (consistant with 
+//   associated hits in the KLM layers, the function returns 0 (consistant with
 //   an electron).
 double
 ParticleCandidate::klmChi2PerHits()
