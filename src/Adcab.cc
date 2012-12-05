@@ -661,7 +661,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     int number_of_event_k_minus = 0;
     for (ParticleCandidateIterator kaon = kaon_candidates.begin();
         kaon < kaon_candidates.end(); kaon++) {
-      if (kaon->particle().charge() < 0) ++number_of_k_minus;
+      if (kaon->particle().charge() < 0) ++number_of_event_k_minus;
     }
 
     // Column names can be no greater than eight (8) characters long.
