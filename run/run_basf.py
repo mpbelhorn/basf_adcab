@@ -70,6 +70,23 @@ if process_type == [0, 0, 0, 0]:
 elif process_type == [1, 0, 0, 0]:
   print('Processing real data.')
   output_name = ('Adcab.DATA.e' + str(options.experiment_number))
+  # process_files.append('process_url http://bweb3/mdst.php?ex=43&rs=1&re=999&skm=dilep_skim&dt=5S_onresonance&bl=caseB')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001013-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001014-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001016-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001019-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001021-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001022-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001024-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001025-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001026-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001028-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001030-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001031-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001033-b20090127_0910.index 0')
+  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000043/dilep_skim/0127/5S_scan/10/dilepskim-e000043r001034-b20090127_0910.index 0')
+  for url in process_files:
+    print(url)
 
 elif process_type == [1, 1, 0, 0]:
   print('Processing signal MC.')
@@ -88,10 +105,9 @@ elif process_type == [1, 1, 0, 0]:
 
 elif process_type == [1, 0, 1, 0]:
   print('Processing continuum.')
-  output_name = ('Adcab.SGMC.udsc.e' + str(options.experiment_number))
+  output_name = ('Adcab.DATA.udsc.e' + str(options.experiment_number))
   process_files.append('process_url ' +
-      'http://bweb3/mdst.php?' +
-      'ex=45&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB&dv=zfserv')
+      'http://bweb3/mdst.php?ex=67&rs=1&re=719&skm=dilep_skim&dt=continuum&bl=caseB')
   for url in process_files:
     print(url)
 
