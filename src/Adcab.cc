@@ -561,7 +561,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_kaons_->column("is_cntnm", basf_parameter_is_continuum_);
       nTuple_kaons_->column("cm_enrgy", beam_energy_cm_frame_);
       nTuple_kaons_->column("charge"  , electric_charge);
-      nTuple_kaons_->column("charge"  , electric_charge);
       nTuple_kaons_->column("mass"    , kaon.p().mag());
       nTuple_kaons_->column("good_mu" , good_muon);
       nTuple_kaons_->column("veto_mu" , vetoed_muon);
@@ -658,6 +657,12 @@ Adcab::event(BelleEvent* evptr, int* status)
     DileptonEvent &event_candidate = *i;
     ParticleCandidate &l0 = event_candidate.l0();
     ParticleCandidate &l1 = event_candidate.l1();
+  
+    int number_of_event_k_minus = 0;
+    for (ParticleCandidateIterator kaon = kaon_candidates.begin();
+        kaon < kaon_candidates.end(); kaon++) {
+      if (kaon->particle().charge() < 0) ++number_of_k_minus;
+    }
 
     // Column names can be no greater than eight (8) characters long.
     // Write event-level data to the n-tuple.
@@ -671,7 +676,8 @@ Adcab::event(BelleEvent* evptr, int* status)
     nTuple_dileptons_->column("hadronb" , hadronb_code);
     nTuple_dileptons_->column("cm_enrgy", beam_energy_cm_frame_);
     nTuple_dileptons_->column("n_kaons" , kaon_candidates.size());
-
+    nTuple_dileptons_->column("n_k_min" , number_of_event_k_minus);
+    
     // Write dilepton-level data to the n-tuple.
     nTuple_dileptons_->column("typ_asn" , event_candidate.eventTypeAssigned());
     nTuple_dileptons_->column("typ_tru" , event_candidate.eventTypeTrue());
@@ -767,6 +773,7 @@ Adcab::hist_def()
                                    "hadronb "
                                    "cm_enrgy "
                                    "n_kaons "
+                                   "n_k_min "
                                    "typ_asn "
                                    "typ_tru "
                                    "evt_sign "
