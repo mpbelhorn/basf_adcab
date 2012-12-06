@@ -2,7 +2,7 @@
 # $Xorg: imake.c,v 1.6 2001/02/09 02:03:15 xorgcvs Exp $
 
 # ----------------------------------------------------------------------
-# Makefile generated from "Imake.tmpl" and </tmp/IIf.I5jIaj>
+# Makefile generated from "Imake.tmpl" and </tmp/IIf.zpYOXI>
 # $Xorg: Imake.tmpl,v 1.4 2000/08/17 19:41:46 cpqbld Exp $
 # $XdotOrg: util/cf/Imake.tmpl,v 1.17 2006/04/15 15:55:25 herrb Exp $
 #

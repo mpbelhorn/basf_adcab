@@ -192,7 +192,7 @@ analysis_parameters = [
     ['JPsi_Veto_OS_Only', str(int(options.jpsi_veto_os_only))],
     ['Verbose_Log',       str(int(options.verbose_log))],
     ['MC_Stream_Number',  str(int(options.stream_number))],
-    ['Is_Continuum',      str(int(options.continuum))]],
+    ['Is_Continuum',      str(int(options.continuum))],
     ['Scale_Momentum',    str(int(options.scale_momentum))]]
 
 # Test runs must exit before calling BASF.

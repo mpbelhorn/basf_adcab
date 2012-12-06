@@ -2,7 +2,7 @@
 import subprocess
 
 experiments = [43, 53, 67, 69, 71]
-streams = range(3,6)
+streams = range(0,6)
 queue = 'b_a'
 
 for experiment in experiments:
