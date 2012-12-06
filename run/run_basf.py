@@ -27,6 +27,9 @@ parser.add_argument('-f', default = 19299,
 parser.add_argument('-c', default = False,
     action = 'store_true', dest = 'continuum',
     help = 'process continuum data')
+parser.add_argument('-p', default = False,
+    action = 'store_true', dest = 'scale_momentum',
+    help = 'scale lepton momentum from Y(4S)->Y(5S)')
 parser.add_argument('-g', default = False,
     action = 'store_true', dest = 'generic_mc',
     help = 'process generic monte carlo')
@@ -103,11 +106,29 @@ elif process_type == [1, 1, 0, 0]:
   if len(process_files) != 4:
     print('Warning: Number of MC files might not be right.')
 
-elif process_type == [1, 0, 1, 0]:
+elif process_type == [0, 0, 1, 0]:
   print('Processing continuum.')
-  output_name = ('Adcab.DATA.udsc.e' + str(options.experiment_number))
-  process_files.append('process_url ' +
-      'http://bweb3/mdst.php?ex=67&rs=1&re=719&skm=dilep_skim&dt=continuum&bl=caseB')
+  options.scale_momentum = True
+  output_name = ('Adcab.DATA.udsc')
+  process_files.append('process_url http://bweb3/mdst.php?ex=31&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=33&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=35&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=37&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=41&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=43&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=45&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=47&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=49&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=51&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=53&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=55&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=61&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=63&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=65&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=67&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=69&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=71&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
+  process_files.append('process_url http://bweb3/mdst.php?ex=73&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
   for url in process_files:
     print(url)
 
@@ -171,7 +192,8 @@ analysis_parameters = [
     ['JPsi_Veto_OS_Only', str(int(options.jpsi_veto_os_only))],
     ['Verbose_Log',       str(int(options.verbose_log))],
     ['MC_Stream_Number',  str(int(options.stream_number))],
-    ['Is_Continuum',      str(int(options.continuum))]]
+    ['Is_Continuum',      str(int(options.continuum))]],
+    ['Scale_Momentum',    str(int(options.scale_momentum))]]
 
 # Test runs must exit before calling BASF.
 if options.test_run:
