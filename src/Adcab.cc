@@ -268,12 +268,10 @@ Adcab::event(BelleEvent* evptr, int* status)
     fox_wolfram_r2 = hadron_info_manager[0].R2();
   }
 
-  // Instantiate constant data structures stored in external header files.
+  // Instantiate cuts as stored in external header file.
   // Might as well make them static since
   //     they will be needed again and they never change.
-  static PDGmasses masses;
   static AdcabCuts cuts;
-  static EntryTypes entry_types;
 
   // Instantiate PID classes. These are constant and
   //     should only be initialized once.
@@ -539,8 +537,6 @@ Adcab::event(BelleEvent* evptr, int* status)
     }
 
     // Treat the particle as a charged kaon.
-    Particle kaon_particle(charged_particle,
-        electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
     setMCtruth(kaon_particle);
     ParticleCandidate kaon(kaon_particle, cm_boost_, interaction_point_);
     if (good_kaon || abs(kaon.idTrue()) == 321) {
