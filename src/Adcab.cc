@@ -289,9 +289,11 @@ Adcab::event(BelleEvent* evptr, int* status)
   }
   static std::vector<ParticleCandidate> lepton_candidates(5);
   static std::vector<ParticleCandidate> kaon_candidates(10);
+  static std::vector<ParticleCandidate> true_kaons(10);
   static std::vector<DileptonEvent> dilepton_event_candidates(10);
   lepton_candidates.clear();
   kaon_candidates.clear();
+  true_kaons.clear();
   dilepton_event_candidates.clear();
 
   // Alias the MDST charged manager, which contains the measured charged tracks
@@ -337,7 +339,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       cout << "        ["<< good_muon << good_electron << good_kaon << "] "
            << "PID check." << endl;
     }
-    if (!(good_muon || good_electron || good_kaon)) continue;
 
     // Create particle class objects of each species.
     double electric_charge = charged_particle.charge();
@@ -371,8 +372,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       cout << "        ["<< good_muon << good_electron << good_kaon << "] "
            << "dr/dz and SVD check." << endl;
     }
-    if (!(good_muon || good_electron || good_kaon)) continue;
-
     // Reject if the particle track has polar angle pointing outside the
     //   barrel (p is given closest to coord. origin - see mdst table).
     //   The lab momentum is the same for each particle candidate, so we use the
@@ -387,7 +386,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       cout << "        ["<< good_muon << good_electron << good_kaon << "] "
            << "Barrel intersection check." << endl;
     }
-    if (!(good_muon || good_electron || good_kaon)) continue;
 
     // Check if CM momentum is good assuming muon and electron masses.
     if ((muon_candidate.pCm().rho() < cuts.minLeptonMomentumCm) ||
@@ -402,7 +400,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       cout << "        ["<< good_muon << good_electron << good_kaon << "] "
            << "CM-frame momentum check." << endl;
     }
-    if (!(good_muon || good_electron || good_kaon)) continue;
 
     // Tag possible pair production and J/Psi daughters.
     bool vetoed_muon = false;
@@ -476,7 +473,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       cout << "        ["<< good_muon << good_electron << good_kaon << "] "
            << "J/Psi and pair production veto." << endl;
     }
-    if (!(good_muon || good_electron || good_kaon)) continue;
 
     // While the candidate is still good, add it to the lepton list. Only add
     //     the candidate to the lepton list once! If it is a good muon
@@ -542,16 +538,21 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_leptons_->dumpData();
     }
 
-    if (good_kaon && !good_lepton) {
-      if (basf_parameter_verbose_log_ > 1) {
-        cout << "        Committing kaon to list." << endl;
+    // Treat the particle as a charged kaon.
+    Particle kaon_particle(charged_particle,
+        electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
+    setMCtruth(kaon_particle);
+    ParticleCandidate kaon(kaon_particle, cm_boost_, interaction_point_);
+    if (good_kaon || abs(kaon.idTrue()) == 321) {
+      if (good_kaon && !good_lepton) {
+        if (basf_parameter_verbose_log_ > 1) {
+          cout << "        Committing kaon to list." << endl;
+        }
+        kaon_candidates.push_back(kaon);
       }
-      // Treat the particle as a charged kaon.
-      Particle kaon_particle(charged_particle,
-          electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
-      setMCtruth(kaon_particle);
-      ParticleCandidate kaon(kaon_particle, cm_boost_, interaction_point_);
-      kaon_candidates.push_back(kaon);
+      if (abs(kaon.idTrue()) == 321) {
+        true_kaons.push_back(kaon);
+      }
 
       nTuple_kaons_->column("stm_no"  , basf_parameter_mc_stream_number_);
       nTuple_kaons_->column("exp_no"  , experiment_number_);
@@ -657,11 +658,26 @@ Adcab::event(BelleEvent* evptr, int* status)
     DileptonEvent &event_candidate = *i;
     ParticleCandidate &l0 = event_candidate.l0();
     ParticleCandidate &l1 = event_candidate.l1();
-  
-    int number_of_event_k_minus = 0;
+
+    int number_of_candidate_k_plus = 0;
+    int number_of_candidate_k_minus = 0;
     for (ParticleCandidateIterator kaon = kaon_candidates.begin();
         kaon < kaon_candidates.end(); kaon++) {
-      if (kaon->particle().charge() < 0) ++number_of_event_k_minus;
+      if (kaon->particle().charge() > 0) {
+        ++number_of_candidate_k_plus;
+      } else {
+        ++number_of_candidate_k_minus;
+      }
+    }
+    int number_of_true_k_plus = 0;
+    int number_of_true_k_minus = 0;
+    for (ParticleCandidateIterator kaon = true_kaons.begin();
+        kaon < true_kaons.end(); kaon++) {
+      if (kaon->particle().charge() > 0) {
+        ++number_of_true_k_plus;
+      } else {
+        ++number_of_true_k_minus;
+      }
     }
 
     // Column names can be no greater than eight (8) characters long.
@@ -675,9 +691,11 @@ Adcab::event(BelleEvent* evptr, int* status)
     nTuple_dileptons_->column("fw_r2"   , fox_wolfram_r2);
     nTuple_dileptons_->column("hadronb" , hadronb_code);
     nTuple_dileptons_->column("cm_enrgy", beam_energy_cm_frame_);
-    nTuple_dileptons_->column("n_kaons" , kaon_candidates.size());
-    nTuple_dileptons_->column("n_k_min" , number_of_event_k_minus);
-    
+    nTuple_dileptons_->column("n_can_kp", number_of_candidate_k_plus);
+    nTuple_dileptons_->column("n_can_km", number_of_candidate_k_minus);
+    nTuple_dileptons_->column("n_tru_kp", number_of_true_k_plus);
+    nTuple_dileptons_->column("n_tru_km", number_of_true_k_minus);
+
     // Write dilepton-level data to the n-tuple.
     nTuple_dileptons_->column("typ_asn" , event_candidate.eventTypeAssigned());
     nTuple_dileptons_->column("typ_tru" , event_candidate.eventTypeTrue());
@@ -772,8 +790,10 @@ Adcab::hist_def()
                                    "fw_r2 "
                                    "hadronb "
                                    "cm_enrgy "
-                                   "n_kaons "
-                                   "n_k_min "
+                                   "n_can_kp "
+                                   "n_can_km "
+                                   "n_tru_kp "
+                                   "n_tru_km "
                                    "typ_asn "
                                    "typ_tru "
                                    "evt_sign "
