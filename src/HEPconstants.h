@@ -26,7 +26,7 @@ struct PDGmasses {
   static const double dStarCharged = 2.010000;
   static const double dStar0       = 2.006700;
   static const double rho          = 0.775800;
-  static const double phi          = 1.019460;
+  static const double phi          = 1.019455;
   static const double d0           = 1.864500;
   static const double b0           = 5.279000;
   static const double upsilon4S    = 10.58000;
