@@ -617,14 +617,14 @@ Adcab::event(BelleEvent* evptr, int* status)
       }
     }
   }
-  for (ParticleIterator phi_iter = phi_candidate.begin();
+  for (ParticleIterator phi_iter = phi_candidates.begin();
       phi_iter != phi_candidates.end(); ++ phi_iter) {
-    setMCtruth(phi);
+    setMCtruth(*phi_iter);
     cout << "Phi vertex chisq: "
          << dynamic_cast<UserInfo&>(phi_iter->userInfo()).chisq()
          << endl;
     cout << "Phi truth: "
-         << phi_iter
+         << IDhep(*phi_iter)
          << endl;
   }
 
