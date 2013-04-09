@@ -1,3 +1,6 @@
+#ifndef USERINFO_H
+#define USERINFO_H
+
 //______________________________________________________________________________
 // Filename: Userinfo.h
 // Author: Unknown.
@@ -70,4 +73,5 @@ UserInfo : public ParticleUserInfo
 
 #if defined(BELLE_NAMESPACE)
 } // namespace Belle
+#endif
 #endif
