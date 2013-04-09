@@ -10,7 +10,7 @@
 namespace Belle {
 #endif
 
-void setMCtruth(std::vector<Particle> &plist);
+int fitPhiVertex(Particle &p);
 
 #if defined(BELLE_NAMESPACE)
 } // namespace Belle
