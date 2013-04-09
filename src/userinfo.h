@@ -25,31 +25,47 @@ class
 UserInfo : public ParticleUserInfo
 {
  public:
-	UserInfo();                 // Default Constructor.
-	UserInfo(unsigned);         // Useful Constructor.
-	UserInfo(const UserInfo &); // Copy Constructor.
-	virtual ~UserInfo();
+  UserInfo();                 // Default Constructor.
+  UserInfo(unsigned);         // Useful Constructor.
+  UserInfo(const UserInfo &); // Copy Constructor.
+  virtual ~UserInfo();
 
-	// Constructs self object.
-	UserInfo * clone(void) const;
-
-	// Copy operator.
-	UserInfo & operator = (const UserInfo &);
+  // Constructs self object.
+  UserInfo * clone(void) const;
+  // Copy operator.
+  UserInfo & operator = (const UserInfo &);
 
  public:
-	const int & decayMode(void) const { return m_decayMode; }
-	void decayMode(const int &v) { m_decayMode = v; }
+  const int & decayMode(void) const { return m_decayMode; }
+  void decayMode(const int &v) { m_decayMode = v; }
 
-	const int & genHepevtLink(void) const { return m_genHepevtLink; }
-	void genHepevtLink(const int &v) { m_genHepevtLink = v; }
+  const int & genHepevtLink(void) const { return m_genHepevtLink; }
+  void genHepevtLink(const int &v) { m_genHepevtLink = v; }
 
-	const int & genHepevtChecked(void) const { return m_genHepevtChecked; }
-	void genHepevtChecked(const int &v) { m_genHepevtChecked = v; }
+  const int & genHepevtChecked(void) const { return m_genHepevtChecked; }
+  void genHepevtChecked(const int &v) { m_genHepevtChecked = v; }
+
+  /// Input vertex Chi^2.
+  void chisq(const double &v) { m_chisq = v; }
+
+  /// Vertex fit confidence level.
+  void cl(const double &v)    { m_cl = v; }
+
+  /// Vertex fit degrees of freedom.
+  void ndf(const unsigned &v) { m_ndf = v; }
+
+  /// Output.
+  const double   & chisq(void) const { return m_chisq; }
+  const double   & cl(void)    const { return m_cl; }
+  const unsigned & ndf(void)   const { return m_ndf; }
 
  private:
-	int m_genHepevtLink;
-	int m_genHepevtChecked;
-	int m_decayMode;
+  int m_genHepevtLink;
+  int m_genHepevtChecked;
+  int m_decayMode;
+  double   m_chisq;
+  double   m_cl;
+  unsigned m_ndf;
 };
 
 #if defined(BELLE_NAMESPACE)
