@@ -288,10 +288,16 @@ Adcab::event(BelleEvent* evptr, int* status)
   static std::vector<ParticleCandidate> lepton_candidates(5);
   static std::vector<ParticleCandidate> kaon_candidates(10);
   static std::vector<ParticleCandidate> true_kaons(10);
+  static std::vector<ParticleCandidate> pi_candidates(10);
+  static std::vector<Particle> phi_candidates(5);
+  static std::vector<Particle> d_candidates(5);
   static std::vector<DileptonEvent> dilepton_event_candidates(10);
   lepton_candidates.clear();
   kaon_candidates.clear();
   true_kaons.clear();
+  pi_candidates.clear();
+  phi_candidates.clear();
+  d_candidates.clear();
   dilepton_event_candidates.clear();
 
   // Alias the MDST charged manager, which contains the measured charged tracks
@@ -592,6 +598,34 @@ Adcab::event(BelleEvent* evptr, int* status)
     cout << "    Passed track selection." << endl;
     cout << "      Lepton candidates: " << lepton_candidates.size() << endl;
     cout << "      Kaon candidates: " << kaon_candidates.size() << endl;
+  }
+
+  // Find Phi canididates.
+  for (ParticleCandidateIterator kaon1 = kaon_candidates.begin();
+      kaon1 != kaon_candidates.end(); ++kaon1) {
+    for (ParticleCandidateIterator kaon2 = kaon1;
+        kaon2 != kaon_candidates.end(); ++kaon2) {
+      if (kaon1 == kaon2) continue;
+      Particle &k1 = kaon1->particle();
+      Particle &k2 = kaon2->particle();
+      if (k1.charge() == k2.charge()) continue;
+      HepLorentzVector phi_momentum = k1.p() + k2.p();
+      Particle phi_candidate(phi_momentum, Ptype("PHI"));
+      int error = fitPhiVertex(phi_candidate);
+      if (!error) {
+        phi_candidates.push_back(phi_candidate);
+      }
+    }
+  }
+  for (ParticleIterator phi_iter = phi_candidate.begin();
+      phi_iter != phi_candidates.end(); ++ phi_iter) {
+    setMCtruth(phi);
+    cout << "Phi vertex chisq: "
+         << dynamic_cast<UserInfo&>(phi_iter->userInfo()).chisq()
+         << endl;
+    cout << "Phi truth: "
+         << phi_iter
+         << endl;
   }
 
   // Find good dilepton event candidates.

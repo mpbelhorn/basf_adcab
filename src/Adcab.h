@@ -1,3 +1,5 @@
+#ifndef ADCAB_H
+#define ADCAB_H
 //______________________________________________________________________________
 // Filename: Adcab.h
 // Version: 2011.02.09.A
@@ -8,7 +10,7 @@
 //______________________________________________________________________________
 
 #include <cmath>                      // Uses cmath functions.
-  
+
 #include "belle.h"                    // BELLE Library.
 #include <utility>                    // For std::pair.
 #include "event/BelleEvent.h"         // For managing BELLE events.
@@ -24,13 +26,13 @@
 #include "mdst/mdst.h"                // For MDST files.
 #include "ip/IpProfile.h"             // Beam Interaction Point (IP) analysis
                                       //    tools. Position unit = cm.
-  
+
 #include <panther/panther.h>    // Panther - general header?
 #include BELLETDF_H             // Panther - runhead/belle_event tables.
 #include HEPEVT_H               // Panther - not sure?
 #include MDST_H                 // Panther - mdst tables.
 #include EVTCLS_H               // Panther - event classification tables.
-  
+
 #include "HEPconstants.h"       // PDG masses and constants.
 #include "TrackParameters.h"    // Custom class managing the track parameters.
 #include "ParticleCandidate.h"    // Class for managing lepton candidate info.
@@ -38,8 +40,9 @@
 #include "EntryTypes.h"         // Structure for managing ntuple line data.
 #include "AdcabCuts.h"          // Analysis specfic selection cut constants.
 #include "geninfo.h"            // Custom analysis functions to use Zupanc's MC.
-#include "userinfo.h"           // Custom analysis functions to use Zupanc's MC.
-  
+#include "userinfo.h"           // For saving special info to Particle instances.
+#include "VertexFit.h"          // Custom analysis functions to for vertexing.
+
 #if defined(BELLE_NAMESPACE)    // Namespace container for backwards
 namespace Belle {               //  compatibility with older versions of
 #endif                          //  BELLE Library (used for b200611xx onward).
@@ -68,7 +71,7 @@ Adcab : public Module
   void end_run(BelleEvent*, int*);        // At end of each run.
   void other(int*, BelleEvent*, int*) {}  // Not used.
   void term();                            // Once by BASF "terminate".
-  
+
   // BASF passable parameters.
   int basf_parameter_allow_charge_bias_;
   int basf_parameter_verbose_log_;
@@ -112,7 +115,7 @@ Adcab : public Module
   double kekb_her_beam_energy_;  // Uncalibrated energy reported by KEKB.
   double beam_crossing_angle_;
 
-  // Flags           
+  // Flags
   bool flag_mc_;  // Data type flag. 'true' = MC, 'false' = Real Data.
 
  private:
@@ -125,3 +128,4 @@ Adcab : public Module
 #if defined(BELLE_NAMESPACE)  // Needed to close compiler namespace
 } // namespace Belle          // container for backwards compatibility
 #endif                        // with older BELLE Libraries.
+#endif
