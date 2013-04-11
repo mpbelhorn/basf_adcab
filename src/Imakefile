@@ -3,7 +3,7 @@
 #
 
 TARGET1 = Adcab.so
-OBJS1 = Adcab.o TrackParameters.o ParticleCandidate.o DileptonEvent.o userinfo.o geninfo.o
+OBJS1 = Adcab.o TrackParameters.o ParticleCandidate.o DileptonEvent.o userinfo.o geninfo.o VertexFit.o
 BUILD_TOP_DIR    = $(BELLE_RUN_DIR)
 RELATIVE_TOP_DIR = $(BELLE_TOP_DIR)
 BELLE_INC_DIR    = $(BELLE_TOP_DIR)/include
