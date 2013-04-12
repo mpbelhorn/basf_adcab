@@ -2,7 +2,7 @@
 # $Xorg: imake.c,v 1.6 2001/02/09 02:03:15 xorgcvs Exp $
 
 # ----------------------------------------------------------------------
-# Makefile generated from "Imake.tmpl" and </tmp/IIf.YhatxQ>
+# Makefile generated from "Imake.tmpl" and </tmp/IIf.1i4QGm>
 # $Xorg: Imake.tmpl,v 1.4 2000/08/17 19:41:46 cpqbld Exp $
 # $XdotOrg: util/cf/Imake.tmpl,v 1.17 2006/04/15 15:55:25 herrb Exp $
 #
@@ -1072,7 +1072,7 @@ $(TARGET1): $(OBJS1)
 all:: $(TARGET1)
 
 cleandir::
-	rm -f Makefile Makefile.bak *.root *.mdst
+	rm -f *.root *.mdst
 	rm -f $(OBJS1)
 
 svnclean::

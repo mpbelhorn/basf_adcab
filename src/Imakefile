@@ -41,7 +41,7 @@ $(TARGET1): $(OBJS1)
 all:: $(TARGET1)
 
 clean::
-	rm -f Makefile Makefile.bak *.root *.mdst
+	rm -f *.root *.mdst
 	rm -f $(OBJS1)
 
 svnclean::

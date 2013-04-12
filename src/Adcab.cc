@@ -606,26 +606,38 @@ Adcab::event(BelleEvent* evptr, int* status)
     for (ParticleCandidateIterator kaon2 = kaon1;
         kaon2 != kaon_candidates.end(); ++kaon2) {
       if (kaon1 == kaon2) continue;
-      Particle &k1 = kaon1->particle();
-      Particle &k2 = kaon2->particle();
-      if (k1.charge() == k2.charge()) continue;
-      HepLorentzVector phi_momentum = k1.p() + k2.p();
+      double kaon1_charge = kaon1->particle().charge();
+      double kaon2_charge = kaon2->particle().charge();
+      if (kaon1_charge == kaon2_charge) continue;
+      Particle &kaon_minus = kaon1_charge > 0 ? kaon2->particle() : kaon1->particle();
+      Particle &kaon_plus = kaon1_charge > 0 ? kaon1->particle() : kaon2->particle();
+      HepLorentzVector phi_momentum = kaon_minus.p() + kaon_plus.p();
       Particle phi_candidate(phi_momentum, Ptype("PHI"));
+      phi_candidate.relation().append(kaon_minus);
+      phi_candidate.relation().append(kaon_plus);
       int error = fitPhiVertex(phi_candidate);
+      setMCtruth(phi_candidate);
       if (!error) {
+        double chi2 = dynamic_cast<UserInfo&>(phi_candidate.userInfo()).chisq();
+        int reconstruction_status =  dynamic_cast<UserInfo&>(
+            phi_candidate.userInfo()).genHepevtLink();
+        cout << "Phi vertex chisq/dof: "
+             << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).chisq()
+             << "/"
+             << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).ndf()
+             << " | truth: "
+             << IDhep(phi_candidate)
+             << "["
+             << reconstruction_status
+             << "] ("
+             << IDhep(phi_candidate.child(0))
+             << " : "
+             << IDhep(phi_candidate.child(1))
+             << ")"
+             << endl;
         phi_candidates.push_back(phi_candidate);
       }
     }
-  }
-  for (ParticleIterator phi_iter = phi_candidates.begin();
-      phi_iter != phi_candidates.end(); ++ phi_iter) {
-    setMCtruth(*phi_iter);
-    cout << "Phi vertex chisq: "
-         << dynamic_cast<UserInfo&>(phi_iter->userInfo()).chisq()
-         << endl;
-    cout << "Phi truth: "
-         << IDhep(*phi_iter)
-         << endl;
   }
 
   // Find good dilepton event candidates.

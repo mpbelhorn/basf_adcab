@@ -9,10 +9,16 @@
 
 #include "VertexFit.h"
 
+#if defined(BELLE_NAMESPACE)
+namespace Belle {
+#endif
+
 int
 fitPhiVertex(Particle &p)
 {
+  setUserInfo(p);
   kvertexfitter kvf;
+  // Check the pointer goes somewhere.
   addTrack2fit(kvf, p.relation().child(0));
   addTrack2fit(kvf, p.relation().child(1));
   unsigned err = kvf.fit();
@@ -30,3 +36,7 @@ fitPhiVertex(Particle &p)
     return 1;
   }
 }
+
+#if defined(BELLE_NAMESPACE)
+} // namespace Belle
+#endif
