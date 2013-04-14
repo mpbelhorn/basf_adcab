@@ -326,6 +326,8 @@ Adcab::event(BelleEvent* evptr, int* status)
     eid charged_particle_eid(charged_particle);
     Muid_mdst charged_particle_muid(charged_particle);
 
+    UserInfo info;
+
     double muid_probability = charged_particle_muid.Muon_likelihood();
     double eid_probability = charged_particle_eid.prob(3, -1, 5);
     double kaon_to_pion_likelihood = pid_kaon_to_pi.prob(charged_particle);
@@ -619,22 +621,46 @@ Adcab::event(BelleEvent* evptr, int* status)
       setMCtruth(phi_candidate);
       if (!error) {
         double chi2 = dynamic_cast<UserInfo&>(phi_candidate.userInfo()).chisq();
-        int reconstruction_status =  dynamic_cast<UserInfo&>(
-            phi_candidate.userInfo()).genHepevtLink();
-        cout << "Phi vertex chisq/dof: "
-             << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).chisq()
-             << "/"
-             << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).ndf()
-             << " | truth: "
-             << IDhep(phi_candidate)
-             << "["
-             << reconstruction_status
-             << "] ("
-             << IDhep(phi_candidate.child(0))
-             << " : "
-             << IDhep(phi_candidate.child(1))
-             << ")"
-             << endl;
+        if (phi_momentum.m() < 1.04 && phi_momentum.m() > 1.00 && chi2 < 2.0) {
+          int reconstruction_status =  dynamic_cast<UserInfo&>(
+              phi_candidate.userInfo()).genHepevtLink();
+          cout << "Phi vertex chisq/dof: "
+               << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).chisq()
+               << "/"
+               << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).ndf()
+               << ", m="
+               << phi_momentum.m()
+               << " | truth: "
+               << IDhep(phi_candidate)
+               << "["
+               << reconstruction_status
+               << "] ("
+               << IDhep(phi_candidate.child(0))
+               << " : "
+               << IDhep(phi_candidate.child(1))
+               << ")"
+               << endl;
+        } else if (abs(IDhep(phi_candidate)) == 333) {
+          cout << "MISSED ONE!" << endl;
+          int reconstruction_status =  dynamic_cast<UserInfo&>(
+              phi_candidate.userInfo()).genHepevtLink();
+          cout << "    Phi vertex chisq/dof: "
+               << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).chisq()
+               << "/"
+               << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).ndf()
+               << ", m="
+               << phi_momentum.m()
+               << " | truth: "
+               << IDhep(phi_candidate)
+               << "["
+               << reconstruction_status
+               << "] ("
+               << IDhep(phi_candidate.child(0))
+               << " : "
+               << IDhep(phi_candidate.child(1))
+               << ")"
+               << endl;
+        }
         phi_candidates.push_back(phi_candidate);
       }
     }
