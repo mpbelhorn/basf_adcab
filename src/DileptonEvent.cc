@@ -19,8 +19,8 @@ DileptonEvent::DileptonEvent()
 }
 
 // Dilepton constructor.
-DileptonEvent::DileptonEvent(ParticleCandidate &lepton0,
-                             ParticleCandidate &lepton1)
+DileptonEvent::DileptonEvent(Particle &lepton0,
+                             Particle &lepton1)
 {
   l0_ = &lepton0;
   l1_ = &lepton1;
@@ -35,23 +35,23 @@ DileptonEvent::DileptonEvent(ParticleCandidate &lepton0,
 double
 DileptonEvent::eventTypeAssigned()
 {
-  double lund_sum = abs(l0().idAssigned()) + abs(l1().idAssigned());
+  double id_sum = abs(l0_->pType().lund()) + abs(l1_->pType().lund());
   double type = 0;
-  if (lund_sum == 22) {
+  if (id_sum == 22) {
     type = 1;
-  } else if (lund_sum == 24) {
+  } else if (id_sum == 24) {
     type = 2;
-  } else if (lund_sum == 26) {
+  } else if (id_sum == 26) {
     type = 3;
   }
   return type;
 }
 
-// Same as eventTypeAssigned except uses truth-table 
+// Same as eventTypeAssigned except uses truth-table
 double
 DileptonEvent::eventTypeTrue()
 {
-  double lund_sum = abs(l0().idTrue()) + abs(l1().idTrue());
+  double lund_sum = abs(IDhep(*l0_)) + abs(IDhep(*l1_));
   double type = 0;
   if (lund_sum == 22) {
     type = 1;
@@ -67,7 +67,7 @@ DileptonEvent::eventTypeTrue()
 double
 DileptonEvent::eventSign()
 {
-  return (l0().particle().charge() + l1().particle().charge()) / 2;
+  return (l0_->charge() + l1_->charge()) / 2;
 }
 
 // Calculates the cosine of the opening angle theta_ll between the two leptons
@@ -75,9 +75,12 @@ DileptonEvent::eventSign()
 double
 DileptonEvent::cosThetaLL()
 {
-  Hep3Vector lepton0_p3_cm = l0().pCm().vect();
-  Hep3Vector lepton1_p3_cm = l1().pCm().vect();
-  
+
+  UserInfo &l0_info = dynamic_cast<UserInfo&>(l0_->userInfo());
+  UserInfo &l1_info = dynamic_cast<UserInfo&>(l1_->userInfo());
+  Hep3Vector lepton0_p3_cm = l0_info.pCm().vect();
+  Hep3Vector lepton1_p3_cm = l1_info.pCm().vect();
+
   double cosine_theta_ll;
   double total_p_squared = lepton0_p3_cm.mag2() * lepton1_p3_cm.mag2();
   if (total_p_squared <= 0) {
@@ -96,10 +99,7 @@ DileptonEvent::cosThetaLL()
 double
 DileptonEvent::invariantMass()
 {
-  HepLorentzVector l0_p_cm = l0().p();
-  HepLorentzVector l1_p_cm = l1().p();
-
-  return (l0_p_cm + l1_p_cm).m();
+  return (l0_->p() + l1_->p()).m();
 }
 
 #if defined(BELLE_NAMESPACE)

@@ -22,14 +22,15 @@ fitPhiVertex(Particle &p)
   addTrack2fit(kvf, p.relation().child(0));
   addTrack2fit(kvf, p.relation().child(1));
   unsigned err = kvf.fit();
+  UserInfo &info = dynamic_cast<UserInfo&>(p.userInfo());
   if (err == 0) {
-    dynamic_cast<UserInfo&>(p.userInfo()).cl(kvf.cl());
-    dynamic_cast<UserInfo&>(p.userInfo()).chisq(kvf.chisq());
-    dynamic_cast<UserInfo&>(p.userInfo()).ndf(kvf.dgf());
+    info.cl(kvf.cl());
+    info.chisq(kvf.chisq());
+    info.ndf(kvf.dgf());
     makeMother(kvf, p); // calculate "D0" using the fitting result.
     return 0;
   } else {
-    dynamic_cast<UserInfo&>(p.userInfo()).cl(-1.0);
+    info.cl(-1.0);
     HepPoint3D vtx(999.,999.,999.);
     HepSymMatrix errVtx(3,0);
     p.momentum().decayVertex(vtx, errVtx);
