@@ -67,7 +67,7 @@ UserInfo : public ParticleUserInfo
     klm_chi2_ = muid.Chi_2();
   }
   const double & muonLikelihood(void) { return muon_likelihood_; }
-  const double & klmSignature(void) {
+  const double klmSignature(void) {
     return (klm_hits_ > 0 ?  klm_chi2_ / klm_hits_ : 0);
   }
 
@@ -95,7 +95,7 @@ UserInfo : public ParticleUserInfo
     svd_r_kaon_hits_ = mdst.trk().mhyp(3).nhits(3);
     svd_z_kaon_hits_ = mdst.trk().mhyp(3).nhits(4);
   }
-  const double & svdRHitsAs(const int &mass_hyp) {
+  const double svdRHitsAs(const int &mass_hyp) {
     if (mass_hyp == 0) {
       return svd_r_electron_hits_;
     } else if (mass_hyp == 1) {
@@ -106,7 +106,7 @@ UserInfo : public ParticleUserInfo
       return 0;
     }
   }
-  const double & svdZHitsAs(const int &mass_hyp) {
+  const double svdZHitsAs(const int &mass_hyp) {
     if (mass_hyp == 0) {
       return svd_z_electron_hits_;
     } else if (mass_hyp == 1) {
@@ -139,6 +139,7 @@ UserInfo : public ParticleUserInfo
   double   m_cl;
   unsigned m_ndf;
 
+  HepLorentzVector p_cm_;
   double muon_likelihood_;
   double electron_likelihood_;
   double kaon_to_pion_likelihood_;
