@@ -120,8 +120,7 @@ Adcab : public Module
 
  private:
   // Pointers for writing to the n-tuples.
-  BelleTuple *nTuple_leptons_;
-  BelleTuple *nTuple_kaons_;
+  BelleTuple *nTuple_charged_;
   BelleTuple *nTuple_dileptons_;
 };
 
