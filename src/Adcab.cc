@@ -556,6 +556,12 @@ Adcab::event(BelleEvent* evptr, int* status)
     }
   }
 
+  // Print diagnostic information to the log.
+  if (basf_parameter_verbose_log_) {
+    cout << "    Phi selection." << endl;
+    cout << "      phi candidates: " << phi_candidates.size() << endl;
+  }
+
   // Find good dilepton event candidates.
   // Check all lepton pairs.
   for (ParticleIterator outer_lepton = lepton_candidates.begin();
