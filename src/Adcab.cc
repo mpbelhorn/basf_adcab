@@ -491,20 +491,20 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_charged_->column("p_y"     , particle.p().py()); // Lab frame
       nTuple_charged_->column("p_z"     , particle.p().pz()); // Lab frame
       nTuple_charged_->column("id_asn"  , particle.pType().lund());
-      nTuple_charged_->column("id_tru"  , IDhep(lepton));
-      nTuple_charged_->column("id_mom"  , IDmom(lepton));
+      nTuple_charged_->column("id_tru"  , IDhep(particle));
+      nTuple_charged_->column("id_mom"  , IDmom(particle));
       nTuple_charged_->column("good_mu" , good_muon);
       nTuple_charged_->column("good_el" , good_electron);
       nTuple_charged_->column("good_k"  , good_kaon);
-      nTuple_charged_->column("muid_prb", muid_probability);
-      nTuple_charged_->column("eid_prob", eid_probability());
-      nTuple_charged_->column("pid_k_pi", kaon_to_pion_likelihood);
-      nTuple_charged_->column("pid_k_pr", kaon_to_proton_likelihood);
-      nTuple_charged_->column("muid_rto", klm_chi2_per_hits);
-      nTuple_charged_->column("svd_hitr", svd_r_hits);
-      nTuple_charged_->column("svd_hitz", svd_z_hits);
-      nTuple_charged_->column("ip_dr"   , ip_dr);
-      nTuple_charged_->column("ip_dz"   , ip_dz);
+      nTuple_charged_->column("muid_prb", info.muonLikelihood());
+      nTuple_charged_->column("eid_prob", info.electronLikelihood());
+      nTuple_charged_->column("pid_k_pi", info.kaonToPionLikelihood());
+      nTuple_charged_->column("pid_k_pr", info.kaonToProtonLikelihood());
+      nTuple_charged_->column("muid_rto", info.klmSignature());
+      nTuple_charged_->column("svd_hitr", info.svdRHits());
+      nTuple_charged_->column("svd_hitz", info.svdZHits());
+      nTuple_charged_->column("ip_dr"   , info.ipDeltaR());
+      nTuple_charged_->column("ip_dz"   , info.ipDeltaZ());
       nTuple_charged_->column("prompt"  , prompt_candidate);
       nTuple_charged_->dumpData();
     }
@@ -518,9 +518,9 @@ Adcab::event(BelleEvent* evptr, int* status)
   }
 
   // Find Phi canididates.
-  for (ParticleCandidateIterator kaon1 = kaon_candidates.begin();
+  for (ParticleIterator kaon1 = kaon_candidates.begin();
       kaon1 != kaon_candidates.end(); ++kaon1) {
-    for (ParticleCandidateIterator kaon2 = kaon1;
+    for (ParticleIterator kaon2 = kaon1;
         kaon2 != kaon_candidates.end(); ++kaon2) {
       if (kaon1 == kaon2) continue;
       double kaon1_charge = kaon1->particle().charge();
