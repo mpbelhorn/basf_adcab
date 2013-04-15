@@ -16,6 +16,11 @@
 #include "mdst/mdst.h"
 #include "mdst/Muid_mdst.h"
 #include "CLHEP/Matrix/Matrix.h"
+#include <panther/panther.h>
+#include BELLETDF_H
+#include HEPEVT_H
+#include MDST_H
+#include EVTCLS_H
 
 #if defined(BELLE_NAMESPACE)
 namespace Belle {
