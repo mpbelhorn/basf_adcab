@@ -95,7 +95,11 @@ UserInfo : public ParticleUserInfo
     svd_r_kaon_hits_ = mdst.trk().mhyp(3).nhits(3);
     svd_z_kaon_hits_ = mdst.trk().mhyp(3).nhits(4);
   }
-  const double svdRHitsAs(const int &mass_hyp) {
+  void svdHits(const double &r_hits, const double &z_hits) {
+    svd_r_hits_ = r_hits;
+    svd_z_hits_ = z_hits;
+  }
+  const double svdRHits(const int &mass_hyp) {
     if (mass_hyp == 0) {
       return svd_r_electron_hits_;
     } else if (mass_hyp == 1) {
@@ -106,7 +110,7 @@ UserInfo : public ParticleUserInfo
       return 0;
     }
   }
-  const double svdZHitsAs(const int &mass_hyp) {
+  const double svdZHits(const int &mass_hyp) {
     if (mass_hyp == 0) {
       return svd_z_electron_hits_;
     } else if (mass_hyp == 1) {
@@ -117,6 +121,8 @@ UserInfo : public ParticleUserInfo
       return 0;
     }
   }
+  const double svdRHits(void) { return svd_r_hits_; }
+  const double svdZHits(void) { return svd_z_hits_; }
 
   // Track Parameters.
   void ipDeltaR(const double &ip_dr) { ip_dr_ = ip_dr; }

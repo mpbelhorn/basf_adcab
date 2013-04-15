@@ -329,22 +329,22 @@ Adcab::event(BelleEvent* evptr, int* status)
     pid_info.svdHits(charged_particle);
 
     // Check that track has good likelihoods to be interesting FSP.
-    bool good_muon_likelihood = pid_info.muonLikelihood >= cuts.minMuidProb;
-    bool good_electron_likelihood = pid_info.electronLikelihood >= cuts.minEidProb;
+    bool good_muon_likelihood = pid_info.muonLikelihood() >= cuts.minMuidProb;
+    bool good_electron_likelihood = pid_info.electronLikelihood() >= cuts.minEidProb;
     bool good_kaon_likelihood = (
-        (pid_info.kaonToPionLikelihood > cuts.minKaonToPionLikelihood) &&
-        (pid_info.kaonToProtonLikelihood > cuts.minKaonToProtonLikelihood));
+        (pid_info.kaonToPionLikelihood() > cuts.minKaonToPionLikelihood) &&
+        (pid_info.kaonToProtonLikelihood() > cuts.minKaonToProtonLikelihood));
 
     // Check that track has enough hits in the SVD for reliable vertexing.
     bool good_svd_electron = (
-        (pid_info.svdRHitsAs(0) >= cuts.minSvdRHits) &&
-        (pid_info.svdZHitsAs(0) >= cuts.minSvdZHits));
+        (pid_info.svdRHits(0) >= cuts.minSvdRHits) &&
+        (pid_info.svdZHits(0) >= cuts.minSvdZHits));
     bool good_svd_muon = (
-        (pid_info.svdRHitsAs(1) >= cuts.minSvdRHits) &&
-        (pid_info.svdZHitsAs(1) >= cuts.minSvdZHits));
+        (pid_info.svdRHits(1) >= cuts.minSvdRHits) &&
+        (pid_info.svdZHits(1) >= cuts.minSvdZHits));
     bool good_svd_kaon = (
-        (pid_info.svdRHitsAs(3) >= cuts.minSvdRHits) &&
-        (pid_info.svdZHitsAs(3) >= cuts.minSvdZHits));
+        (pid_info.svdRHits(3) >= cuts.minSvdRHits) &&
+        (pid_info.svdZHits(3) >= cuts.minSvdZHits));
 
     // Check that the KLM signature is good for muon candidates.
     bool good_klm_signature = (
@@ -361,16 +361,13 @@ Adcab::event(BelleEvent* evptr, int* status)
     double particle_charge(charged_particle.charge());
     if (good_muon) {
       assigned_type = (particle_charge > 0 ? Ptype("MU+") : Ptype("MU-"));
-      pid_info.svdRHits(info.svdRHitsAs(1));
-      pid_info.svdZHits(info.svdZHitsAs(1));
+      pid_info.svdHits(pid_info.svdRHitsAs(1), pid_info.svdZHitsAs(1));
     } else if (good_electron) {
       assigned_type = (particle_charge > 0 ? Ptype("E+") : Ptype("E-"));
-      pid_info.svdRHits(info.svdRHitsAs(0));
-      pid_info.svdZHits(info.svdZHitsAs(0));
+      pid_info.svdHits(pid_info.svdRHitsAs(0), pid_info.svdZHitsAs(0));
     } else if (good_kaon) {
       assigned_type = (particle_charge > 0 ? Ptype("K+") : Ptype("K-"));
-      pid_info.svdRHits(info.svdRHitsAs(3));
-      pid_info.svdZHits(info.svdZHitsAs(3));
+      pid_info.svdHits(pid_info.svdRHitsAs(3), pid_info.svdZHitsAs(3));
     } else {
       continue;
     }
@@ -421,7 +418,7 @@ Adcab::event(BelleEvent* evptr, int* status)
         const Mdst_charged &sister_mdst = *mdst_charged_iterator;
 
         // Reject case where pointers point to same object.
-        if (particle.mdstCharged() == mdst_charged_iterator) continue;
+        if (particle.mdstCharged() == sister_mdst) continue;
 
         // If allowing a charge bias and pair is SS, skip to the next pair.
         if (basf_parameter_allow_charge_bias_ &&
