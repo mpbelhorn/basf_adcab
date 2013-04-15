@@ -13,6 +13,8 @@
 #include "particle/Particle.h"
 #include "particle/Momentum.h"
 #include "particle/ParticleUserInfo.h"
+#include "mdst/mdst.h"
+#include "mdst/Muid_mdst.h"
 #include "CLHEP/Matrix/Matrix.h"
 
 #if defined(BELLE_NAMESPACE)

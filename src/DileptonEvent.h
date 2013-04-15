@@ -11,7 +11,6 @@
 
 #include <cmath>                     // Uses cmath functions.
 
-#include "belle.h"
 #include "particle/Particle.h"
 #include "geninfo.h"
 #include "userinfo.h"
