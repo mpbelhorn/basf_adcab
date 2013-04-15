@@ -12,6 +12,8 @@
 #include <cmath>                     // Uses cmath functions.
 
 #include "particle/Particle.h"
+#include "geninfo.h"
+#include "userinfo.h"
 
 #if defined(BELLE_NAMESPACE)
 namespace Belle {
