@@ -361,13 +361,13 @@ Adcab::event(BelleEvent* evptr, int* status)
     double particle_charge(charged_particle.charge());
     if (good_muon) {
       assigned_type = (particle_charge > 0 ? Ptype("MU+") : Ptype("MU-"));
-      pid_info.svdHits(pid_info.svdRHitsAs(1), pid_info.svdZHitsAs(1));
+      pid_info.svdHits(pid_info.svdRHits(1), pid_info.svdZHits(1));
     } else if (good_electron) {
       assigned_type = (particle_charge > 0 ? Ptype("E+") : Ptype("E-"));
-      pid_info.svdHits(pid_info.svdRHitsAs(0), pid_info.svdZHitsAs(0));
+      pid_info.svdHits(pid_info.svdRHits(0), pid_info.svdZHits(0));
     } else if (good_kaon) {
       assigned_type = (particle_charge > 0 ? Ptype("K+") : Ptype("K-"));
-      pid_info.svdHits(pid_info.svdRHitsAs(3), pid_info.svdZHitsAs(3));
+      pid_info.svdHits(pid_info.svdRHits(3), pid_info.svdZHits(3));
     } else {
       continue;
     }
@@ -431,6 +431,7 @@ Adcab::event(BelleEvent* evptr, int* status)
         //   (or pair production for the electron case), reject the candidate.
         switch (abs(particle.pType().lund())) {
           case 11: // Electrons
+          {
             Particle sister_particle(sister_mdst,
                 sister_mdst.charge() > 0 ? Ptype("E+") : Ptype("E-"));
             double pair_invariant_mass = abs(
@@ -444,7 +445,9 @@ Adcab::event(BelleEvent* evptr, int* status)
               prompt_candidate = false;
             }
             break;
+          }
           case 13: // Muons
+          {
             Particle sister_particle(sister_mdst,
                 sister_mdst.charge() > 0 ? Ptype("MU+") : Ptype("MU-"));
             double pair_invariant_mass = abs(
@@ -455,10 +458,13 @@ Adcab::event(BelleEvent* evptr, int* status)
               prompt_candidate = false;
             }
             break;
+          }
           default:
+          {
             // This shouldn't happen!
             prompt_candidate = false;
             continue;
+          }
         }
       }
       // If passed above cuts, add to lepton_candidates.
