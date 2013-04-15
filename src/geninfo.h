@@ -31,6 +31,7 @@ int findCommonMother(int nChildren, std::vector<int> thisMothers,
 void genDecayChain(Particle p, int* dChain);
 
 int IDhep(Particle &part);
+int IDmom(Particle &part);
 int NdecayProd(Particle &part);
 
 
