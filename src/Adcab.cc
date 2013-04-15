@@ -523,13 +523,11 @@ Adcab::event(BelleEvent* evptr, int* status)
     for (ParticleIterator kaon2 = kaon1;
         kaon2 != kaon_candidates.end(); ++kaon2) {
       if (kaon1 == kaon2) continue;
-      double kaon1_charge = kaon1->particle().charge();
-      double kaon2_charge = kaon2->particle().charge();
+      double kaon1_charge = kaon1->charge();
+      double kaon2_charge = kaon2->charge();
       if (kaon1_charge == kaon2_charge) continue;
-      Particle &kaon_minus =
-          kaon1_charge > 0 ? kaon2->particle() : kaon1->particle();
-      Particle &kaon_plus =
-          kaon1_charge > 0 ? kaon1->particle() : kaon2->particle();
+      Particle &kaon_minus = kaon1_charge > 0 ? *kaon2 : *kaon1;
+      Particle &kaon_plus = kaon1_charge > 0 ? *kaon1 : *kaon2;
       HepLorentzVector phi_momentum = kaon_minus.p() + kaon_plus.p();
       Particle phi_candidate(phi_momentum, Ptype("PHI"));
       phi_candidate.relation().append(kaon_minus);
@@ -538,7 +536,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       setMCtruth(phi_candidate);
       UserInfo &phi_info = dynamic_cast<UserInfo&>(phi_candidate.userInfo());
       if (!error) {
-        double chi2 = phi_info.chisq();
         int reconstruction_status =  phi_info.genHepevtLink();
         cout << "Phi vertex chisq/dof: "
              << phi_info.chisq()
@@ -587,13 +584,13 @@ Adcab::event(BelleEvent* evptr, int* status)
       if (inner_lepton_info.pCm().mag() > outer_lepton_info.pCm().mag()) {
         greater_p_lepton = &(*inner_lepton);
         lesser_p_lepton = &(*outer_lepton);
-        greater_p_lepton_info = &(*inner_lepton_info);
-        lesser_p_lepton_info = &(*outer_lepton_info);
+        greater_p_lepton_info = &inner_lepton_info;
+        lesser_p_lepton_info = &outer_lepton_info;
       } else {
         greater_p_lepton = &(*outer_lepton);
         lesser_p_lepton = &(*inner_lepton);
-        greater_p_lepton_info = &(*outer_lepton_info);
-        lesser_p_lepton_info = &(*inner_lepton_info);
+        greater_p_lepton_info = &outer_lepton_info;
+        lesser_p_lepton_info = &inner_lepton_info;
       }
       Particle &l0 = *greater_p_lepton;
       Particle &l1 = *lesser_p_lepton;
