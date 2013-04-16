@@ -417,10 +417,16 @@ Adcab::event(BelleEvent* evptr, int* status)
       // All leptons are considered prompt signal candidates unless shown to
       // be otherwise.
       prompt_candidate = true;
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "        Possible Prompt lepton." << endl;
+      }
 
       // Cut on IP proximity.
       if (abs(info.ipDeltaR()) > cuts.maxIpDr ||
           abs(info.ipDeltaZ()) > cuts.maxIpDz) {
+        if (basf_parameter_verbose_log_ > 1) {
+          cout << "          Cut on IP dz or dr." << endl;
+        }
         prompt_candidate = false;
       }
 
@@ -428,6 +434,9 @@ Adcab::event(BelleEvent* evptr, int* status)
       double cosine_polar_angle = particle.p().cosTheta();
       if ((cosine_polar_angle < cuts.minLeptonCosTheta) ||
           (cosine_polar_angle > cuts.maxLeptonCosTheta)) {
+        if (basf_parameter_verbose_log_ > 1) {
+          cout << "          Cut on barrel intersection." << endl;
+        }
         prompt_candidate = false;
       }
       // Scale momentum to Y(5S) CM if necessary.
@@ -439,6 +448,9 @@ Adcab::event(BelleEvent* evptr, int* status)
       info.pCm(particle.p(), cm_boost_);
       if ((info.pCm().rho() < cuts.minLeptonMomentumCm) ||
           (info.pCm().rho() > cuts.maxLeptonMomentumCm)) {
+        if (basf_parameter_verbose_log_ > 1) {
+          cout << "          Cut on CM momentum." << endl;
+        }
         prompt_candidate = false;
       }
 
@@ -470,10 +482,16 @@ Adcab::event(BelleEvent* evptr, int* status)
                 (particle.p() + sister_particle.p()).m());
             double delta_mass = pair_invariant_mass - cuts.massJPsi;
             if (pair_invariant_mass < cuts.minEPlusEMinusMass) {
+              if (basf_parameter_verbose_log_ > 1) {
+                cout << "          Cut on pair-production veto." << endl;
+              }
               prompt_candidate = false;
             }
             if (cuts.minElElJPsiCandidate < delta_mass &&
                 delta_mass < cuts.maxElElJPsiCandidate) {
+              if (basf_parameter_verbose_log_ > 1) {
+                cout << "          Cut on J/Psi veto." << endl;
+              }
               prompt_candidate = false;
             }
             break;
@@ -487,6 +505,9 @@ Adcab::event(BelleEvent* evptr, int* status)
             double delta_mass = pair_invariant_mass - cuts.massJPsi;
             if (cuts.minMuMuJPsiCandidate < delta_mass &&
                 delta_mass < cuts.maxMuMuJPsiCandidate) {
+              if (basf_parameter_verbose_log_ > 1) {
+                cout << "          Cut on J/Psi veto." << endl;
+              }
               prompt_candidate = false;
             }
             break;
@@ -494,6 +515,9 @@ Adcab::event(BelleEvent* evptr, int* status)
           default:
           {
             // This shouldn't happen!
+            if (basf_parameter_verbose_log_ > 1) {
+              cout << "          Cut on mistake!" << endl;
+            }
             prompt_candidate = false;
             continue;
           }
@@ -611,23 +635,17 @@ Adcab::event(BelleEvent* evptr, int* status)
       //  loop lepton has the greater momentum, then check that.
       Particle *greater_p_lepton;
       Particle *lesser_p_lepton;
-      UserInfo *greater_p_lepton_info;
-      UserInfo *lesser_p_lepton_info;
       if (inner_lepton_info.pCm().mag() > outer_lepton_info.pCm().mag()) {
         greater_p_lepton = &(*inner_lepton);
         lesser_p_lepton = &(*outer_lepton);
-        greater_p_lepton_info = &inner_lepton_info;
-        lesser_p_lepton_info = &outer_lepton_info;
       } else {
         greater_p_lepton = &(*outer_lepton);
         lesser_p_lepton = &(*inner_lepton);
-        greater_p_lepton_info = &outer_lepton_info;
-        lesser_p_lepton_info = &inner_lepton_info;
       }
       Particle &l0 = *greater_p_lepton;
       Particle &l1 = *lesser_p_lepton;
-      UserInfo &l0_info = *greater_p_lepton_info;
-      UserInfo &l1_info = *lesser_p_lepton_info;
+      UserInfo &l0_info = dynamic_cast<UserInfo&>(l0.userInfo());
+      UserInfo &l1_info = dynamic_cast<UserInfo&>(l1.userInfo());
 
       DileptonEvent event_candidate(l0, l1);
 
