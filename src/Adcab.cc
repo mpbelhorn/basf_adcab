@@ -328,12 +328,28 @@ Adcab::event(BelleEvent* evptr, int* status)
     pid_info.kaonToProtonLikelihood(pid_kaon_to_pr.prob(charged_particle));
     pid_info.svdHits(charged_particle);
 
+    if (basf_parameter_verbose_log_ > 2) {
+      const Gen_hepevt & hep(get_hepevt(charged_particle));
+      if (hep) {
+        cout << "      PID=" << hep.idhep() << endl;
+      }
+    }
+
     // Check that track has good likelihoods to be interesting FSP.
     bool good_muon_likelihood = pid_info.muonLikelihood() >= cuts.minMuidProb;
     bool good_electron_likelihood = pid_info.electronLikelihood() >= cuts.minEidProb;
     bool good_kaon_likelihood = (
         (pid_info.kaonToPionLikelihood() > cuts.minKaonToPionLikelihood) &&
         (pid_info.kaonToProtonLikelihood() > cuts.minKaonToProtonLikelihood));
+
+    if (basf_parameter_verbose_log_ > 2) {
+      cout << "      PID mu:" << pid_info.muonLikelihood() << "|"
+                              << pid_info.klmSignature()
+           << " el:" << pid_info.electronLikelihood()
+           << " k-pi:" << pid_info.kaonToPionLikelihood()
+           << " k-pr:" << pid_info.kaonToProtonLikelihood()
+           << endl;
+    }
 
     // Check that track has enough hits in the SVD for reliable vertexing.
     bool good_svd_electron = (
@@ -345,6 +361,14 @@ Adcab::event(BelleEvent* evptr, int* status)
     bool good_svd_kaon = (
         (pid_info.svdRHits(3) >= cuts.minSvdRHits) &&
         (pid_info.svdZHits(3) >= cuts.minSvdZHits));
+
+    if (basf_parameter_verbose_log_ > 2) {
+      cout << "      SVD mu:" << pid_info.svdRHits(1) << "|"
+                              << pid_info.svdZHits(1)
+           << " el:" << pid_info.svdRHits(0) << "|" << pid_info.svdZHits(0)
+           << " k:" << pid_info.svdRHits(3) << "|" << pid_info.svdZHits(3)
+           << endl;
+    }
 
     // Check that the KLM signature is good for muon candidates.
     bool good_klm_signature = (
@@ -369,6 +393,10 @@ Adcab::event(BelleEvent* evptr, int* status)
       assigned_type = (particle_charge > 0 ? Ptype("K+") : Ptype("K-"));
       pid_info.svdHits(pid_info.svdRHits(3), pid_info.svdZHits(3));
     } else {
+      // Print diagnostic information to the log.
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "        Rejected". << endl;
+      }
       continue;
     }
     Particle particle(charged_particle, assigned_type);
