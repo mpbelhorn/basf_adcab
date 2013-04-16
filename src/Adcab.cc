@@ -568,21 +568,15 @@ Adcab::event(BelleEvent* evptr, int* status)
       setMCtruth(phi_candidate);
       UserInfo &phi_info = dynamic_cast<UserInfo&>(phi_candidate.userInfo());
       if (!error) {
-        int reconstruction_status =  phi_info.genHepevtLink();
-        cout << "Phi vertex chisq/dof: "
-             << phi_info.chisq()
-             << "/"
-             << phi_info.ndf()
-             << " | truth: "
-             << IDhep(phi_candidate)
-             << "["
-             << reconstruction_status
-             << "] ("
-             << IDhep(phi_candidate.child(0))
-             << " : "
-             << IDhep(phi_candidate.child(1))
-             << ")"
-             << endl;
+        if (basf_parameter_verbose_log_ > 2) {
+          cout << "Phi vertex chisq/dof: " << phi_info.chisq()
+               << "/" << phi_info.ndf()
+               << " | truth: " << IDhep(phi_candidate)
+               << "[" << phi_info.genHepevtLink()
+               << "] (" << IDhep(phi_candidate.child(0))
+               << " : " << IDhep(phi_candidate.child(1)) << ")"
+               << endl;
+        }
         phi_candidates.push_back(phi_candidate);
       }
     }
@@ -750,29 +744,17 @@ Adcab::hist_def()
       "cm_bst_x "
       "cm_bst_y "
       "cm_bst_z "
-      "n_can_kp "
-      "n_can_km "
-      "n_tru_kp "
-      "n_tru_km "
-      "typ_asn "
-      "typ_tru "
-      "evt_sign "
       "cos_thta "
-      "inv_mass "
       "l0_chrge " "l1_chrge "
       "l0_idasn " "l1_idasn "
       "l0_idtru " "l1_idtru "
       "l0_idmom " "l1_idmom "
-      "l0_plab "  "l1_plab "
-      "l0_pcm "   "l1_pcm "
       "l0_e_cm "  "l1_e_cm "
       "l0_pcm_x " "l1_pcm_x "
       "l0_pcm_y " "l1_pcm_y "
       "l0_pcm_z " "l1_pcm_z "
       "l0_ip_dr " "l1_ip_dr "
-      "l0_ip_dz " "l1_ip_dz "
-      "l0_svdr "  "l1_svdr "
-      "l0_svdz "  "l1_svdz";
+      "l0_ip_dz " "l1_ip_dz";
 
   nTuple_charged_ = tm->ntuple("Charged", charged_particle_variables, 1);
   nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 3);
