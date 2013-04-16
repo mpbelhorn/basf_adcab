@@ -331,7 +331,11 @@ Adcab::event(BelleEvent* evptr, int* status)
     if (basf_parameter_verbose_log_ > 2) {
       const Gen_hepevt & hep(get_hepevt(charged_particle));
       if (hep) {
-        cout << "      PID=" << hep.idhep() << endl;
+        cout << "      PID=" << hep.idhep();
+        if (hep.mother()) {
+          cout << ", mom=" << hep.mother().idhep();
+        }
+        cout << endl;
       }
     }
 
@@ -395,7 +399,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     } else {
       // Print diagnostic information to the log.
       if (basf_parameter_verbose_log_ > 1) {
-        cout << "        Rejected". << endl;
+        cout << "        Rejected" << endl;
       }
       continue;
     }
