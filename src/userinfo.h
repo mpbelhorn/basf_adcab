@@ -133,7 +133,7 @@ UserInfo : public ParticleUserInfo
 
   // Track Parameters.
   void ipDeltaR(const double &ip_dr) { ip_dr_ = ip_dr; }
-  void ipDeltaZ(const double &ip_dz) { ip_dr_ = ip_dz; }
+  void ipDeltaZ(const double &ip_dz) { ip_dz_ = ip_dz; }
   const double & ipDeltaR(void) { return ip_dr_; }
   const double & ipDeltaZ(void) { return ip_dz_; }
 
