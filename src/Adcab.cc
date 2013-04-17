@@ -578,6 +578,29 @@ Adcab::event(BelleEvent* evptr, int* status)
                << endl;
         }
         phi_candidates.push_back(phi_candidate);
+        nTuple_phi_->column("cm_enrgy", beam_energy_cm_frame_);
+        nTuple_phi_->column("cm_bst_x", cm_boost_.x());
+        nTuple_phi_->column("cm_bst_y", cm_boost_.y());
+        nTuple_phi_->column("cm_bst_z", cm_boost_.z());
+        nTuple_phi_->column("km_e"    , kaon_minus.p().e());
+        nTuple_phi_->column("km_px"   , kaon_minus.p().x());
+        nTuple_phi_->column("km_py"   , kaon_minus.p().y());
+        nTuple_phi_->column("km_pz"   , kaon_minus.p().z());
+        nTuple_phi_->column("km_pid"  , IDhep(kaon_minus));
+        nTuple_phi_->column("kp_e"    , kaon_plus.p().e());
+        nTuple_phi_->column("kp_px"   , kaon_plus.p().x());
+        nTuple_phi_->column("kp_py"   , kaon_plus.p().y());
+        nTuple_phi_->column("kp_pz"   , kaon_plus.p().z());
+        nTuple_phi_->column("kp_pid"  , IDhep(kaon_plus));
+        nTuple_phi_->column("ph_pid"  , IDhep(phi_candidate));
+        nTuple_phi_->column("ph_recon", phi_info.genHepevtLink());
+        nTuple_phi_->column("decay_x" , phi_candidate.momentum().decayVertex().x());
+        nTuple_phi_->column("decay_y" , phi_candidate.momentum().decayVertex().y());
+        nTuple_phi_->column("decay_z" , phi_candidate.momentum().decayVertex().z());
+        nTuple_phi_->column("vx_chi2" , phi_info.chisq());
+        nTuple_phi_->column("vx_dof"  , phi_info.ndf());
+        nTuple_phi_->column("trk_prx" , 0); // TODO - Get closest approach of K tracks.
+        nTuple_phi_->dumpData();
       }
     }
   }
@@ -731,6 +754,25 @@ Adcab::hist_def()
       "ip_dz "
       "prompt";
 
+  const char *phi_variables =
+      "cm_enrgy "
+      "cm_bst_x "
+      "cm_bst_y "
+      "cm_bst_z "
+      "km_e "     "kp_e "
+      "km_px "    "kp_px "
+      "km_py "    "kp_py "
+      "km_pz "    "kp_py "
+      "km_pid "   "kp_pid "
+      "ph_pid "
+      "ph_recon "
+      "decay_x "
+      "decay_y "
+      "decay_z "
+      "vx_chi2 "
+      // "vx_dof "
+      "trk_prx ";
+
   const char *dilepton_variables =
       "stm_no "
       "exp_no "
@@ -757,6 +799,7 @@ Adcab::hist_def()
       "l0_ip_dz " "l1_ip_dz";
 
   nTuple_charged_ = tm->ntuple("Charged", charged_particle_variables, 1);
+  nTuple_phi_ = tm->ntuple("Phi", phi_variables, 2);
   nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 3);
 
   return;
