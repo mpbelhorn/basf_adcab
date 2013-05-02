@@ -601,6 +601,7 @@ Adcab::event(BelleEvent* evptr, int* status)
                << " : " << IDhep(phi_candidate.child(1)) << ")"
                << endl;
         }
+
         phi_candidates.push_back(phi_candidate);
         nTuple_phi_->column("cm_enrgy", beam_energy_cm_frame_);
         nTuple_phi_->column("cm_bst_x", cm_boost_.x());
@@ -680,6 +681,16 @@ Adcab::event(BelleEvent* evptr, int* status)
         continue;
       }
 
+      bool phi_candidate_in_mass_range = false;
+      for (ParticleIterator phi_candidate = phi_candidates.begin();
+          phi_candidate != phi_candidates.end(); ++phi_candidate) {
+        if (phi_candidate->p().m() > 1.045) {
+          continue;
+        } else {
+          phi_candidate_in_mass_range = true;
+        }
+      }
+
       if (basf_parameter_verbose_log_ > 1) {
         cout << "        Found good dilepton event candidate." << endl;
       }
@@ -701,6 +712,8 @@ Adcab::event(BelleEvent* evptr, int* status)
 
       // Write dilepton-level data to the n-tuple.
       nTuple_dileptons_->column("cos_thta", event_candidate.cosThetaLL());
+      nTuple_dileptons_->column("phi_cnds", phi_candidates.size());
+      nTuple_dileptons_->column("good_phi", phi_candidate_in_mass_range);
 
       // Write lepton-level data to the n-tuple.
       nTuple_dileptons_->column("l0_chrge", l0.charge());
@@ -805,6 +818,8 @@ Adcab::hist_def()
       "cm_bst_y "
       "cm_bst_z "
       "cos_thta "
+      "phi_cnds "
+      "good_phi "
       "l0_chrge " "l1_chrge "
       "l0_idasn " "l1_idasn "
       "l0_idtru " "l1_idtru "

@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(
         'run on most data sets, real or monte carlo.'),
     epilog='Report bugs to M. Belhorn (matt.belhorn@gmail.com)')
 parser.add_argument('-e', default = None,
-    type = int, dest = 'experiment_number', choices = y5s_experiments,
+    type = int, dest = 'experiment_number',
     help = 'process specific experiment number')
 parser.add_argument('-s', default = None,
     type = int, dest = 'stream_number',
