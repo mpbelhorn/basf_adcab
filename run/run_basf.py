@@ -3,15 +3,15 @@ from array import array
 import os
 import fnmatch
 import errno
-import re, urllib
+import re
+import urllib.request
 import sys
 import subprocess
 import argparse
 
 def targetFiles(url):
-    page = urllib.urlopen(url).read()
+    page = urllib.request.urlopen(url).read().decode("utf-8")
     return re.findall('process_event.*', page)
-
 
 y5s_experiments = [43, 53, 67, 69 ,71]
 
@@ -68,9 +68,10 @@ if options.process_specific:
   print('Processing specific mdst')
   output_name = 'Adcab.custom'
   process_files.append('process_event ' + options.process_specific + ' 0')
+  print(process_files)
 
-elif options.experiment_number is None
-    and not options.process_specific:
+elif (options.experiment_number is None
+    and not options.process_specific):
   # Diagnostic run
   print('Processing diagnostic run.')
   diagnostic_mdst = mdst_directory + '/fs19299.s0.e43.mBdBd.n0016545.mdst'
@@ -83,40 +84,38 @@ elif options.experiment_number is None
     print('except mdst does not exist!')
   output_name = 'Adcab.diagnostic'
 
-elif options.experiment_number is not None
+elif (options.experiment_number is not None
     and options.stream_number is None
-    and options.continuum:
+    and options.continuum):
   # Continuum data
   print('Processing continuum.')
   options.scale_momentum = True
-  output_name = 'Adcab.DATA.udsc.%(exp)' % {'exp': options.experiment_number}
+  output_name = 'Adcab.DATA.udsc.{exp}'.format(exp=options.experiment_number)
   # All experiments with continuum data runs:
   #     31, 33, 35, 37, 41, 43, 45, 47, 49, 51,
   #     53, 55, 61, 63, 65, 67, 69, 71, 73
-  url = 'http://bweb3/mdst.php?ex=%(exp)&rs=%(rs)&re=%(re)&skm=dilep_skim' +
-      '&dt=continuum&bl=caseB' %
-      {'exp':options.experiment_number, 'rs':1, 're':9999}
+  url = ('http://bweb3/mdst.php?ex={exp}&rs={rs}&re={re}&skm=dilep_skim&dt=continuum&bl=caseB'.format(exp=options.experiment_number, rs=1, re=9999))
   process_files = process_files + targetFiles(url)
+  print(url)
   for target in process_files:
     print(target)
 
-elif options.experiment_number is in y5s_experiments
+elif (options.experiment_number in y5s_experiments
     and options.stream_number is None
-    and not options.continuum:
+    and not options.continuum):
   # Experimental data
   print('Processing experimental data.')
-  output_name = 'Adcab.DATA.e%(exp)' % {'exp': options.experiment_number}
-  url = 'http://bweb3/mdst.php?ex=%(exp)&rs=%(rs)&re=%(re)&skm=dilep_skim' +
-      '&dt=5S_onresonance&bl=caseB' %
-      {'exp':options.experiment_number, 'rs':1, 're':9999}
+  output_name = 'Adcab.DATA.e%(exp)s' % {'exp': options.experiment_number}
+  url = ('http://bweb3/mdst.php?ex={exp}&rs={rs}&re={re}&skm=dilep_skim&dt=5S_onresonance&bl=caseB'.format(exp=options.experiment_number, rs=1, re=9999))
   process_files = process_files + targetFiles(url)
+  print(url)
   for target in process_files:
     print(target)
 
-elif options.experiment_number is not None
+elif (options.experiment_number is not None
     and options.stream_number is not None
     and options.generic_mc
-    and not options.continuum:
+    and not options.continuum):
   # Generic B-Bbar MC
   print('Processing generic MC B-Bbar events.')
   for event_type in ('bsbs', 'nonbsbs'):
@@ -133,10 +132,10 @@ elif options.experiment_number is not None
   output_name = ('Adcab.GNMC.fs19299.s' + str(options.stream_number) +
       '.e' + str(options.experiment_number))
 
-elif options.experiment_number is not None
+elif (options.experiment_number is not None
     and options.stream_number is not None
     and options.generic_mc
-    and options.continuum:
+    and options.continuum):
   # Generic Continuum MC
   print('Processing generic MC continuum.')
   for event_type in ('charm', 'uds'):
@@ -153,9 +152,9 @@ elif options.experiment_number is not None
   output_name = ('Adcab.GNMC.udsc.s' + str(options.stream_number) +
       '.e' + str(options.experiment_number))
 
-elif options.experiment_number is not None
+elif (options.experiment_number is not None
     and options.stream_number is not None
-    and not options.generic_mc
+    and not options.generic_mc):
   # Signal MC
   print('Processing signal MC.')
   mdst_base_filename = (
@@ -199,7 +198,7 @@ analysis_path_commands = [
 analysis_parameters = [
     ['JPsi_Veto_OS_Only', str(int(options.jpsi_veto_os_only))],
     ['Verbose_Log',       str(int(options.verbose_log))],
-    ['MC_Stream_Number',  str(int(options.stream_number))],
+    ['MC_Stream_Number',  -1 if options.stream_number is None else str(int(options.stream_number))],
     ['Is_Continuum',      str(int(options.continuum))],
     ['Scale_Momentum',    str(int(options.scale_momentum))]]
 
