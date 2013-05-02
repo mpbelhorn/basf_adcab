@@ -3,9 +3,17 @@ from array import array
 import os
 import fnmatch
 import errno
+import re, urllib
 import sys
 import subprocess
 import argparse
+
+def targetFiles(url):
+    page = urllib.urlopen(url).read()
+    return re.findall('process_event.*', page)
+
+
+y5s_experiments = [43, 53, 67, 69 ,71]
 
 # Parse CLI for arguments and set default variables... FOR SCIENCE!
 parser = argparse.ArgumentParser(
@@ -15,11 +23,14 @@ parser = argparse.ArgumentParser(
         'analysis. By specifying the appropriate flags, the analysis can be '
         'run on most data sets, real or monte carlo.'),
     epilog='Report bugs to M. Belhorn (matt.belhorn@gmail.com)')
-parser.add_argument('-e', default = 0,
-    type = int, dest = 'experiment_number', choices = [0, 43, 53, 67, 69, 71],
+parser.add_argument('-e', default = None,
+    type = int, dest = 'experiment_number', choices = y5s_experiments,
     help = 'process specific experiment number')
-parser.add_argument('-s', default = -1,
+parser.add_argument('-s', default = None,
     type = int, dest = 'stream_number',
+    help = 'process specific monte carlo stream')
+parser.add_argument('-m', default = None,
+    dest = 'process_specific',
     help = 'process specific monte carlo stream')
 parser.add_argument('-f', default = 19299,
     type = int, dest = 'fs',
@@ -44,12 +55,6 @@ parser.add_argument('-t', default = False,
     help = 'test the code without running a BASF job')
 options = parser.parse_args()
 
-process_type = [
-    options.experiment_number != 0,
-    options.stream_number >= 0,
-    options.continuum,
-    options.generic_mc]
-
 # Set the directories and instantiate processing variables.
 analysis_directory = '/home/belle/mbelhorn/analysis/adcab'
 output_directory = analysis_directory + '/output'
@@ -58,7 +63,15 @@ process_files = []
 output_name = 'Adcab.OOPS'
 
 # Given inputs, find the data files to process.
-if process_type == [0, 0, 0, 0]:
+if options.process_specific:
+  # Run on specifc target file(s)
+  print('Processing specific mdst')
+  output_name = 'Adcab.custom'
+  process_files.append('process_event ' + options.process_specific + ' 0')
+
+elif options.experiment_number is None
+    and not options.process_specific:
+  # Diagnostic run
   print('Processing diagnostic run.')
   diagnostic_mdst = mdst_directory + '/fs19299.s0.e43.mBdBd.n0016545.mdst'
   options.stream_number = 0
@@ -70,110 +83,41 @@ if process_type == [0, 0, 0, 0]:
     print('except mdst does not exist!')
   output_name = 'Adcab.diagnostic'
 
-elif process_type == [1, 0, 0, 0]:
-  print('Processing real data.')
-  output_name = ('Adcab.DATA.e' + str(options.experiment_number))
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000027-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000028-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000029-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000030-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000031-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000032-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000033-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000036-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000037-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000038-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000039-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000040-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000041-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000043-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000044-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000045-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000046-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000047-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000048-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000049-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000050-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000051-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000052-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000054-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000055-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000056-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000057-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000058-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000060-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000061-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000063-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000064-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000065-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000066-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000067-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000068-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000069-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000070-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000071-b20090127_0910.index 0')
-  process_files.append('process_event /group/belle/bdata_b/dstprod/index/e000071/dilep_skim/0127/5S_scan/00/dilepskim-e000071r000072-b20090127_0910.index 0')
-  for url in process_files:
-    print(url)
-
-elif process_type == [1, 1, 0, 0]:
-  print('Processing signal MC.')
-  mdst_base_filename = (
-      'fs' + str(options.fs) + '.s' + str(options.stream_number) +
-      '.e' + str(options.experiment_number) + '.m*.n*.mdst')
-  for file in os.listdir(mdst_directory):
-    if fnmatch.fnmatch(file, mdst_base_filename):
-      print('Found:', file)
-      process_files.append('process_event ' + mdst_directory + '/' + str(file))
-  output_name = ('Adcab.SGMC.fs' + str(options.fs)
-      + '.s' + str(options.stream_number)
-      + '.e' + str(options.experiment_number))
-  if len(process_files) != 4:
-    print('Warning: Number of MC files might not be right.')
-
-elif process_type == [0, 0, 1, 0]:
+elif options.experiment_number is not None
+    and options.stream_number is None
+    and options.continuum:
+  # Continuum data
   print('Processing continuum.')
   options.scale_momentum = True
-  output_name = ('Adcab.DATA.udsc')
-  process_files.append('process_url http://bweb3/mdst.php?ex=31&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=33&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=35&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=37&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=41&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=43&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=45&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=47&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=49&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=51&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=53&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=55&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=61&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=63&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=65&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=67&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=69&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=71&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  process_files.append('process_url http://bweb3/mdst.php?ex=73&rs=1&re=9999&skm=dilep_skim&dt=continuum&bl=caseB')
-  for url in process_files:
-    print(url)
+  output_name = 'Adcab.DATA.udsc.%(exp)' % {'exp': options.experiment_number}
+  # All experiments with continuum data runs:
+  #     31, 33, 35, 37, 41, 43, 45, 47, 49, 51,
+  #     53, 55, 61, 63, 65, 67, 69, 71, 73
+  url = 'http://bweb3/mdst.php?ex=%(exp)&rs=%(rs)&re=%(re)&skm=dilep_skim' +
+      '&dt=continuum&bl=caseB' %
+      {'exp':options.experiment_number, 'rs':1, 're':9999}
+  process_files = process_files + targetFiles(url)
+  for target in process_files:
+    print(target)
 
-elif ((process_type == [1, 1, 1, 0]) or (process_type == [1, 1, 1, 1])):
-  print('Processing generic MC continuum.')
-  for event_type in ('charm', 'uds'):
-    mdst_base_filename = ('dilepskim-e*' + str(options.experiment_number) +
-        'r*r*-s*' + str(options.stream_number) + '-evtgen-' +
-        event_type + '-5S_onresonance-b*.index')
-    mdst_directory = ('/group/belle/bdata-files/g0mc/skim/skim5S/index/' +
-        'dilepskim/5S_onresonance/e0000' + str(options.experiment_number) +
-        '/evtgen-' + event_type + '/s0' + str(options.stream_number))
-    for file in os.listdir(mdst_directory):
-      if fnmatch.fnmatch(file, mdst_base_filename):
-        print('Found:', file)
-        process_files.append('process_event ' + mdst_directory + '/' + str(file))
-  output_name = ('Adcab.GNMC.udsc.s' + str(options.stream_number) +
-      '.e' + str(options.experiment_number))
+elif options.experiment_number is in y5s_experiments
+    and options.stream_number is None
+    and not options.continuum:
+  # Experimental data
+  print('Processing experimental data.')
+  output_name = 'Adcab.DATA.e%(exp)' % {'exp': options.experiment_number}
+  url = 'http://bweb3/mdst.php?ex=%(exp)&rs=%(rs)&re=%(re)&skm=dilep_skim' +
+      '&dt=5S_onresonance&bl=caseB' %
+      {'exp':options.experiment_number, 'rs':1, 're':9999}
+  process_files = process_files + targetFiles(url)
+  for target in process_files:
+    print(target)
 
-elif process_type == [1, 1, 0, 1]:
+elif options.experiment_number is not None
+    and options.stream_number is not None
+    and options.generic_mc
+    and not options.continuum:
+  # Generic B-Bbar MC
   print('Processing generic MC B-Bbar events.')
   for event_type in ('bsbs', 'nonbsbs'):
     mdst_base_filename = ('dilepskim-e*' + str(options.experiment_number) +
@@ -189,7 +133,46 @@ elif process_type == [1, 1, 0, 1]:
   output_name = ('Adcab.GNMC.fs19299.s' + str(options.stream_number) +
       '.e' + str(options.experiment_number))
 
+elif options.experiment_number is not None
+    and options.stream_number is not None
+    and options.generic_mc
+    and options.continuum:
+  # Generic Continuum MC
+  print('Processing generic MC continuum.')
+  for event_type in ('charm', 'uds'):
+    mdst_base_filename = ('dilepskim-e*' + str(options.experiment_number) +
+        'r*r*-s*' + str(options.stream_number) + '-evtgen-' +
+        event_type + '-5S_onresonance-b*.index')
+    mdst_directory = ('/group/belle/bdata-files/g0mc/skim/skim5S/index/' +
+        'dilepskim/5S_onresonance/e0000' + str(options.experiment_number) +
+        '/evtgen-' + event_type + '/s0' + str(options.stream_number))
+    for file in os.listdir(mdst_directory):
+      if fnmatch.fnmatch(file, mdst_base_filename):
+        print('Found:', file)
+        process_files.append('process_event ' + mdst_directory + '/' + str(file))
+  output_name = ('Adcab.GNMC.udsc.s' + str(options.stream_number) +
+      '.e' + str(options.experiment_number))
+
+elif options.experiment_number is not None
+    and options.stream_number is not None
+    and not options.generic_mc
+  # Signal MC
+  print('Processing signal MC.')
+  mdst_base_filename = (
+      'fs' + str(options.fs) + '.s' + str(options.stream_number) +
+      '.e' + str(options.experiment_number) + '.m*.n*.mdst')
+  for file in os.listdir(mdst_directory):
+    if fnmatch.fnmatch(file, mdst_base_filename):
+      print('Found:', file)
+      process_files.append('process_event ' + mdst_directory + '/' + str(file))
+  output_name = ('Adcab.SGMC.fs' + str(options.fs)
+      + '.s' + str(options.stream_number)
+      + '.e' + str(options.experiment_number))
+  if len(process_files) != 4:
+    print('Warning: Number of MC files might not be right.')
+
 else:
+  # Nonsense.
   print('Input could not be interpereted.')
   print(options)
   sys.exit()
