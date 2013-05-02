@@ -1,3 +1,5 @@
 *.o
 *.so
 *fpda_pid*
+*Makefile
+*.kumac

@@ -1,6 +1,8 @@
 #
 # Imakefile
 #
+#
+# Usage: run xmkmf in the directory containing this imakefile to generate the Makefile.
 
 TARGET1 = Adcab.so
 OBJS1 = Adcab.o TrackParameters.o ParticleCandidate.o DileptonEvent.o userinfo.o geninfo.o VertexFit.o

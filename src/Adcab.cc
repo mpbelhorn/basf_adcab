@@ -780,7 +780,7 @@ Adcab::hist_def()
       "km_e "     "kp_e "
       "km_px "    "kp_px "
       "km_py "    "kp_py "
-      "km_pz "    "kp_py "
+      "km_pz "    "kp_pz "
       "km_pid "   "kp_pid "
       "ph_pid "
       "ph_recon "
