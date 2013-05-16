@@ -2,7 +2,7 @@
 import subprocess
 
 experiments = [31, 33, 35, 37, 41, 43, 45, 47, 49, 51, 53, 55, 61, 63, 65, 67, 69, 71, 73]
-queue = 'b_a'
+queue = 'b_index'
 
 for experiment in experiments:
   lsf_args = [

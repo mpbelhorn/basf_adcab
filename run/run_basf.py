@@ -29,6 +29,12 @@ parser.add_argument('-e', default = None,
 parser.add_argument('-s', default = None,
     type = int, dest = 'stream_number',
     help = 'process specific monte carlo stream')
+parser.add_argument('--run-start', default = 1,
+    type = int, dest = 'run_start',
+    help = 'process data starting with specific run')
+parser.add_argument('--run-end', default = 9999,
+    type = int, dest = 'run_end',
+    help = 'process data ending with specific run')
 parser.add_argument('-m', default = None,
     dest = 'process_specific',
     help = 'process specific monte carlo stream')
@@ -90,11 +96,11 @@ elif (options.experiment_number is not None
   # Continuum data
   print('Processing continuum.')
   options.scale_momentum = True
-  output_name = 'Adcab.DATA.udsc.{exp}'.format(exp=options.experiment_number)
+  output_name = 'Adcab.DATA.udsc.e{exp}'.format(exp=options.experiment_number)
   # All experiments with continuum data runs:
   #     31, 33, 35, 37, 41, 43, 45, 47, 49, 51,
   #     53, 55, 61, 63, 65, 67, 69, 71, 73
-  url = ('http://bweb3/mdst.php?ex={exp}&rs={rs}&re={re}&skm=dilep_skim&dt=continuum&bl=caseB'.format(exp=options.experiment_number, rs=1, re=9999))
+  url = ('http://bweb3/mdst.php?ex={exp}&rs={rs}&re={re}&skm=dilep_skim&dt=continuum&bl=caseB'.format(exp=options.experiment_number, rs=options.run_start, re=options.run_end))
   process_files = process_files + targetFiles(url)
   print(url)
   for target in process_files:
@@ -106,7 +112,7 @@ elif (options.experiment_number in y5s_experiments
   # Experimental data
   print('Processing experimental data.')
   output_name = 'Adcab.DATA.e%(exp)s' % {'exp': options.experiment_number}
-  url = ('http://bweb3/mdst.php?ex={exp}&rs={rs}&re={re}&skm=dilep_skim&dt=5S_onresonance&bl=caseB'.format(exp=options.experiment_number, rs=1, re=9999))
+  url = ('http://bweb3/mdst.php?ex={exp}&rs={rs}&re={re}&skm=dilep_skim&dt=5S_onresonance&bl=caseB'.format(exp=options.experiment_number, rs=options.run_start, re=options.run_end))
   process_files = process_files + targetFiles(url)
   print(url)
   for target in process_files:
@@ -198,7 +204,7 @@ analysis_path_commands = [
 analysis_parameters = [
     ['JPsi_Veto_OS_Only', str(int(options.jpsi_veto_os_only))],
     ['Verbose_Log',       str(int(options.verbose_log))],
-    ['MC_Stream_Number',  -1 if options.stream_number is None else str(int(options.stream_number))],
+    ['MC_Stream_Number',  "-1" if options.stream_number is None else str(int(options.stream_number))],
     ['Is_Continuum',      str(int(options.continuum))],
     ['Scale_Momentum',    str(int(options.scale_momentum))]]
 
@@ -225,7 +231,7 @@ for file_index, file in enumerate(process_files):
   for parameter in analysis_parameters:
     basf_in.write(
         ('module put_parameter Adcab ' + parameter[0] + '\\' +
-        parameter[1]+ '\n').encode('utf-8'))
+        parameter[1] + '\n').encode('utf-8'))
     basf_in.flush()
   # Finalize BASF's initialization.
   basf_in.write(('initialize\n').encode('utf-8'))
