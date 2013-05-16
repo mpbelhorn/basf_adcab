@@ -681,13 +681,11 @@ Adcab::event(BelleEvent* evptr, int* status)
         continue;
       }
 
-      bool phi_candidate_in_mass_range = false;
+      int phi_candidates_in_mass_range = 0;
       for (ParticleIterator phi_candidate = phi_candidates.begin();
           phi_candidate != phi_candidates.end(); ++phi_candidate) {
-        if (phi_candidate->p().m() > 1.045) {
-          continue;
-        } else {
-          phi_candidate_in_mass_range = true;
+        if (phi_candidate->p().m() < 1.045) {
+          phi_candidates_in_mass_range++;
         }
       }
 
@@ -713,7 +711,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Write dilepton-level data to the n-tuple.
       nTuple_dileptons_->column("cos_thta", event_candidate.cosThetaLL());
       nTuple_dileptons_->column("phi_cnds", phi_candidates.size());
-      nTuple_dileptons_->column("good_phi", phi_candidate_in_mass_range);
+      nTuple_dileptons_->column("good_phi", phi_candidates_in_mass_range);
 
       // Write lepton-level data to the n-tuple.
       nTuple_dileptons_->column("l0_chrge", l0.charge());
