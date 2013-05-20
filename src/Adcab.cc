@@ -362,9 +362,9 @@ Adcab::event(BelleEvent* evptr, int* status)
     bool good_svd_muon = (
         (pid_info.svdRHits(1) >= cuts.minSvdRHits) &&
         (pid_info.svdZHits(1) >= cuts.minSvdZHits));
-    bool good_svd_kaon = (
-        (pid_info.svdRHits(3) >= cuts.minSvdRHits) &&
-        (pid_info.svdZHits(3) >= cuts.minSvdZHits));
+    // bool good_svd_kaon = (
+    //    (pid_info.svdRHits(3) >= cuts.minSvdRHits) &&
+    //    (pid_info.svdZHits(3) >= cuts.minSvdZHits));
 
     if (basf_parameter_verbose_log_ > 2) {
       cout << "      SVD mu:" << pid_info.svdRHits(1) << "|"
@@ -382,7 +382,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     // Add up the cuts to determine species candidacy.
     bool good_muon = (good_muon_likelihood && good_svd_muon && good_klm_signature);
     bool good_electron = (good_electron_likelihood && good_svd_electron);
-    bool good_kaon = (good_kaon_likelihood && good_svd_kaon);
+    bool good_kaon = (good_kaon_likelihood /*&& good_svd_kaon*/);
 
     // Create a particle instance for the candidate final state particle.
     Ptype assigned_type;
