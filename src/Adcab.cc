@@ -730,9 +730,20 @@ Adcab::event(BelleEvent* evptr, int* status)
         continue;
       }
 
+      int l0_id(l0.mdstCharged().get_ID());
+      int l1_id(l1.mdstCharged().get_ID());
       int phi_candidates_in_mass_range = 0;
       for (ParticleIterator phi_candidate = phi_candidates.begin();
           phi_candidate != phi_candidates.end(); ++phi_candidate) {
+        int kaon_minus_id(phi_candidate.relation().child(0).mdstCharged().get_ID());
+        int kaon_plus_id(phi_candidate.relation().child(1).mdstCharged().get_ID());
+        if (kaon_minus_id == l0_id ||
+            kaon_minus_id == l1_id ||
+            kaon_plus_id == l0_id ||
+            kaon_plus_id == l1_id) {
+          // Bad phi+dilepton: double counted tracks.
+          continue;
+        }
         if (phi_candidate->p().m() < 1.045) {
           phi_candidates_in_mass_range++;
         }
