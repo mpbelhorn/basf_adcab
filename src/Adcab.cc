@@ -446,6 +446,7 @@ Adcab::event(BelleEvent* evptr, int* status)
         cout << "          Cut electron on IP dz or dr." << endl;
       }
       prompt_electron = false;
+    }
 
     // Cut on barrel intersection.
     double muon_polar_angle_cosine = muon_candidate.p().cosTheta();
@@ -458,7 +459,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     }
     double electron_polar_angle_cosine = muon_candidate.p().cosTheta();
     if ((electron_polar_angle_cosine < cuts.minLeptonCosTheta) ||
-        (electorn_polar_angle_cosine > cuts.maxLeptonCosTheta)) {
+        (electron_polar_angle_cosine > cuts.maxLeptonCosTheta)) {
       prompt_electron = false;
       if (basf_parameter_verbose_log_ > 1) {
         cout << "          Cut electron on barrel intersection." << endl;
@@ -470,17 +471,19 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Set scaled P(CM) in particle info.
       // TODO - Possibly change lab momentum in particle instance.
       double muon_scale_factor(1.03291);
-      HepLorentzVector scaled_muon_p(muon_candidate.p());
-      scaled_muon_p *= muon_scale_factor;
+      HepLorentzVector scaled_muon_p(
+          muon_candidate.p().vect() * muon_scale_factor,
+          muon_candidate.p().t() * muon_scale_factor);
       muon_info.pCm(scaled_muon_p, cm_boost_);
 
       double electron_scale_factor(1.03290);
-      HepLorentzVector scaled_electron_p(electron_candidate.p());
-      scaled_electron_p *= electron_scale_factor;
+      HepLorentzVector scaled_electron_p(
+          electron_candidate.p().vect() * electron_scale_factor,
+          electron_candidate.p().t() * electron_scale_factor);
       electron_info.pCm(scaled_electron_p, cm_boost_);
     } else {
       muon_info.pCm(muon_candidate.p(), cm_boost_);
-      electon_info.pCm(electron_candidate.p(), cm_boost_);
+      electron_info.pCm(electron_candidate.p(), cm_boost_);
     }
 
     // CM momentum cut.
@@ -501,8 +504,7 @@ Adcab::event(BelleEvent* evptr, int* status)
 
     // J/Psi veto.
     for (MdstChargedIterator mdst_charged_iterator = first_mdst_charged;
-        prompt_candidate && (mdst_charged_iterator != last_mdst_charged);
-        ++mdst_charged_iterator) {
+        mdst_charged_iterator != last_mdst_charged; ++mdst_charged_iterator) {
       const Mdst_charged &sister_mdst = *mdst_charged_iterator;
 
       // Reject case where pointers point to same object.
@@ -543,7 +545,7 @@ Adcab::event(BelleEvent* evptr, int* status)
       double dimuon_jpsi_mass_difference = dimuon_invariant_mass - cuts.massJPsi;
       if (cuts.minMuMuJPsiCandidate < dimuon_jpsi_mass_difference &&
           dimuon_jpsi_mass_difference < cuts.maxMuMuJPsiCandidate) {
-        prompt_candidate = false;
+        prompt_muon = false;
         if (basf_parameter_verbose_log_ > 1) {
           cout << "          Cut muon on J/Psi veto." << endl;
         }
@@ -559,7 +561,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     // Regardless if the particle makes a good lepton candidate, if it is a
     // good K candidate, add it to the list of kaons.
     if (good_kaon) {
-      kaon_candidates.push_back(particle);
+      kaon_candidates.push_back(kaon_candidate);
     }
     if (good_muon || good_electron || good_kaon) {
       nTuple_charged_->column("stm_no"  , basf_parameter_mc_stream_number_);
@@ -594,11 +596,11 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_charged_->column("good_k"  , good_kaon);
       nTuple_charged_->column("prmpt_mu", prompt_muon);
       nTuple_charged_->column("prmpt_el", prompt_electron);
-      nTuple_charged_->column("muid_prb", info.muonLikelihood());
-      nTuple_charged_->column("eid_prob", info.electronLikelihood());
-      nTuple_charged_->column("pid_k_pi", info.kaonToPionLikelihood());
-      nTuple_charged_->column("pid_k_pr", info.kaonToProtonLikelihood());
-      nTuple_charged_->column("muid_rto", info.klmSignature());
+      nTuple_charged_->column("muid_prb", pid_info.muonLikelihood());
+      nTuple_charged_->column("eid_prob", pid_info.electronLikelihood());
+      nTuple_charged_->column("pid_k_pi", pid_info.kaonToPionLikelihood());
+      nTuple_charged_->column("pid_k_pr", pid_info.kaonToProtonLikelihood());
+      nTuple_charged_->column("muid_rto", pid_info.klmSignature());
       nTuple_charged_->column("mu_svd_r", muon_info.svdRHits());
       nTuple_charged_->column("mu_svd_z", muon_info.svdZHits());
       nTuple_charged_->column("el_svd_r", electron_info.svdRHits());
@@ -735,8 +737,8 @@ Adcab::event(BelleEvent* evptr, int* status)
       int phi_candidates_in_mass_range = 0;
       for (ParticleIterator phi_candidate = phi_candidates.begin();
           phi_candidate != phi_candidates.end(); ++phi_candidate) {
-        int kaon_minus_id(phi_candidate.relation().child(0).mdstCharged().get_ID());
-        int kaon_plus_id(phi_candidate.relation().child(1).mdstCharged().get_ID());
+        int kaon_minus_id(phi_candidate->relation().child(0).mdstCharged().get_ID());
+        int kaon_plus_id(phi_candidate->relation().child(1).mdstCharged().get_ID());
         if (kaon_minus_id == l0_id ||
             kaon_minus_id == l1_id ||
             kaon_plus_id == l0_id ||
