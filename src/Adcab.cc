@@ -285,19 +285,13 @@ Adcab::event(BelleEvent* evptr, int* status)
   if (basf_parameter_verbose_log_ > 1) {
     cout << "    Initializing particle containers." << endl;
   }
-  static std::vector<ParticleCandidate> lepton_candidates(5);
-  static std::vector<ParticleCandidate> kaon_candidates(10);
-  static std::vector<ParticleCandidate> true_kaons(10);
-  static std::vector<ParticleCandidate> pi_candidates(10);
+  static std::vector<Particle> lepton_candidates(5);
+  static std::vector<Particle> kaon_candidates(10);
   static std::vector<Particle> phi_candidates(5);
-  static std::vector<Particle> d_candidates(5);
   static std::vector<DileptonEvent> dilepton_event_candidates(10);
   lepton_candidates.clear();
   kaon_candidates.clear();
-  true_kaons.clear();
-  pi_candidates.clear();
   phi_candidates.clear();
-  d_candidates.clear();
   dilepton_event_candidates.clear();
 
   // Alias the MDST charged manager, which contains the measured charged tracks
@@ -312,7 +306,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     cout << "    Passed event initialization." << endl;
   }
 
-  // Populate the lepton candidate lists.
+  // Populate the final state particle (FSP) candidate lists.
   for (MdstChargedIterator lepton_scan_iterator = first_mdst_charged;
       lepton_scan_iterator != last_mdst_charged; ++lepton_scan_iterator) {
 
@@ -322,276 +316,302 @@ Adcab::event(BelleEvent* evptr, int* status)
     // Alias the current particle as "charged_particle".
     const Mdst_charged &charged_particle = *lepton_scan_iterator;
 
-    // Get electron and muon likelihoods.
+    // Set up an instantance of UserInfo to store PID data.
+    UserInfo pid_info;
+
+    // Get final state particle (FSP) ID likelihoods and track quality.
     eid charged_particle_eid(charged_particle);
     Muid_mdst charged_particle_muid(charged_particle);
+    pid_info.muonId(charged_particle_muid);
+    pid_info.electronLikelihood(charged_particle_eid.prob(3, -1, 5));
+    pid_info.kaonToPionLikelihood(pid_kaon_to_pi.prob(charged_particle));
+    pid_info.kaonToProtonLikelihood(pid_kaon_to_pr.prob(charged_particle));
+    pid_info.svdHits(charged_particle);
 
-    UserInfo info;
-
-    double muid_probability = charged_particle_muid.Muon_likelihood();
-    double eid_probability = charged_particle_eid.prob(3, -1, 5);
-    double kaon_to_pion_likelihood = pid_kaon_to_pi.prob(charged_particle);
-    double kaon_to_proton_likelihood = pid_kaon_to_pr.prob(charged_particle);
-
-    // Reject particle if below both electron and muon likelihood cuts.
-    bool good_muon = ((muid_probability >= cuts.minMuidProb) &&
-        (charged_particle_muid.Chi_2() != 0));
-    bool good_electron = eid_probability >= cuts.minEidProb;
-    bool good_kaon = (
-        (kaon_to_pion_likelihood > cuts.minKaonToPionLikelihood) &&
-        (kaon_to_proton_likelihood > cuts.minKaonToProtonLikelihood));
-
-    if (basf_parameter_verbose_log_ > 1) {
-      cout << "        ["<< good_muon << good_electron << good_kaon << "] "
-           << "PID check." << endl;
+    if (basf_parameter_verbose_log_ > 2) {
+      const Gen_hepevt & hep(get_hepevt(charged_particle));
+      if (hep) {
+        cout << "      PID=" << hep.idhep();
+        if (hep.mother()) {
+          cout << ", mom=" << hep.mother().idhep();
+        }
+        cout << endl;
+      }
     }
 
-    // Create particle class objects of each species.
-    double electric_charge = charged_particle.charge();
-    Particle muon_particle(charged_particle,
-        electric_charge > 0 ? particle_mu_plus_ : particle_mu_minus_);
-    Particle electron_particle(charged_particle,
-        electric_charge > 0 ? particle_e_plus_ : particle_e_minus_);
-    Particle kaon_particle(charged_particle,
-        electric_charge > 0 ? particle_k_plus_ : particle_k_minus_);
+    // Check that track has good likelihoods to be interesting FSP.
+    bool good_muon_likelihood = pid_info.muonLikelihood() >= cuts.minMuidProb;
+    bool good_electron_likelihood = pid_info.electronLikelihood() >= cuts.minEidProb;
+    bool good_kaon_likelihood = (
+        (pid_info.kaonToPionLikelihood() > cuts.minKaonToPionLikelihood) &&
+        (pid_info.kaonToProtonLikelihood() > cuts.minKaonToProtonLikelihood));
 
-    ParticleCandidate muon_candidate(muon_particle, cm_boost_,
-        interaction_point_, basf_parameter_scale_momentum_);
-    ParticleCandidate electron_candidate(electron_particle, cm_boost_,
-        interaction_point_, basf_parameter_scale_momentum_);
-
-    // Cut on IP dr and dz and SVD hits.
-    // This is to make sure that particles were created near the IP.
-    if ((abs(muon_candidate.track().dr()) > cuts.maxIpDr) ||
-        (abs(muon_candidate.track().dz()) > cuts.maxIpDz) ||
-        (muon_candidate.svdRHits() < cuts.minSvdRHits) ||
-        (muon_candidate.svdZHits() < cuts.minSvdZHits)) {
-      good_muon = false;
-    }
-    if ((abs(electron_candidate.track().dr()) > cuts.maxIpDr) ||
-        (abs(electron_candidate.track().dz()) > cuts.maxIpDz) ||
-        (electron_candidate.svdRHits() < cuts.minSvdRHits) ||
-        (electron_candidate.svdZHits() < cuts.minSvdZHits)) {
-      good_electron = false;
-    }
-    if (basf_parameter_verbose_log_ > 1) {
-      cout << "        ["<< good_muon << good_electron << good_kaon << "] "
-           << "dr/dz and SVD check." << endl;
-    }
-    // Reject if the particle track has polar angle pointing outside the
-    //   barrel (p is given closest to coord. origin - see mdst table).
-    //   The lab momentum is the same for each particle candidate, so we use the
-    //   muon's particle instance for the job.
-    double track_cosine_polar_angle = muon_particle.p().cosTheta();
-    if ((track_cosine_polar_angle < cuts.minLeptonCosTheta) ||
-        (track_cosine_polar_angle > cuts.maxLeptonCosTheta)) {
-      good_muon = false;
-      good_electron = false;
-    }
-    if (basf_parameter_verbose_log_ > 1) {
-      cout << "        ["<< good_muon << good_electron << good_kaon << "] "
-           << "Barrel intersection check." << endl;
+    if (basf_parameter_verbose_log_ > 2) {
+      cout << "      PID mu:" << pid_info.muonLikelihood() << "|"
+                              << pid_info.klmSignature()
+           << " el:" << pid_info.electronLikelihood()
+           << " k-pi:" << pid_info.kaonToPionLikelihood()
+           << " k-pr:" << pid_info.kaonToProtonLikelihood()
+           << endl;
     }
 
-    // Check if CM momentum is good assuming muon and electron masses.
-    if ((muon_candidate.pCm().rho() < cuts.minLeptonMomentumCm) ||
-        (muon_candidate.pCm().rho() > cuts.maxLeptonMomentumCm)) {
-      good_muon = false;
-    }
-    if ((electron_candidate.pCm().rho() < cuts.minLeptonMomentumCm) ||
-        (electron_candidate.pCm().rho() > cuts.maxLeptonMomentumCm)) {
-      good_electron = false;
-    }
-    if (basf_parameter_verbose_log_ > 1) {
-      cout << "        ["<< good_muon << good_electron << good_kaon << "] "
-           << "CM-frame momentum check." << endl;
+    // Check that track has enough hits in the SVD for reliable vertexing.
+    bool good_svd_electron = (
+        (pid_info.svdRHits(0) >= cuts.minSvdRHits) &&
+        (pid_info.svdZHits(0) >= cuts.minSvdZHits));
+    bool good_svd_muon = (
+        (pid_info.svdRHits(1) >= cuts.minSvdRHits) &&
+        (pid_info.svdZHits(1) >= cuts.minSvdZHits));
+    // bool good_svd_kaon = (
+    //    (pid_info.svdRHits(3) >= cuts.minSvdRHits) &&
+    //    (pid_info.svdZHits(3) >= cuts.minSvdZHits));
+
+    if (basf_parameter_verbose_log_ > 2) {
+      cout << "      SVD mu:" << pid_info.svdRHits(1) << "|"
+                              << pid_info.svdZHits(1)
+           << " el:" << pid_info.svdRHits(0) << "|" << pid_info.svdZHits(0)
+           << " k:" << pid_info.svdRHits(3) << "|" << pid_info.svdZHits(3)
+           << endl;
     }
 
-    // Tag possible pair production and J/Psi daughters.
-    bool vetoed_muon = false;
-    bool vetoed_electron = false;
-    for (MdstChargedIterator jpsi_pair_iterator = first_mdst_charged;
-        (good_muon || good_electron) && !(vetoed_muon && vetoed_electron) &&
-        (jpsi_pair_iterator != last_mdst_charged); ++jpsi_pair_iterator) {
-      const Mdst_charged &jpsi_pair_particle = *jpsi_pair_iterator;
+    // Check that the KLM signature is good for muon candidates.
+    bool good_klm_signature = (
+        (pid_info.klmSignature() > 0) &&
+        (pid_info.klmSignature() < cuts.maxKlmChi2PerHits));
+
+    // Add up the cuts to determine species candidacy.
+    bool good_muon = (good_muon_likelihood && good_svd_muon && good_klm_signature);
+    bool good_electron = (good_electron_likelihood && good_svd_electron);
+    bool good_kaon = (good_kaon_likelihood /*&& good_svd_kaon*/);
+
+    // Create a particle instance for the candidate final state particle.
+    double particle_charge(charged_particle.charge());
+    Particle muon_candidate(charged_particle,
+        particle_charge > 0 ? Ptype("MU+") : Ptype("MU-"));
+    muon_candidate.userInfo(pid_info);
+    setMCtruth(muon_candidate);
+    UserInfo &muon_info = dynamic_cast<UserInfo&>(muon_candidate.userInfo());
+    muon_info.svdHits(pid_info.svdRHits(1), pid_info.svdZHits(1));
+
+    Particle electron_candidate(charged_particle,
+        particle_charge > 0 ? Ptype("E+") : Ptype("E-"));
+    electron_candidate.userInfo(pid_info);
+    setMCtruth(electron_candidate);
+    UserInfo &electron_info = dynamic_cast<UserInfo&>(electron_candidate.userInfo());
+    electron_info.svdHits(pid_info.svdRHits(0), pid_info.svdZHits(0));
+
+    Particle kaon_candidate(charged_particle,
+        particle_charge > 0 ? Ptype("K+") : Ptype("K-"));
+    kaon_candidate.userInfo(pid_info);
+    setMCtruth(kaon_candidate);
+    UserInfo &kaon_info = dynamic_cast<UserInfo&>(kaon_candidate.userInfo());
+    kaon_info.svdHits(pid_info.svdRHits(3), pid_info.svdZHits(3));
+
+    if (! (good_muon || good_electron || good_kaon)) {
+      // Print diagnostic information to the log.
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "        Rejected" << endl;
+      }
+      continue;
+    }
+
+    TrackParameters muon_ip_profile(muon_candidate, interaction_point_);
+    muon_info.ipDeltaR(muon_ip_profile.dr());
+    muon_info.ipDeltaZ(muon_ip_profile.dz());
+
+    TrackParameters electron_ip_profile(electron_candidate, interaction_point_);
+    electron_info.ipDeltaR(electron_ip_profile.dr());
+    electron_info.ipDeltaZ(electron_ip_profile.dz());
+
+    TrackParameters kaon_ip_profile(kaon_candidate, interaction_point_);
+    kaon_info.ipDeltaR(kaon_ip_profile.dr());
+    kaon_info.ipDeltaZ(kaon_ip_profile.dz());
+
+    // All leptons are considered prompt signal candidates unless shown to
+    // be otherwise.
+    bool prompt_muon = true;
+    bool prompt_electron = true;
+
+    // Cut on IP proximity.
+    if (abs(muon_info.ipDeltaR()) > cuts.maxIpDr ||
+        abs(muon_info.ipDeltaZ()) > cuts.maxIpDz) {
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "          Cut muon on IP dz or dr." << endl;
+      }
+      prompt_muon = false;
+    }
+    if (abs(electron_info.ipDeltaR()) > cuts.maxIpDr ||
+        abs(electron_info.ipDeltaZ()) > cuts.maxIpDz) {
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "          Cut electron on IP dz or dr." << endl;
+      }
+      prompt_electron = false;
+
+    // Cut on barrel intersection.
+    double muon_polar_angle_cosine = muon_candidate.p().cosTheta();
+    if ((muon_polar_angle_cosine < cuts.minLeptonCosTheta) ||
+        (muon_polar_angle_cosine > cuts.maxLeptonCosTheta)) {
+      prompt_muon = false;
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "          Cut muon on barrel intersection." << endl;
+      }
+    }
+    double electron_polar_angle_cosine = muon_candidate.p().cosTheta();
+    if ((electron_polar_angle_cosine < cuts.minLeptonCosTheta) ||
+        (electorn_polar_angle_cosine > cuts.maxLeptonCosTheta)) {
+      prompt_electron = false;
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "          Cut electron on barrel intersection." << endl;
+      }
+    }
+
+    // Calculate the CM momentum, scale momentum to Y(5S) CM if necessary.
+    if (basf_parameter_scale_momentum_) {
+      // Set scaled P(CM) in particle info.
+      // TODO - Possibly change lab momentum in particle instance.
+      double muon_scale_factor(1.03291);
+      HepLorentzVector scaled_muon_p(muon_candidate.p());
+      scaled_muon_p *= muon_scale_factor;
+      muon_info.pCm(scaled_muon_p, cm_boost_);
+
+      double electron_scale_factor(1.03290);
+      HepLorentzVector scaled_electron_p(electron_candidate.p());
+      scaled_electron_p *= electron_scale_factor;
+      electron_info.pCm(scaled_electron_p, cm_boost_);
+    } else {
+      muon_info.pCm(muon_candidate.p(), cm_boost_);
+      electon_info.pCm(electron_candidate.p(), cm_boost_);
+    }
+
+    // CM momentum cut.
+    if ((muon_info.pCm().rho() < cuts.minLeptonMomentumCm) ||
+        (muon_info.pCm().rho() > cuts.maxLeptonMomentumCm)) {
+      prompt_muon = false;
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "          Cut muon on CM momentum." << endl;
+      }
+    }
+    if ((electron_info.pCm().rho() < cuts.minLeptonMomentumCm) ||
+        (electron_info.pCm().rho() > cuts.maxLeptonMomentumCm)) {
+      prompt_electron = false;
+      if (basf_parameter_verbose_log_ > 1) {
+        cout << "          Cut electron on CM momentum." << endl;
+      }
+    }
+
+    // J/Psi veto.
+    for (MdstChargedIterator mdst_charged_iterator = first_mdst_charged;
+        prompt_candidate && (mdst_charged_iterator != last_mdst_charged);
+        ++mdst_charged_iterator) {
+      const Mdst_charged &sister_mdst = *mdst_charged_iterator;
 
       // Reject case where pointers point to same object.
-      if (lepton_scan_iterator == jpsi_pair_iterator) continue;
+      if (charged_particle == sister_mdst) continue;
 
       // If allowing a charge bias and pair is SS, skip to the next pair.
       if (basf_parameter_allow_charge_bias_ &&
-          (electric_charge == jpsi_pair_particle.charge())) {
+          (particle_charge == sister_mdst.charge())) {
         continue;
       }
 
-      if (good_muon && !vetoed_muon) {
-        // Check to see if the candidate makes a bad muon. First, assume
-        //     the pair particle is a muon.
-        Particle other_muon(jpsi_pair_particle,
-            jpsi_pair_particle.charge() > 0 ?
-            particle_mu_plus_ : particle_mu_minus_);
-
-        // Calculate the invariant mass of the two particles.
-        double pair_invariant_mass = abs(
-            (muon_candidate.p() + other_muon.p()).m());
-
-        // If at any time candidate proves to be likely from a J/Psi, the flag
-        //   is switched.
-        double delta_mass = pair_invariant_mass - cuts.massJPsi;
-        if (cuts.minMuMuJPsiCandidate < delta_mass &&
-            delta_mass < cuts.maxMuMuJPsiCandidate) {
-          if (basf_parameter_verbose_log_ > 1) {
-            cout << "            Bad muon: Likely J/Psi daughter." << endl;
-          }
-          vetoed_muon = true;
-        }
-      }
-
-      if (good_electron && !vetoed_electron) {
-        // Check to see if the candidate makes a bad electron. First, assume
-        //     the pair particle is an electron.
-        Particle other_electron(jpsi_pair_particle,
-            jpsi_pair_particle.charge() > 0 ?
-            particle_e_plus_ : particle_e_minus_);
-
-        // Calculate the invariant mass of the electron
-        //   candidate and the other charged track.
-        double pair_invariant_mass = abs(
-            (electron_candidate.p() + other_electron.p()).m());
-        double delta_mass = pair_invariant_mass - cuts.massJPsi;
-
-        // Cut possible pair production electrons or J/Psi daughters.
-        if (pair_invariant_mass < cuts.minEPlusEMinusMass) {
-          if (basf_parameter_verbose_log_ > 1) {
-            cout << "            Bad electron: Likely pair production." << endl;
-          }
-          vetoed_electron = true;
-        } else if (cuts.minElElJPsiCandidate < delta_mass &&
-            delta_mass < cuts.maxElElJPsiCandidate) {
-          if (basf_parameter_verbose_log_ > 1) {
-            cout << "            Bad electron: Likely J/Psi daughter." << endl;
-          }
-          vetoed_electron = true;
-        }
-      }
-    }
-    if (basf_parameter_verbose_log_ > 1) {
-      cout << "        ["<< good_muon << good_electron << good_kaon << "] "
-           << "J/Psi and pair production veto." << endl;
-    }
-
-    // While the candidate is still good, add it to the lepton list. Only add
-    //     the candidate to the lepton list once! If it is a good muon
-    //     candidate, then consider it a muon, otherwise it is deemed an
-    //     electron, but flag the verbose log if the particle passes as both.
-    ParticleCandidate *good_lepton = NULL;
-    bool vetoed_lepton = false;
-    if (good_muon) {
-      if (vetoed_muon) vetoed_lepton = true;
-      setMCtruth(muon_candidate.particle());
-      good_lepton = &muon_candidate;
-    } else if (good_electron) {
-      if (vetoed_electron) vetoed_lepton = true;
-      setMCtruth(electron_candidate.particle());
-      good_lepton = &electron_candidate;
-    }
-
-    // Dump lepton candidate information to the ntuple for all lepton
-    //   candidates including those that fail the J/psi or pair production veto,
-    //   but only pass non-vetoed leptons on to the good lepton list.
-    if (good_lepton) {
-      if (basf_parameter_verbose_log_ > 1) {
-        cout << "        Committing lepton to ntuple." << endl;
-      }
-      ParticleCandidate lepton((*good_lepton));
-      if (!vetoed_lepton) {
-        lepton_candidates.push_back(lepton);
-      }
-
-      nTuple_leptons_->column("stm_no"  , basf_parameter_mc_stream_number_);
-      nTuple_leptons_->column("exp_no"  , experiment_number_);
-      nTuple_leptons_->column("run_no"  , run_number_);
-      nTuple_leptons_->column("evt_no"  , event_number_);
-      nTuple_leptons_->column("is_mc"   , flag_mc_);
-      nTuple_leptons_->column("is_cntnm", basf_parameter_is_continuum_);
-      nTuple_leptons_->column("cm_enrgy", beam_energy_cm_frame_);
-      nTuple_leptons_->column("charge"  , electric_charge);
-      nTuple_leptons_->column("mass"    , lepton.p().mag());
-      nTuple_leptons_->column("good_mu" , good_muon);
-      nTuple_leptons_->column("veto_mu" , vetoed_muon);
-      nTuple_leptons_->column("good_el" , good_electron);
-      nTuple_leptons_->column("veto_el" , vetoed_electron);
-      nTuple_leptons_->column("good_k"  , good_kaon);
-      nTuple_leptons_->column("pid_k_pi", kaon_to_pion_likelihood);
-      nTuple_leptons_->column("pid_k_pr", kaon_to_proton_likelihood);
-      nTuple_leptons_->column("id_asn"  , lepton.idAssigned());
-      nTuple_leptons_->column("id_tru"  , lepton.idTrue());
-      nTuple_leptons_->column("id_mom"  , lepton.idMom());
-      nTuple_leptons_->column("eid_prob", eid_probability);
-      nTuple_leptons_->column("muid_prb", muid_probability);
-      nTuple_leptons_->column("muid_rto", lepton.klmChi2PerHits());
-      nTuple_leptons_->column("p_lb_mag", lepton.p().rho());
-      nTuple_leptons_->column("p_cm_mag", lepton.pCm().rho());
-      nTuple_leptons_->column("e_cm"    , lepton.pCm().e());
-      nTuple_leptons_->column("p_cm_x"  , lepton.pCm().px());
-      nTuple_leptons_->column("p_cm_y"  , lepton.pCm().py());
-      nTuple_leptons_->column("p_cm_z"  , lepton.pCm().pz());
-      nTuple_leptons_->column("cos_pol" , lepton.p().cosTheta());
-      nTuple_leptons_->column("ip_dr"   , lepton.track().dr());
-      nTuple_leptons_->column("ip_dz"   , lepton.track().dz());
-      nTuple_leptons_->column("svd_hitr", lepton.svdRHits());
-      nTuple_leptons_->column("svd_hitz", lepton.svdZHits());
-      nTuple_leptons_->dumpData();
-    }
-
-    // Treat the particle as a charged kaon.
-    setMCtruth(kaon_particle);
-    ParticleCandidate kaon(kaon_particle, cm_boost_, interaction_point_);
-    if (good_kaon || abs(kaon.idTrue()) == 321) {
-      if (good_kaon && !good_lepton) {
+      // Check to see if the candidate lepton and the other charged track
+      //   make a good J/Psi. If candidate and sister are likely from a J/Psi
+      //   (or pair production for the electron case), reject the candidate.
+      Particle sister_electron(sister_mdst,
+          sister_mdst.charge() > 0 ? Ptype("E+") : Ptype("E-"));
+      double dielectron_invariant_mass = abs(
+          (electron_candidate.p() + sister_electron.p()).m());
+      if (dielectron_invariant_mass < cuts.minEPlusEMinusMass) {
+        prompt_electron = false;
         if (basf_parameter_verbose_log_ > 1) {
-          cout << "        Committing kaon to list." << endl;
+          cout << "          Cut electron on pair-production veto." << endl;
         }
-        kaon_candidates.push_back(kaon);
       }
-      if (abs(kaon.idTrue()) == 321) {
-        true_kaons.push_back(kaon);
+      double dielectron_jpsi_mass_difference = dielectron_invariant_mass - cuts.massJPsi;
+      if (cuts.minElElJPsiCandidate < dielectron_jpsi_mass_difference &&
+          dielectron_jpsi_mass_difference < cuts.maxElElJPsiCandidate) {
+        prompt_electron = false;
+        if (basf_parameter_verbose_log_ > 1) {
+          cout << "          Cut electron on J/Psi veto." << endl;
+        }
       }
 
-      nTuple_kaons_->column("stm_no"  , basf_parameter_mc_stream_number_);
-      nTuple_kaons_->column("exp_no"  , experiment_number_);
-      nTuple_kaons_->column("run_no"  , run_number_);
-      nTuple_kaons_->column("evt_no"  , event_number_);
-      nTuple_kaons_->column("is_mc"   , flag_mc_);
-      nTuple_kaons_->column("is_cntnm", basf_parameter_is_continuum_);
-      nTuple_kaons_->column("cm_enrgy", beam_energy_cm_frame_);
-      nTuple_kaons_->column("charge"  , electric_charge);
-      nTuple_kaons_->column("mass"    , kaon.p().mag());
-      nTuple_kaons_->column("good_mu" , good_muon);
-      nTuple_kaons_->column("veto_mu" , vetoed_muon);
-      nTuple_kaons_->column("good_el" , good_electron);
-      nTuple_kaons_->column("veto_el" , vetoed_electron);
-      nTuple_kaons_->column("good_k"  , good_kaon);
-      nTuple_kaons_->column("pid_k_pi", kaon_to_pion_likelihood);
-      nTuple_kaons_->column("pid_k_pr", kaon_to_proton_likelihood);
-      nTuple_kaons_->column("id_asn"  , kaon.idAssigned());
-      nTuple_kaons_->column("id_tru"  , kaon.idTrue());
-      nTuple_kaons_->column("id_mom"  , kaon.idMom());
-      nTuple_kaons_->column("eid_prob", eid_probability);
-      nTuple_kaons_->column("muid_prb", muid_probability);
-      nTuple_kaons_->column("muid_rto", kaon.klmChi2PerHits());
-      nTuple_kaons_->column("p_lb_mag", kaon.p().rho());
-      nTuple_kaons_->column("p_cm_mag", kaon.pCm().rho());
-      nTuple_kaons_->column("e_cm"    , kaon.pCm().e());
-      nTuple_kaons_->column("p_cm_x"  , kaon.pCm().px());
-      nTuple_kaons_->column("p_cm_y"  , kaon.pCm().py());
-      nTuple_kaons_->column("p_cm_z"  , kaon.pCm().pz());
-      nTuple_kaons_->column("cos_pol" , kaon.p().cosTheta());
-      nTuple_kaons_->column("ip_dr"   , kaon.track().dr());
-      nTuple_kaons_->column("ip_dz"   , kaon.track().dz());
-      nTuple_kaons_->column("svd_hitr", kaon.svdRHits());
-      nTuple_kaons_->column("svd_hitz", kaon.svdZHits());
-      nTuple_kaons_->dumpData();
+      Particle sister_muon(sister_mdst,
+          sister_mdst.charge() > 0 ? Ptype("MU+") : Ptype("MU-"));
+      double dimuon_invariant_mass = abs(
+          (muon_candidate.p() + sister_muon.p()).m());
+      double dimuon_jpsi_mass_difference = dimuon_invariant_mass - cuts.massJPsi;
+      if (cuts.minMuMuJPsiCandidate < dimuon_jpsi_mass_difference &&
+          dimuon_jpsi_mass_difference < cuts.maxMuMuJPsiCandidate) {
+        prompt_candidate = false;
+        if (basf_parameter_verbose_log_ > 1) {
+          cout << "          Cut muon on J/Psi veto." << endl;
+        }
+      }
+    }
+    // If still a good prompt candidate after above cuts, add to lepton_candidates.
+    if (prompt_muon) {
+      lepton_candidates.push_back(muon_candidate);
+    } else if (prompt_electron) {
+      lepton_candidates.push_back(electron_candidate);
+    }
+
+    // Regardless if the particle makes a good lepton candidate, if it is a
+    // good K candidate, add it to the list of kaons.
+    if (good_kaon) {
+      kaon_candidates.push_back(particle);
+    }
+    if (good_muon || good_electron || good_kaon) {
+      nTuple_charged_->column("stm_no"  , basf_parameter_mc_stream_number_);
+      nTuple_charged_->column("exp_no"  , experiment_number_);
+      nTuple_charged_->column("run_no"  , run_number_);
+      nTuple_charged_->column("evt_no"  , event_number_);
+      nTuple_charged_->column("is_mc"   , flag_mc_);
+      nTuple_charged_->column("is_cntnm", basf_parameter_is_continuum_);
+      nTuple_charged_->column("cm_enrgy", beam_energy_cm_frame_);
+      nTuple_charged_->column("cm_bst_x", cm_boost_.x());
+      nTuple_charged_->column("cm_bst_y", cm_boost_.y());
+      nTuple_charged_->column("cm_bst_z", cm_boost_.z());
+      nTuple_charged_->column("charge"  , particle_charge);
+
+      nTuple_charged_->column("mu_enrgy", muon_info.pCm().e());  // Scaled CM frame
+      nTuple_charged_->column("mu_p_x"  , muon_info.pCm().px());
+      nTuple_charged_->column("mu_p_y"  , muon_info.pCm().py());
+      nTuple_charged_->column("mu_p_z"  , muon_info.pCm().pz());
+      nTuple_charged_->column("el_enrgy", electron_info.pCm().e());  // Scaled CM frame
+      nTuple_charged_->column("el_p_x"  , electron_info.pCm().px());
+      nTuple_charged_->column("el_p_y"  , electron_info.pCm().py());
+      nTuple_charged_->column("el_p_z"  , electron_info.pCm().pz());
+      nTuple_charged_->column("k_enrgy" , kaon_candidate.p().e());  // Lab frame
+      nTuple_charged_->column("k_p_x"   , kaon_candidate.p().px());
+      nTuple_charged_->column("k_p_y"   , kaon_candidate.p().py());
+      nTuple_charged_->column("k_p_z"   , kaon_candidate.p().pz());
+
+      nTuple_charged_->column("id_tru"  , IDhep(muon_candidate)); // Same for all candidates.
+      nTuple_charged_->column("id_mom"  , IDmom(muon_candidate)); // Same for all candidates.
+      nTuple_charged_->column("good_mu" , good_muon);
+      nTuple_charged_->column("good_el" , good_electron);
+      nTuple_charged_->column("good_k"  , good_kaon);
+      nTuple_charged_->column("prmpt_mu", prompt_muon);
+      nTuple_charged_->column("prmpt_el", prompt_electron);
+      nTuple_charged_->column("muid_prb", info.muonLikelihood());
+      nTuple_charged_->column("eid_prob", info.electronLikelihood());
+      nTuple_charged_->column("pid_k_pi", info.kaonToPionLikelihood());
+      nTuple_charged_->column("pid_k_pr", info.kaonToProtonLikelihood());
+      nTuple_charged_->column("muid_rto", info.klmSignature());
+      nTuple_charged_->column("mu_svd_r", muon_info.svdRHits());
+      nTuple_charged_->column("mu_svd_z", muon_info.svdZHits());
+      nTuple_charged_->column("el_svd_r", electron_info.svdRHits());
+      nTuple_charged_->column("el_svd_z", electron_info.svdZHits());
+      nTuple_charged_->column("k_svd_r" , kaon_info.svdRHits());
+      nTuple_charged_->column("k_svd_z" , kaon_info.svdZHits());
+      nTuple_charged_->column("mu_ip_dr", muon_info.ipDeltaR());
+      nTuple_charged_->column("mu_ip_dz", muon_info.ipDeltaZ());
+      nTuple_charged_->column("el_ip_dr", electron_info.ipDeltaR());
+      nTuple_charged_->column("el_ip_dz", electron_info.ipDeltaZ());
+      nTuple_charged_->column("k_ip_dr" , kaon_info.ipDeltaR());
+      nTuple_charged_->column("k_ip_dz" , kaon_info.ipDeltaZ());
+      nTuple_charged_->dumpData();
     }
   }
 
@@ -603,74 +623,75 @@ Adcab::event(BelleEvent* evptr, int* status)
   }
 
   // Find Phi canididates.
-  for (ParticleCandidateIterator kaon1 = kaon_candidates.begin();
+  for (ParticleIterator kaon1 = kaon_candidates.begin();
       kaon1 != kaon_candidates.end(); ++kaon1) {
-    for (ParticleCandidateIterator kaon2 = kaon1;
+    for (ParticleIterator kaon2 = kaon1;
         kaon2 != kaon_candidates.end(); ++kaon2) {
       if (kaon1 == kaon2) continue;
-      double kaon1_charge = kaon1->particle().charge();
-      double kaon2_charge = kaon2->particle().charge();
+      double kaon1_charge = kaon1->charge();
+      double kaon2_charge = kaon2->charge();
       if (kaon1_charge == kaon2_charge) continue;
-      Particle &kaon_minus = kaon1_charge > 0 ? kaon2->particle() : kaon1->particle();
-      Particle &kaon_plus = kaon1_charge > 0 ? kaon1->particle() : kaon2->particle();
+      Particle &kaon_minus = kaon1_charge > 0 ? *kaon2 : *kaon1;
+      Particle &kaon_plus = kaon1_charge > 0 ? *kaon1 : *kaon2;
       HepLorentzVector phi_momentum = kaon_minus.p() + kaon_plus.p();
       Particle phi_candidate(phi_momentum, Ptype("PHI"));
       phi_candidate.relation().append(kaon_minus);
       phi_candidate.relation().append(kaon_plus);
       int error = fitPhiVertex(phi_candidate);
       setMCtruth(phi_candidate);
+      UserInfo &phi_info = dynamic_cast<UserInfo&>(phi_candidate.userInfo());
       if (!error) {
-        double chi2 = dynamic_cast<UserInfo&>(phi_candidate.userInfo()).chisq();
-        if (phi_momentum.m() < 1.04 && phi_momentum.m() > 1.00 && chi2 < 2.0) {
-          int reconstruction_status =  dynamic_cast<UserInfo&>(
-              phi_candidate.userInfo()).genHepevtLink();
-          cout << "Phi vertex chisq/dof: "
-               << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).chisq()
-               << "/"
-               << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).ndf()
-               << ", m="
-               << phi_momentum.m()
-               << " | truth: "
-               << IDhep(phi_candidate)
-               << "["
-               << reconstruction_status
-               << "] ("
-               << IDhep(phi_candidate.child(0))
-               << " : "
-               << IDhep(phi_candidate.child(1))
-               << ")"
-               << endl;
-        } else if (abs(IDhep(phi_candidate)) == 333) {
-          cout << "MISSED ONE!" << endl;
-          int reconstruction_status =  dynamic_cast<UserInfo&>(
-              phi_candidate.userInfo()).genHepevtLink();
-          cout << "    Phi vertex chisq/dof: "
-               << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).chisq()
-               << "/"
-               << dynamic_cast<UserInfo&>(phi_candidate.userInfo()).ndf()
-               << ", m="
-               << phi_momentum.m()
-               << " | truth: "
-               << IDhep(phi_candidate)
-               << "["
-               << reconstruction_status
-               << "] ("
-               << IDhep(phi_candidate.child(0))
-               << " : "
-               << IDhep(phi_candidate.child(1))
-               << ")"
+        if (basf_parameter_verbose_log_ > 2) {
+          cout << "Phi vertex chisq/dof: " << phi_info.chisq()
+               << "/" << phi_info.ndf()
+               << " | truth: " << IDhep(phi_candidate)
+               << "[" << phi_info.genHepevtLink()
+               << "] (" << IDhep(phi_candidate.child(0))
+               << " : " << IDhep(phi_candidate.child(1)) << ")"
                << endl;
         }
+
         phi_candidates.push_back(phi_candidate);
+        nTuple_phi_->column("cm_enrgy", beam_energy_cm_frame_);
+        nTuple_phi_->column("cm_bst_x", cm_boost_.x());
+        nTuple_phi_->column("cm_bst_y", cm_boost_.y());
+        nTuple_phi_->column("cm_bst_z", cm_boost_.z());
+        nTuple_phi_->column("km_e"    , kaon_minus.p().e());
+        nTuple_phi_->column("km_px"   , kaon_minus.p().x());
+        nTuple_phi_->column("km_py"   , kaon_minus.p().y());
+        nTuple_phi_->column("km_pz"   , kaon_minus.p().z());
+        nTuple_phi_->column("km_pid"  , IDhep(kaon_minus));
+        nTuple_phi_->column("kp_e"    , kaon_plus.p().e());
+        nTuple_phi_->column("kp_px"   , kaon_plus.p().x());
+        nTuple_phi_->column("kp_py"   , kaon_plus.p().y());
+        nTuple_phi_->column("kp_pz"   , kaon_plus.p().z());
+        nTuple_phi_->column("kp_pid"  , IDhep(kaon_plus));
+        nTuple_phi_->column("ph_pid"  , IDhep(phi_candidate));
+        nTuple_phi_->column("ph_recon", phi_info.genHepevtLink());
+        nTuple_phi_->column("decay_x" , phi_candidate.momentum().decayVertex().x());
+        nTuple_phi_->column("decay_y" , phi_candidate.momentum().decayVertex().y());
+        nTuple_phi_->column("decay_z" , phi_candidate.momentum().decayVertex().z());
+        nTuple_phi_->column("vx_chi2" , phi_info.chisq());
+        nTuple_phi_->column("vx_dof"  , phi_info.ndf());
+        nTuple_phi_->column("trk_prx" , 0); // TODO - Get closest approach of K tracks.
+        nTuple_phi_->dumpData();
       }
     }
   }
 
+  // Print diagnostic information to the log.
+  if (basf_parameter_verbose_log_) {
+    cout << "    Phi selection." << endl;
+    cout << "      phi candidates: " << phi_candidates.size() << endl;
+  }
+
   // Find good dilepton event candidates.
   // Check all lepton pairs.
-  for (ParticleCandidateIterator outer_lepton = lepton_candidates.begin();
+  for (ParticleIterator outer_lepton = lepton_candidates.begin();
       outer_lepton != lepton_candidates.end(); ++outer_lepton) {
-    for (ParticleCandidateIterator inner_lepton = outer_lepton;
+    UserInfo &outer_lepton_info =
+        dynamic_cast<UserInfo&>(outer_lepton->userInfo());
+    for (ParticleIterator inner_lepton = outer_lepton;
         inner_lepton != lepton_candidates.end(); ++inner_lepton) {
       // Exclude the case where both iterators point to the same particle.
       if (outer_lepton == inner_lepton) continue;
@@ -678,21 +699,26 @@ Adcab::event(BelleEvent* evptr, int* status)
         cout << "    New dilepton event candidate" << endl;
       }
 
+      UserInfo &inner_lepton_info =
+          dynamic_cast<UserInfo&>(inner_lepton->userInfo());
+
       // Determine higher momentum lepton and add it to an event candidate.
       // Reference the higher momentum lepton as "lepton0"
       //  and the lower momentum lepton as "lepton1". First, assume the outer
       //  loop lepton has the greater momentum, then check that.
-      ParticleCandidate *greater_p_lepton;
-      ParticleCandidate *lesser_p_lepton;
-      if ((*inner_lepton).pCm().mag() > (*outer_lepton).pCm().mag()) {
+      Particle *greater_p_lepton;
+      Particle *lesser_p_lepton;
+      if (inner_lepton_info.pCm().mag() > outer_lepton_info.pCm().mag()) {
         greater_p_lepton = &(*inner_lepton);
         lesser_p_lepton = &(*outer_lepton);
       } else {
         greater_p_lepton = &(*outer_lepton);
         lesser_p_lepton = &(*inner_lepton);
       }
-      ParticleCandidate &l0 = *greater_p_lepton;
-      ParticleCandidate &l1 = *lesser_p_lepton;
+      Particle &l0 = *greater_p_lepton;
+      Particle &l1 = *lesser_p_lepton;
+      UserInfo &l0_info = dynamic_cast<UserInfo&>(l0.userInfo());
+      UserInfo &l1_info = dynamic_cast<UserInfo&>(l1.userInfo());
 
       DileptonEvent event_candidate(l0, l1);
 
@@ -704,105 +730,74 @@ Adcab::event(BelleEvent* evptr, int* status)
         continue;
       }
 
+      int l0_id(l0.mdstCharged().get_ID());
+      int l1_id(l1.mdstCharged().get_ID());
+      int phi_candidates_in_mass_range = 0;
+      for (ParticleIterator phi_candidate = phi_candidates.begin();
+          phi_candidate != phi_candidates.end(); ++phi_candidate) {
+        int kaon_minus_id(phi_candidate.relation().child(0).mdstCharged().get_ID());
+        int kaon_plus_id(phi_candidate.relation().child(1).mdstCharged().get_ID());
+        if (kaon_minus_id == l0_id ||
+            kaon_minus_id == l1_id ||
+            kaon_plus_id == l0_id ||
+            kaon_plus_id == l1_id) {
+          // Bad phi+dilepton: double counted tracks.
+          continue;
+        }
+        if (phi_candidate->p().m() < 1.045) {
+          phi_candidates_in_mass_range++;
+        }
+      }
+
       if (basf_parameter_verbose_log_ > 1) {
         cout << "        Found good dilepton event candidate." << endl;
       }
-      // Save the good dilepton event candidates the list.
-      dilepton_event_candidates.push_back(event_candidate);
+
+      // Column names can be no greater than eight (8) characters long.
+      // Write event-level data to the n-tuple.
+      nTuple_dileptons_->column("stm_no"  , basf_parameter_mc_stream_number_);
+      nTuple_dileptons_->column("exp_no"  , experiment_number_);
+      nTuple_dileptons_->column("run_no"  , run_number_);
+      nTuple_dileptons_->column("evt_no"  , event_number_);
+      nTuple_dileptons_->column("is_mc"   , flag_mc_);
+      nTuple_dileptons_->column("is_cntnm", basf_parameter_is_continuum_);
+      nTuple_dileptons_->column("fw_r2"   , fox_wolfram_r2);
+      nTuple_dileptons_->column("hadronb" , hadronb_code);
+      nTuple_dileptons_->column("cm_enrgy", beam_energy_cm_frame_);
+      nTuple_dileptons_->column("cm_bst_x", cm_boost_.x());
+      nTuple_dileptons_->column("cm_bst_y", cm_boost_.y());
+      nTuple_dileptons_->column("cm_bst_z", cm_boost_.z());
+
+      // Write dilepton-level data to the n-tuple.
+      nTuple_dileptons_->column("cos_thta", event_candidate.cosThetaLL());
+      nTuple_dileptons_->column("phi_cnds", phi_candidates.size());
+      nTuple_dileptons_->column("good_phi", phi_candidates_in_mass_range);
+
+      // Write lepton-level data to the n-tuple.
+      nTuple_dileptons_->column("l0_chrge", l0.charge());
+      nTuple_dileptons_->column("l0_idasn", l0.pType().lund());
+      nTuple_dileptons_->column("l0_idtru", IDhep(l0));
+      nTuple_dileptons_->column("l0_idmom", IDmom(l0));
+      nTuple_dileptons_->column("l0_e_cm" , l0_info.pCm().e());
+      nTuple_dileptons_->column("l0_pcm_x", l0_info.pCm().px());
+      nTuple_dileptons_->column("l0_pcm_y", l0_info.pCm().py());
+      nTuple_dileptons_->column("l0_pcm_z", l0_info.pCm().pz());
+      nTuple_dileptons_->column("l0_ip_dr", l0_info.ipDeltaR());
+      nTuple_dileptons_->column("l0_ip_dz", l0_info.ipDeltaZ());
+
+      nTuple_dileptons_->column("l1_chrge", l1.charge());
+      nTuple_dileptons_->column("l1_idasn", l1.pType().lund());
+      nTuple_dileptons_->column("l1_idtru", IDhep(l1));
+      nTuple_dileptons_->column("l1_idmom", IDmom(l1));
+      nTuple_dileptons_->column("l1_e_cm" , l1_info.pCm().e());
+      nTuple_dileptons_->column("l1_pcm_x", l1_info.pCm().px());
+      nTuple_dileptons_->column("l1_pcm_y", l1_info.pCm().py());
+      nTuple_dileptons_->column("l1_pcm_z", l1_info.pCm().pz());
+      nTuple_dileptons_->column("l1_ip_dr", l1_info.ipDeltaR());
+      nTuple_dileptons_->column("l1_ip_dz", l1_info.ipDeltaZ());
+
+      nTuple_dileptons_->dumpData();
     }
-  }
-
-  // TODO - Scan through the dilepton event list and see if two kaon candidates
-  //   "vertex" well with the lepton candidates. Different kaons with smallest
-  //   vertex error for each lepton should be added to the dilepton event and
-  //   dumped out with the dilepton event below.
-
-  // Write all dilepton event candidates to the ntuple.
-  for (DileptonEventIterator i = dilepton_event_candidates.begin();
-      i != dilepton_event_candidates.end(); i++) {
-    if (basf_parameter_verbose_log_) {
-      cout << "    Commiting Event Candidate to the ntuple" << endl;
-    }
-    DileptonEvent &event_candidate = *i;
-    ParticleCandidate &l0 = event_candidate.l0();
-    ParticleCandidate &l1 = event_candidate.l1();
-
-    int number_of_candidate_k_plus = 0;
-    int number_of_candidate_k_minus = 0;
-    for (ParticleCandidateIterator kaon = kaon_candidates.begin();
-        kaon < kaon_candidates.end(); kaon++) {
-      if (kaon->particle().charge() > 0) {
-        ++number_of_candidate_k_plus;
-      } else {
-        ++number_of_candidate_k_minus;
-      }
-    }
-    int number_of_true_k_plus = 0;
-    int number_of_true_k_minus = 0;
-    for (ParticleCandidateIterator kaon = true_kaons.begin();
-        kaon < true_kaons.end(); kaon++) {
-      if (kaon->particle().charge() > 0) {
-        ++number_of_true_k_plus;
-      } else {
-        ++number_of_true_k_minus;
-      }
-    }
-
-    // Column names can be no greater than eight (8) characters long.
-    // Write event-level data to the n-tuple.
-    nTuple_dileptons_->column("stm_no"  , basf_parameter_mc_stream_number_);
-    nTuple_dileptons_->column("exp_no"  , experiment_number_);
-    nTuple_dileptons_->column("run_no"  , run_number_);
-    nTuple_dileptons_->column("evt_no"  , event_number_);
-    nTuple_dileptons_->column("is_mc"   , flag_mc_);
-    nTuple_dileptons_->column("is_cntnm", basf_parameter_is_continuum_);
-    nTuple_dileptons_->column("fw_r2"   , fox_wolfram_r2);
-    nTuple_dileptons_->column("hadronb" , hadronb_code);
-    nTuple_dileptons_->column("cm_enrgy", beam_energy_cm_frame_);
-    nTuple_dileptons_->column("n_can_kp", number_of_candidate_k_plus);
-    nTuple_dileptons_->column("n_can_km", number_of_candidate_k_minus);
-    nTuple_dileptons_->column("n_tru_kp", number_of_true_k_plus);
-    nTuple_dileptons_->column("n_tru_km", number_of_true_k_minus);
-
-    // Write dilepton-level data to the n-tuple.
-    nTuple_dileptons_->column("typ_asn" , event_candidate.eventTypeAssigned());
-    nTuple_dileptons_->column("typ_tru" , event_candidate.eventTypeTrue());
-    nTuple_dileptons_->column("evt_sign", event_candidate.eventSign());
-    nTuple_dileptons_->column("cos_thta", event_candidate.cosThetaLL());
-    nTuple_dileptons_->column("inv_mass", event_candidate.invariantMass());
-
-    // Write lepton-level data to the n-tuple.
-    nTuple_dileptons_->column("l0_chrge", l0.particle().charge());
-    nTuple_dileptons_->column("l0_idasn", l0.idAssigned());
-    nTuple_dileptons_->column("l0_idtru", l0.idTrue());
-    nTuple_dileptons_->column("l0_idmom", l0.idMom());
-    nTuple_dileptons_->column("l0_plab" , l0.p().rho());
-    nTuple_dileptons_->column("l0_pcm"  , l0.pCm().rho());
-    nTuple_dileptons_->column("l0_e_cm" , l0.pCm().e());
-    nTuple_dileptons_->column("l0_pcm_x", l0.pCm().px());
-    nTuple_dileptons_->column("l0_pcm_y", l0.pCm().py());
-    nTuple_dileptons_->column("l0_pcm_z", l0.pCm().pz());
-    nTuple_dileptons_->column("l0_ip_dr", l0.track().dr());
-    nTuple_dileptons_->column("l0_ip_dz", l0.track().dz());
-    nTuple_dileptons_->column("l0_svdr" , l0.svdRHits());
-    nTuple_dileptons_->column("l0_svdz" , l0.svdZHits());
-
-    nTuple_dileptons_->column("l1_chrge", l1.particle().charge());
-    nTuple_dileptons_->column("l1_idasn", l1.idAssigned());
-    nTuple_dileptons_->column("l1_idtru", l1.idTrue());
-    nTuple_dileptons_->column("l1_idmom", l1.idMom());
-    nTuple_dileptons_->column("l1_plab" , l1.p().rho());
-    nTuple_dileptons_->column("l1_pcm"  , l1.pCm().rho());
-    nTuple_dileptons_->column("l1_e_cm" , l1.pCm().e());
-    nTuple_dileptons_->column("l1_pcm_x", l1.pCm().px());
-    nTuple_dileptons_->column("l1_pcm_y", l1.pCm().py());
-    nTuple_dileptons_->column("l1_pcm_z", l1.pCm().pz());
-    nTuple_dileptons_->column("l1_ip_dr", l1.track().dr());
-    nTuple_dileptons_->column("l1_ip_dz", l1.track().dz());
-    nTuple_dileptons_->column("l1_svdr" , l1.svdRHits());
-    nTuple_dileptons_->column("l1_svdz" , l1.svdZHits());
-
-    nTuple_dileptons_->dumpData();
   }
 
   return;
@@ -815,75 +810,103 @@ Adcab::hist_def()
   extern BelleTupleManager *BASF_Histogram;   // Define a BASF Histogram
 
   BelleTupleManager *tm = BASF_Histogram;
-  const char *charged_particle_variables = "stm_no "
-                                           "exp_no "
-                                           "run_no "
-                                           "evt_no "
-                                           "is_mc "
-                                           "is_cntnm "
-                                           "cm_enrgy "
-                                           "charge "
-                                           "mass "
-                                           "good_mu "
-                                           "veto_mu "
-                                           "good_el "
-                                           "veto_el "
-                                           "good_k "
-                                           "pid_k_pi "
-                                           "pid_k_pr "
-                                           "id_asn "
-                                           "id_tru "
-                                           "id_mom "
-                                           "eid_prob "
-                                           "muid_prb "
-                                           "muid_rto "
-                                           "p_lb_mag "
-                                           "p_cm_mag "
-                                           "e_cm "
-                                           "p_cm_x "
-                                           "p_cm_y "
-                                           "p_cm_z "
-                                           "cos_pol "
-                                           "ip_dr "
-                                           "ip_dz "
-                                           "svd_hitr "
-                                           "svd_hitz";
+  const char *charged_particle_variables =
+      "stm_no "
+      "exp_no "
+      "run_no "
+      "evt_no "
+      "is_mc "
+      "is_cntnm "
+      "cm_enrgy "
+      "cm_bst_x "
+      "cm_bst_y "
+      "cm_bst_z "
+      "charge "
+      "mu_enrgy "
+      "mu_p_x "
+      "mu_p_y "
+      "mu_p_z "
+      "el_enrgy "
+      "el_p_x "
+      "el_p_y "
+      "el_p_z "
+      "k_enrgy "
+      "k_p_x "
+      "k_p_y "
+      "k_p_z "
+      "id_tru "
+      "id_mom "
+      "good_mu "
+      "good_el "
+      "good_k "
+      "prmpt_mu "
+      "prmpt_el "
+      "muid_prb "
+      "eid_prob "
+      "pid_k_pi "
+      "pid_k_pr "
+      "muid_rto "
+      "mu_svd_r "
+      "mu_svd_z "
+      "el_svd_r "
+      "el_svd_z "
+      "k_svd_r "
+      "k_svd_z "
+      "mu_ip_dr "
+      "mu_ip_dz "
+      "el_ip_dr "
+      "el_ip_dz "
+      "k_ip_dr "
+      "k_ip_dz";
 
-  const char *dilepton_variables = "stm_no "
-                                   "exp_no "
-                                   "run_no "
-                                   "evt_no "
-                                   "is_mc "
-                                   "is_cntnm "
-                                   "fw_r2 "
-                                   "hadronb "
-                                   "cm_enrgy "
-                                   "n_can_kp "
-                                   "n_can_km "
-                                   "n_tru_kp "
-                                   "n_tru_km "
-                                   "typ_asn "
-                                   "typ_tru "
-                                   "evt_sign "
-                                   "cos_thta "
-                                   "inv_mass "
-                                   "l0_chrge " "l1_chrge "
-                                   "l0_idasn " "l1_idasn "
-                                   "l0_idtru " "l1_idtru "
-                                   "l0_idmom " "l1_idmom "
-                                   "l0_plab "  "l1_plab "
-                                   "l0_pcm "   "l1_pcm "
-                                   "l0_e_cm "  "l1_e_cm "
-                                   "l0_pcm_x " "l1_pcm_x "
-                                   "l0_pcm_y " "l1_pcm_y "
-                                   "l0_pcm_z " "l1_pcm_z "
-                                   "l0_ip_dr " "l1_ip_dr "
-                                   "l0_ip_dz " "l1_ip_dz "
-                                   "l0_svdr "  "l1_svdr "
-                                   "l0_svdz "  "l1_svdz";
+  const char *phi_variables =
+      "cm_enrgy "
+      "cm_bst_x "
+      "cm_bst_y "
+      "cm_bst_z "
+      "km_e "     "kp_e "
+      "km_px "    "kp_px "
+      "km_py "    "kp_py "
+      "km_pz "    "kp_pz "
+      "km_pid "   "kp_pid "
+      "ph_pid "
+      "ph_recon "
+      "decay_x "
+      "decay_y "
+      "decay_z "
+      "vx_chi2 "
+      // "vx_dof "
+      "trk_prx ";
 
-  nTuple_leptons_ = tm->ntuple("Leptons", charged_particle_variables, 1);
-  nTuple_kaons_ = tm->ntuple("Kaons", charged_particle_variables, 2);
+  const char *dilepton_variables =
+      "stm_no "
+      "exp_no "
+      "run_no "
+      "evt_no "
+      "is_mc "
+      "is_cntnm "
+      "fw_r2 "
+      "hadronb "
+      "cm_enrgy "
+      "cm_bst_x "
+      "cm_bst_y "
+      "cm_bst_z "
+      "cos_thta "
+      "phi_cnds "
+      "good_phi "
+      "l0_chrge " "l1_chrge "
+      "l0_idasn " "l1_idasn "
+      "l0_idtru " "l1_idtru "
+      "l0_idmom " "l1_idmom "
+      "l0_e_cm "  "l1_e_cm "
+      "l0_pcm_x " "l1_pcm_x "
+      "l0_pcm_y " "l1_pcm_y "
+      "l0_pcm_z " "l1_pcm_z "
+      "l0_ip_dr " "l1_ip_dr "
+      "l0_ip_dz " "l1_ip_dz";
+
+  nTuple_charged_ = tm->ntuple("Charged", charged_particle_variables, 1);
+  nTuple_phi_ = tm->ntuple("Phi", phi_variables, 2);
   nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 3);
 
   return;

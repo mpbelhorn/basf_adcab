@@ -301,7 +301,6 @@ int getCommonMother(Particle &A, Particle &B, Particle &C) {
   return thisGen.idhep();
 }
 
-
 int findCommonMother(int nChildren,
     std::vector<int> thisMothers, std::vector<int> otherMothers) {
   for (int i = 0; i < (int)thisMothers.size(); ++i) {
@@ -313,6 +312,7 @@ int findCommonMother(int nChildren,
   }
   return 0;
 }
+
 int findCommonMother(Gen_hepevt pThis, Gen_hepevt pOther, int level) {
   Gen_hepevt motherThis(pThis);
 
@@ -843,14 +843,24 @@ void genDecayChain(Particle p, int* dChain) {
   }
 }
 
-int IDhep(Particle &part) {
-
-  if (! part.genHepevt()) return 0;
-  return part.genHepevt().idhep();
+int IDhep(Particle &particle)
+{
+  if (! particle.genHepevt()) return 0;
+  return particle.genHepevt().idhep();
 }
 
-int NdecayProd(Particle &part) {
+int IDmom(Particle &particle)
+{
+  if (particle.relation().genHepevt()) {
+    if (particle.relation().genHepevt().mother()) {
+      return particle.relation().genHepevt().mother().idhep();
+    }
+  }
+  return 0;
+}
 
+int NdecayProd(Particle &part)
+{
   if (! part.genHepevt()) return 0;
   return part.genHepevt().daLast() - part.genHepevt().daFirst() +1;
 }

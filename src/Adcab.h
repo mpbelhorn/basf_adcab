@@ -35,7 +35,6 @@
 
 #include "HEPconstants.h"       // PDG masses and constants.
 #include "TrackParameters.h"    // Custom class managing the track parameters.
-#include "ParticleCandidate.h"    // Class for managing lepton candidate info.
 #include "DileptonEvent.h"      // Class for managing dilepton event info.
 #include "EntryTypes.h"         // Structure for managing ntuple line data.
 #include "AdcabCuts.h"          // Analysis specfic selection cut constants.
@@ -101,7 +100,6 @@ Adcab : public Module
 
   typedef std::vector<Mdst_charged>::const_iterator MdstChargedIterator;
   typedef std::vector<Particle>::iterator ParticleIterator;
-  typedef std::vector<ParticleCandidate>::iterator ParticleCandidateIterator;
   typedef std::vector<DileptonEvent>::iterator DileptonEventIterator;
 
   // Beam Information.
@@ -120,8 +118,8 @@ Adcab : public Module
 
  private:
   // Pointers for writing to the n-tuples.
-  BelleTuple *nTuple_leptons_;
-  BelleTuple *nTuple_kaons_;
+  BelleTuple *nTuple_charged_;
+  BelleTuple *nTuple_phi_;
   BelleTuple *nTuple_dileptons_;
 };
 
