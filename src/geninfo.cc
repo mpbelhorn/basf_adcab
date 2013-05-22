@@ -24,25 +24,25 @@ using namespace std;
 int isFSP(Gen_hepevt P)
 {
   switch (abs(P.idhep())) {
-    case 211:
+    case 211:   // Pi+
       return 1;
-    case 321:
+    case 321:   // K+
       return 1;
-    case 11:
+    case 11:    // Electron-
       return 1;
-    case 13:
+    case 13:    // Muon-
       return 1;
-    case 22:
+    case 22:    // Photon
       return 1;
-    case 2212:
+    case 2212:  // Proton
       return 1;
-    case 111:
+    case 111:   // Pi0
       return 1;
-    case 310:
+    case 310:   // K0-short
       return 1;
-    case 130:
+    case 130:   // K0-long
       return 1;
-    case 2112:
+    case 2112:  // Neutron
       return 1;
     default:
       return 0;

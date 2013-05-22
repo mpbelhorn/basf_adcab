@@ -118,9 +118,66 @@ Adcab : public Module
 
  private:
   // Pointers for writing to the n-tuples.
-  BelleTuple *nTuple_charged_;
-  BelleTuple *nTuple_phi_;
-  BelleTuple *nTuple_dileptons_;
+  BelleTuple* nTuple_charged_;
+  BelleTuple* nTuple_phi_;
+  BelleTuple* nTuple_dileptons_;
+
+  // Pointers to the BASF level histograms.
+  // Muon ID cuts.
+  BelleHistogram* generated_muon_multiplicity_;
+  BelleHistogram* muon_muid_histogram_;
+  BelleHistogram* muon_muid_multiplicity_;
+  BelleHistogram* muon_svd_r_histogram_;
+  BelleHistogram* muon_svd_r_multiplicity_;
+  BelleHistogram* muon_svd_z_histogram_;
+  BelleHistogram* muon_svd_z_multiplicity_;
+  BelleHistogram* muon_klm_signature_histogram_;
+  BelleHistogram* muon_klm_signature_multiplicity_;
+
+  // Electron ID cuts.
+  BelleHistogram* generated_electron_multiplicity_;
+  BelleHistogram* electron_eid_histogram_;
+  BelleHistogram* electron_eid_multiplicity_;
+  BelleHistogram* electron_svd_r_histogram_;
+  BelleHistogram* electron_svd_r_multiplicity_;
+  BelleHistogram* electron_svd_z_histogram_;
+  BelleHistogram* electron_svd_z_multiplicity_;
+
+  // Kaon ID cuts.
+  BelleHistogram* generated_kaon_multiplicity_;
+  BelleHistogram* kaon_kid_histogram_;
+  BelleHistogram* kaon_kid_multiplicity_;
+
+  // Prompt Muon cuts.
+  std::vector<BelleHistogram*> muon_ip_dr_histograms_; // 0: BG, 1: Bs, 2: Bd, 3: Secondary
+  BelleHistogram* muon_ip_dr_multiplicities_;
+  std::vector<BelleHistogram*> muon_ip_dz_histograms_;
+  BelleHistogram* muon_ip_dz_multiplicities_;
+  std::vector<BelleHistogram*> muon_polar_angle_cosine_histograms_;
+  BelleHistogram* muon_polar_angle_cosine_multiplicities_;
+  std::vector<BelleHistogram*> muon_cm_momentum_histograms_;
+  BelleHistogram* muon_cm_momentum_multiplicities_;
+  BelleHistogram* muon_jpsi_multiplicities_;
+  BelleHistogram* muon_accepted_multiplicities_;
+
+  // Prompt Electron cuts.
+  std::vector<BelleHistogram*> electron_ip_dr_histograms_; // 0: BG, 1: Bs, 2: Bd, 3: Secondary
+  BelleHistogram* electron_ip_dr_multiplicities_;
+  std::vector<BelleHistogram*> electron_ip_dz_histograms_;
+  BelleHistogram* electron_ip_dz_multiplicities_;
+  std::vector<BelleHistogram*> electron_polar_angle_cosine_histograms_;
+  BelleHistogram* electron_polar_angle_cosine_multiplicities_;
+  std::vector<BelleHistogram*> electron_cm_momentum_histograms_;
+  BelleHistogram* electron_cm_momentum_multiplicities_;
+  BelleHistogram* electron_pair_multiplicities_;
+  BelleHistogram* electron_jpsi_multiplicities_;
+  BelleHistogram* electron_accepted_multiplicities_;
+
+  // Phi cuts.
+  BelleHistogram* generated_phi_multiplicity_;
+  BelleHistogram* generated_phi_to_dikaon_multiplicity_;
+  std::vector<BelleHistogram*> phi_mass_histograms_;
+
 };
 
 #if defined(BELLE_NAMESPACE)  // Needed to close compiler namespace

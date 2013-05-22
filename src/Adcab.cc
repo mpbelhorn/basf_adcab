@@ -306,6 +306,45 @@ Adcab::event(BelleEvent* evptr, int* status)
     cout << "    Passed event initialization." << endl;
   }
 
+  // TODO - Populate MC generated histograms.
+  if (flag_mc_) {
+    Gen_hepevt_Manager& generated_particles = Gen_hepevt_Manager::get_manager();
+    for (std::vector<Gen_hepevt>::const_iterator generated_particle_iterator = generated_particles.begin(); generated_particle_iterator != generated_particles.end(); ++generated_particle_iterator) {
+      // Fill the generated particle counters.
+      const Gen_hepevt &generated_particle = *generated_particle_iterator;
+      switch (abs(generated_particle.idhep())) {
+        case 321: // Kaon
+          // Increment Kaon counter.
+          generated_kaon_multiplicity_->accumulate(0.0, 1.0);
+          break;
+        case 11: // Electron
+          // Increment electron counter.
+          generated_electron_multiplicity_->accumulate(0.0, 1.0);
+          break;
+        case 13: // Muon
+          // Increment Muon counter.
+          generated_muon_multiplicity_->accumulate(0.0, 1.0);
+          break;
+        case 333: // Phi(1020)
+          generated_phi_multiplicity_->accumulate(0.0, 1.0);
+          int number_of_daughters =
+              generated_particle.daLast() - generated_particle.daFirst() + 1;
+          if (number_of_daughters == 2) {
+            const Gen_hepevt& child1 = generated_particles(
+                Panther_ID(generated_particle.daFist()));
+            const Gen_hepevt& child2 = generated_particles(
+                Panther_ID(generated_particle.daLastt()));
+            if (abs(child1.idhep()) == 321 && abs(child2.idhep()) == 321) {
+              generated_phi_to_dikaon_multiplicity_->accumulate(0.0, 1.0);
+            }
+          }
+          break;
+        default:
+          // Do nothing.
+      }
+    }
+  }
+
   // Populate the final state particle (FSP) candidate lists.
   for (MdstChargedIterator lepton_scan_iterator = first_mdst_charged;
       lepton_scan_iterator != last_mdst_charged; ++lepton_scan_iterator) {
@@ -328,16 +367,6 @@ Adcab::event(BelleEvent* evptr, int* status)
     pid_info.kaonToProtonLikelihood(pid_kaon_to_pr.prob(charged_particle));
     pid_info.svdHits(charged_particle);
 
-    if (basf_parameter_verbose_log_ > 2) {
-      const Gen_hepevt & hep(get_hepevt(charged_particle));
-      if (hep) {
-        cout << "      PID=" << hep.idhep();
-        if (hep.mother()) {
-          cout << ", mom=" << hep.mother().idhep();
-        }
-        cout << endl;
-      }
-    }
 
     // Check that track has good likelihoods to be interesting FSP.
     bool good_muon_likelihood = pid_info.muonLikelihood() >= cuts.minMuidProb;
@@ -356,15 +385,12 @@ Adcab::event(BelleEvent* evptr, int* status)
     }
 
     // Check that track has enough hits in the SVD for reliable vertexing.
-    bool good_svd_electron = (
-        (pid_info.svdRHits(0) >= cuts.minSvdRHits) &&
-        (pid_info.svdZHits(0) >= cuts.minSvdZHits));
-    bool good_svd_muon = (
-        (pid_info.svdRHits(1) >= cuts.minSvdRHits) &&
-        (pid_info.svdZHits(1) >= cuts.minSvdZHits));
-    // bool good_svd_kaon = (
-    //    (pid_info.svdRHits(3) >= cuts.minSvdRHits) &&
-    //    (pid_info.svdZHits(3) >= cuts.minSvdZHits));
+    bool good_svd_r_electron = (pid_info.svdRHits(0) >= cuts.minSvdRHits);
+    bool good_svd_z_electron = (pid_info.svdZHits(0) >= cuts.minSvdZHits);
+    bool good_svd_electron = good_svd_r_electron && good_svd_z_electron;
+    bool good_svd_r_muon = (pid_info.svdRHits(1) >= cuts.minSvdRHits);
+    bool good_svd_z_muon = (pid_info.svdZHits(1) >= cuts.minSvdZHits);
+    bool good_svd_muon = good_svd_r_muon && good_svd_z_muon;
 
     if (basf_parameter_verbose_log_ > 2) {
       cout << "      SVD mu:" << pid_info.svdRHits(1) << "|"
@@ -407,14 +433,8 @@ Adcab::event(BelleEvent* evptr, int* status)
     UserInfo &kaon_info = dynamic_cast<UserInfo&>(kaon_candidate.userInfo());
     kaon_info.svdHits(pid_info.svdRHits(3), pid_info.svdZHits(3));
 
-    if (! (good_muon || good_electron || good_kaon)) {
-      // Print diagnostic information to the log.
-      if (basf_parameter_verbose_log_ > 1) {
-        cout << "        Rejected" << endl;
-      }
-      continue;
-    }
-
+    // Calculate additional parameters needed to ID prompt leptons.
+    // Calculate proximity to IP.
     TrackParameters muon_ip_profile(muon_candidate, interaction_point_);
     muon_info.ipDeltaR(muon_ip_profile.dr());
     muon_info.ipDeltaZ(muon_ip_profile.dz());
@@ -427,45 +447,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     kaon_info.ipDeltaR(kaon_ip_profile.dr());
     kaon_info.ipDeltaZ(kaon_ip_profile.dz());
 
-    // All leptons are considered prompt signal candidates unless shown to
-    // be otherwise.
-    bool prompt_muon = true;
-    bool prompt_electron = true;
-
-    // Cut on IP proximity.
-    if (abs(muon_info.ipDeltaR()) > cuts.maxIpDr ||
-        abs(muon_info.ipDeltaZ()) > cuts.maxIpDz) {
-      if (basf_parameter_verbose_log_ > 1) {
-        cout << "          Cut muon on IP dz or dr." << endl;
-      }
-      prompt_muon = false;
-    }
-    if (abs(electron_info.ipDeltaR()) > cuts.maxIpDr ||
-        abs(electron_info.ipDeltaZ()) > cuts.maxIpDz) {
-      if (basf_parameter_verbose_log_ > 1) {
-        cout << "          Cut electron on IP dz or dr." << endl;
-      }
-      prompt_electron = false;
-
-    // Cut on barrel intersection.
-    double muon_polar_angle_cosine = muon_candidate.p().cosTheta();
-    if ((muon_polar_angle_cosine < cuts.minLeptonCosTheta) ||
-        (muon_polar_angle_cosine > cuts.maxLeptonCosTheta)) {
-      prompt_muon = false;
-      if (basf_parameter_verbose_log_ > 1) {
-        cout << "          Cut muon on barrel intersection." << endl;
-      }
-    }
-    double electron_polar_angle_cosine = muon_candidate.p().cosTheta();
-    if ((electron_polar_angle_cosine < cuts.minLeptonCosTheta) ||
-        (electorn_polar_angle_cosine > cuts.maxLeptonCosTheta)) {
-      prompt_electron = false;
-      if (basf_parameter_verbose_log_ > 1) {
-        cout << "          Cut electron on barrel intersection." << endl;
-      }
-    }
-
-    // Calculate the CM momentum, scale momentum to Y(5S) CM if necessary.
+    // Calculate CM momentum, scale momentum to Y(5S) CM if necessary.
     if (basf_parameter_scale_momentum_) {
       // Set scaled P(CM) in particle info.
       // TODO - Possibly change lab momentum in particle instance.
@@ -483,23 +465,36 @@ Adcab::event(BelleEvent* evptr, int* status)
       electon_info.pCm(electron_candidate.p(), cm_boost_);
     }
 
+    // All leptons are considered prompt signal candidates unless shown to
+    // be otherwise.
+    // Cut on IP proximity.
+    bool good_muon_ip_dr = (abs(muon_info.ipDeltaR()) <= cuts.maxIpDr);
+    bool good_muon_ip_dz = (abs(muon_info.ipDeltaZ()) <= cuts.maxIpDz);
+    bool good_electron_ip_dr = (abs(electron_info.ipDeltaR()) <= cuts.maxIpDr);
+    bool good_electron_ip_dz = (abs(electron_info.ipDeltaZ()) <= cuts.maxIpDz);
+
+    // Cut on barrel intersection.
+    double muon_polar_angle_cosine = muon_candidate.p().cosTheta();
+    bool good_muon_polar_angle = (
+        (cuts.minLeptonCosTheta <= muon_polar_angle_cosine) &&
+        (muon_polar_angle_cosine <= cuts.maxLeptonCosTheta));
+    double electron_polar_angle_cosine = muon_candidate.p().cosTheta();
+    bool good_electron_polar_angle = (
+        (cuts.minLeptonCosTheta <= electron_polar_angle_cosine) &&
+        (electron_polar_angle_cosine <= cuts.maxLeptonCosTheta));
+
     // CM momentum cut.
-    if ((muon_info.pCm().rho() < cuts.minLeptonMomentumCm) ||
-        (muon_info.pCm().rho() > cuts.maxLeptonMomentumCm)) {
-      prompt_muon = false;
-      if (basf_parameter_verbose_log_ > 1) {
-        cout << "          Cut muon on CM momentum." << endl;
-      }
-    }
-    if ((electron_info.pCm().rho() < cuts.minLeptonMomentumCm) ||
-        (electron_info.pCm().rho() > cuts.maxLeptonMomentumCm)) {
-      prompt_electron = false;
-      if (basf_parameter_verbose_log_ > 1) {
-        cout << "          Cut electron on CM momentum." << endl;
-      }
-    }
+    bool good_muon_cm_momentum = (
+        (cuts.minLeptonMomentumCm <= muon_info.pCm().rho()) &&
+        (muon_info.pCm().rho() <= cuts.maxLeptonMomentumCm));
+    bool good_electron_cm_momentum = (
+        (cuts.minLeptonMomentumCm <= electron_info.pCm().rho()) &&
+        (electron_info.pCm().rho() <= cuts.maxLeptonMomentumCm));
 
     // J/Psi veto.
+    bool jpsi_muon = false;
+    bool pair_electron = false;
+    bool jpsi_electron = false;
     for (MdstChargedIterator mdst_charged_iterator = first_mdst_charged;
         prompt_candidate && (mdst_charged_iterator != last_mdst_charged);
         ++mdst_charged_iterator) {
@@ -521,35 +516,34 @@ Adcab::event(BelleEvent* evptr, int* status)
           sister_mdst.charge() > 0 ? Ptype("E+") : Ptype("E-"));
       double dielectron_invariant_mass = abs(
           (electron_candidate.p() + sister_electron.p()).m());
-      if (dielectron_invariant_mass < cuts.minEPlusEMinusMass) {
-        prompt_electron = false;
-        if (basf_parameter_verbose_log_ > 1) {
-          cout << "          Cut electron on pair-production veto." << endl;
-        }
-      }
+      pair_electron = (dielectron_invariant_mass < cuts.minEPlusEMinusMass);
       double dielectron_jpsi_mass_difference = dielectron_invariant_mass - cuts.massJPsi;
-      if (cuts.minElElJPsiCandidate < dielectron_jpsi_mass_difference &&
-          dielectron_jpsi_mass_difference < cuts.maxElElJPsiCandidate) {
-        prompt_electron = false;
-        if (basf_parameter_verbose_log_ > 1) {
-          cout << "          Cut electron on J/Psi veto." << endl;
-        }
-      }
+      jpsi_electron = (
+          cuts.min_dielectron_jpsi_mass_difference < dielectron_jpsi_mass_difference &&
+          dielectron_jpsi_mass_difference < cuts.max_dielectron_jpsi_mass_difference);
 
       Particle sister_muon(sister_mdst,
           sister_mdst.charge() > 0 ? Ptype("MU+") : Ptype("MU-"));
       double dimuon_invariant_mass = abs(
           (muon_candidate.p() + sister_muon.p()).m());
       double dimuon_jpsi_mass_difference = dimuon_invariant_mass - cuts.massJPsi;
-      if (cuts.minMuMuJPsiCandidate < dimuon_jpsi_mass_difference &&
-          dimuon_jpsi_mass_difference < cuts.maxMuMuJPsiCandidate) {
-        prompt_candidate = false;
-        if (basf_parameter_verbose_log_ > 1) {
-          cout << "          Cut muon on J/Psi veto." << endl;
-        }
-      }
+      jpsi_muon = (
+          cuts.min_dimuon_jpsi_mass_difference < dimuon_jpsi_mass_difference &&
+          dimuon_jpsi_mass_difference < cuts.max_dimuon_jpsi_mass_difference);
     }
+
     // If still a good prompt candidate after above cuts, add to lepton_candidates.
+    bool prompt_muon = good_muon_ip_dr &&
+        good_muon_ip_dz &&
+        good_muon_polar_angle &&
+        good_muon_cm_momentum &&
+        !jpsi_muon;
+    bool prompt_electron = good_electron_ip_dr &&
+        good_electron_ip_dz &&
+        good_electron_polar_angle &&
+        good_electron_cm_momentum &&
+        !pair_electron &&
+        !jpsi_electron;
     if (prompt_muon) {
       lepton_candidates.push_back(muon_candidate);
     } else if (prompt_electron) {
@@ -561,6 +555,134 @@ Adcab::event(BelleEvent* evptr, int* status)
     if (good_kaon) {
       kaon_candidates.push_back(particle);
     }
+
+    // If track is a generated FSP, follow how the cuts affect the track's acceptance.
+    int signal_component = 0;
+    if (flag_mc_) {
+      // Get the generator info.
+      const Gen_hepevt& generated_particle(get_hepevt(charged_particle));
+      // If generator info exits...
+      if (generated_particle) {
+        // Get the ID.
+        int generated_particle_id = generated_particle.idhep();
+        int component_type = 0;
+        if (generated_particle.mother()) {
+          int mother_id = generated_particle.mother().idhep();
+          if (abs(mother_id) == 531) component_type = 1;
+          if (abs(mother_id) == 511) component_type = 2;
+        }
+        switch (abs(generated_particle_id)) {
+          case 321: // Kaon
+            kaon_kid_histogram_->accumulate(pid_info.kaonToPionLikelihood(), 1.0);
+            if (good_kaon_likelihood) {
+              kaon_kid_multiplicity_->accumulate(0.0, 1.0);
+            }
+            break;
+          case 11: // Electron
+            electron_eid_histogram_->accumulate(
+                electron_info.electronLikelihood(), 1.0);
+            electron_svd_r_histogram_->accumulate(
+                electron_info.svdRHits(0), 1.0);
+            electron_svd_z_histogram_->accumulate(
+                electron_info.svdZHits(0), 1.0);
+            electron_ip_dr_histograms_[component_type]->accumulate(
+                electron_info.ipDeltaR(), 1.0);
+            electron_ip_dz_histograms_[component_type]->accumulate(
+                electron_info.ipDeltaZ(), 1.0);
+            electron_polar_angle_cosine_histograms_[component_type]->accumulate(
+                electron_polar_angle_cosine, 1.0);
+            electron_cm_momentum_histograms_[component_type]->accumulate(
+                electron_info.pCm(), 1.0);
+            if (good_electron_likelihood) {
+              electron_eid_multiplicity_->
+                  accumulate(0.0, 1.0);
+              if (good_svd_r_electron) {
+                electron_svd_r_multiplicity_->
+                    accumulate(0.0, 1.0);
+                if (good_svd_z_electron) {
+                  electron_svd_z_multiplicity_->
+                      accumulate(0.0, 1.0);
+                  if (good_electron_ip_dr) {
+                    electron_ip_dr_multiplicities_->
+                        accumulate(component_type, 1.0);
+                    if (good_electron_ip_dz) {
+                      electron_ip_dz_multiplicities_->
+                          accumulate(component_type, 1.0);
+                      if (good_electron_polar_angle) {
+                        electron_polar_angle_cosine_multiplicities_->
+                            accumulate(component_type, 1.0);
+                        if (good_electron_cm_momentum) {
+                          electron_cm_momentum_multiplicities_->
+                              accumulate(component_type, 1.0);
+                          if (!pair_electron) {
+                            electron_pair_multiplicities_->
+                                accumulate(component_type, 1.0);
+                            if (!jpsi_electron) {
+                              electron_jpsi_multiplicities_->
+                                  accumulate(component_type, 1.0);
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            break;
+          case 13: // Muon
+            muon_muid_histogram_->accumulate(pid_info.muonLikelihood(), 1.0);
+            muon_svd_r_histogram_->accumulate(pid_info.svdRHits(1), 1.0);
+            muon_svd_z_histogram_->accumulate(pid_info.svdZHits(1), 1.0);
+            muon_klm_signature_histogram_->accumulate(pid_info.klmSignature(), 1.0);
+            if (good_muon_likelihood) {
+              muon_muid_multiplicity_->accumulate(0.0, 1.0);
+              if (good_svd_r_muon) {
+                muon_svd_r_multiplicity_->accumulate(0.0, 1.0);
+                if (good_svd_z_muon) {
+                  muon_svd_z_multiplicity_->accumulate(0.0, 1.0);
+                  if (good_klm_signature) {
+                    muon_klm_signature_multiplicity_->accumulate(0.0, 1.0);
+                    if (good_muon_ip_dr) {
+                      muon_ip_dr_multiplicities_->
+                          accumulate(component_type, 1.0);
+                      if (good_muon_ip_dz) {
+                        muon_ip_dz_multiplicities_->
+                            accumulate(component_type, 1.0);
+                        if (good_muon_polar_angle) {
+                          muon_polar_angle_cosine_multiplicities_->
+                              accumulate(component_type, 1.0);
+                          if (good_muon_cm_momentum) {
+                            muon_cm_momentum_multiplicities_->
+                                accumulate(component_type, 1.0);
+                            if (!jpsi_muon) {
+                              muon_jpsi_multiplicities_->
+                                  accumulate(component_type, 1.0);
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            muon_ip_dr_histograms_[component_type]->accumulate(
+                muon_info.ipDeltaR(), 1.0);
+            muon_ip_dz_histograms_[component_type]->accumulate(
+                muon_info.ipDeltaZ(), 1.0);
+            muon_polar_angle_cosine_histograms_[component_type]->accumulate(
+                muon_polar_angle_cosine, 1.0);
+            muon_cm_momentum_histograms_[component_type]->accumulate(
+                muon_info.pCm(), 1.0);
+            break;
+          default:
+            // Do nothing.
+        }
+      }
+    }
+
+    // If track is a good candidate, dump info to the ntuple.
     if (good_muon || good_electron || good_kaon) {
       nTuple_charged_->column("stm_no"  , basf_parameter_mc_stream_number_);
       nTuple_charged_->column("exp_no"  , experiment_number_);
@@ -641,16 +763,6 @@ Adcab::event(BelleEvent* evptr, int* status)
       setMCtruth(phi_candidate);
       UserInfo &phi_info = dynamic_cast<UserInfo&>(phi_candidate.userInfo());
       if (!error) {
-        if (basf_parameter_verbose_log_ > 2) {
-          cout << "Phi vertex chisq/dof: " << phi_info.chisq()
-               << "/" << phi_info.ndf()
-               << " | truth: " << IDhep(phi_candidate)
-               << "[" << phi_info.genHepevtLink()
-               << "] (" << IDhep(phi_candidate.child(0))
-               << " : " << IDhep(phi_candidate.child(1)) << ")"
-               << endl;
-        }
-
         phi_candidates.push_back(phi_candidate);
         nTuple_phi_->column("cm_enrgy", beam_energy_cm_frame_);
         nTuple_phi_->column("cm_bst_x", cm_boost_.x());
@@ -909,6 +1021,70 @@ Adcab::hist_def()
   nTuple_phi_ = tm->ntuple("Phi", phi_variables, 2);
   nTuple_dileptons_ = tm->ntuple("Dilepton", dilepton_variables, 3);
 
+  generated_muon_multiplicity_ = tm->histogram("Gen. muon num.", 1, 0, 1);
+  muon_muid_histogram_ = tm->histogram("muid", 100, 0, 1);
+  muon_muid_multiplicity_ = tm->histogram("muid num.", 1, 0, 1);
+  muon_svd_r_histogram_ = tm->histogram("muon svdr", 11, 0, 11);
+  muon_svd_r_multiplicity_ = tm->histogram("muon svdr num", 1, 0, 1);
+  muon_svd_z_histogram_ = tm->histogram("muon svdz", 11, 0, 11);
+  muon_svd_z_multiplicity_ = tm->histogram("muon svdz num", 1, 0, 1);
+  muon_klm_signature_histogram_ = tm->histogram("klm sig", 100, 0, 20);
+  muon_klm_signature_multiplicity_ = tm->histogram("klm sig num", 1, 0, 1);
+
+  generated_electron_multiplicity_ = tm->histogram("Gen. el num.", 1, 0, 1);
+  electron_eid_histogram_ = tm->histogram("eid", 100, 0, 1);
+  electron_eid_multiplicity_ = tm->histogram("eid num.", 1, 0, 1);
+  electron_svd_r_histogram_ = tm->histogram("el svdr", 11, 0, 11);
+  electron_svd_r_multiplicity_ = tm->histogram("el svdr num.", 1, 0, 1);
+  electron_svd_z_histogram_ = tm->histogram("el svdz", 11, 0, 11);
+  electron_svd_z_multiplicity_ = tm->histogram("el svdz num.", 1, 0, 1);
+
+  generated_kaon_multiplicity_ = tm->histogram("Gen. k num.", 1, 0, 1);
+  kaon_kid_histogram_ = tm->histogram("kid", 100, 0, 1);
+  kaon_kid_multiplicity_ = tm->histogram("kid num.", 1, 0, 1);
+
+  // 0: BG, 1: Bs, 2: Bd
+  muon_ip_dr_histograms_.push_back(tm->histogram("mu ipdr 0", 100, 0, 2));
+  muon_ip_dr_histograms_.push_back(tm->histogram("mu ipdr 1", 100, 0, 2));
+  muon_ip_dr_histograms_.push_back(tm->histogram("mu ipdr 2", 100, 0, 2));
+  muon_ip_dr_multiplicities_ = tm->histogram("mu ipdr num", 4, 0, 4);
+  muon_ip_dz_histograms_.push_back(tm->histogram("mu ipdz 0", 100, 0, 2));
+  muon_ip_dz_histograms_.push_back(tm->histogram("mu ipdz 1", 100, 0, 2));
+  muon_ip_dz_histograms_.push_back(tm->histogram("mu ipdz 2", 100, 0, 2));
+  muon_ip_dz_multiplicities_ = tm->histogram("mu ipdz num", 4, 0, 4);
+  muon_polar_angle_cosine_histograms_.push_back(tm->histogram("mu theta 0", 200, -1, 1));
+  muon_polar_angle_cosine_histograms_.push_back(tm->histogram("mu theta 1", 200, -1, 1));
+  muon_polar_angle_cosine_histograms_.push_back(tm->histogram("mu theta 2", 200, -1, 1));
+  muon_polar_angle_cosine_multiplicities_ = tm->histogram("mu theta num", 4, 0, 4);
+  muon_cm_momentum_histograms_.push_back(tm->histogram("mu p_cm 0", 100, 0, 6));
+  muon_cm_momentum_histograms_.push_back(tm->histogram("mu p_cm 1", 100, 0, 6));
+  muon_cm_momentum_histograms_.push_back(tm->histogram("mu p_cm 2", 100, 0, 6));
+  muon_cm_momentum_multiplicities_ = tm->histogram("mu p_cm num", 4, 0, 4);
+  muon_jpsi_multiplicities_ = tm->histogram("mu jpsi num", 4, 0, 4);
+  muon_accepted_multiplicities_ = tm->histogram("mu accept num", 4, 0, 4);
+
+  electron_ip_dr_histograms_.push_back(tm->histogram("el ipdr 0", 100, 0, 2));
+  electron_ip_dr_histograms_.push_back(tm->histogram("el ipdr 1", 100, 0, 2));
+  electron_ip_dr_histograms_.push_back(tm->histogram("el ipdr 2", 100, 0, 2));
+  electron_ip_dr_multiplicities_ = tm->histogram("el ipdr num", 4, 0, 4);
+  electron_ip_dz_histograms_.push_back(tm->histogram("el ipdz 0", 100, 0, 2));
+  electron_ip_dz_histograms_.push_back(tm->histogram("el ipdz 1", 100, 0, 2));
+  electron_ip_dz_histograms_.push_back(tm->histogram("el ipdz 2", 100, 0, 2));
+  electron_ip_dz_multiplicities_ = tm->histogram("el ipdz num", 4, 0, 4);
+  electron_polar_angle_cosine_histograms_.push_back(tm->histogram("el theta 0", 200, -1, 1));
+  electron_polar_angle_cosine_histograms_.push_back(tm->histogram("el theta 1", 200, -1, 1));
+  electron_polar_angle_cosine_histograms_.push_back(tm->histogram("el theta 2", 200, -1, 1));
+  electron_polar_angle_cosine_multiplicities_ = tm->histogram("el theta num", 4, 0, 4);
+  electron_cm_momentum_histograms_.push_back(tm->histogram("el p_cm 0", 100, 0, 6));
+  electron_cm_momentum_histograms_.push_back(tm->histogram("el p_cm 1", 100, 0, 6));
+  electron_cm_momentum_histograms_.push_back(tm->histogram("el p_cm 2", 100, 0, 6));
+  electron_cm_momentum_multiplicities_ = tm->histogram("el p_cm num", 4, 0, 4);
+  electron_pair_multiplicities_ = tm->histogram("el pair num", 4, 0, 4);
+  electron_jpsi_multiplicities_ = tm->histogram("el jpsi num", 4, 0, 4);
+  electron_accepted_multiplicities_ = tm->histogram("el accept num", 4, 0, 4);
+
+  generated_phi_multiplicity_ = tm->histogram("gen phi num.", 1, 0, 1);
+  generated_phi_to_dikaon_multiplicity_ = tm->histogram("gen phi2KK num", 1, 0, 1,);
   return;
 }
 

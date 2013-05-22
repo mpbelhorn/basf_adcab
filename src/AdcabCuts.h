@@ -31,14 +31,14 @@ struct AdcabCuts {
   // Electron selection cuts.
   static const double minEidProb           = 0.80;  // Low for diagnostics.
   static const double minElectronMomentum  = 0.00;  // GeV/c
-  static const double minElElJPsiCandidate = -0.15; // Gev
-  static const double maxElElJPsiCandidate =  0.05; // Gev
+  static const double min_dielectron_jpsi_mass_difference = -0.15; // Gev
+  static const double max_dielectron_jpsi_mass_difference =  0.05; // Gev
 
   // Muon selection cuts.
   static const double minMuidProb          = 0.90;  // Low for diagnostics.
   static const double minMuonMomentum      = 0.00;  // GeV/c
-  static const double minMuMuJPsiCandidate = -0.05; // Gev
-  static const double maxMuMuJPsiCandidate =  0.05; // Gev
+  static const double min_dimuon_jpsi_mass_difference = -0.05; // Gev
+  static const double max_dimuon_jpsi_mass_difference =  0.05; // Gev
   static const double maxKlmChi2PerHits    = 10.00; // Gev
 
   // Pair-production removal cuts.
