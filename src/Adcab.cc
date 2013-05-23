@@ -314,18 +314,25 @@ Adcab::event(BelleEvent* evptr, int* status)
       const Gen_hepevt &generated_particle = *generated_particle_iterator;
       switch (abs(generated_particle.idhep())) {
         case 321: // Kaon
+        {
           // Increment Kaon counter.
           generated_kaon_multiplicity_->accumulate(0.0, 1.0);
           break;
+        }
         case 11: // Electron
+        {
           // Increment electron counter.
           generated_electron_multiplicity_->accumulate(0.0, 1.0);
           break;
+        }
         case 13: // Muon
+        {
           // Increment Muon counter.
           generated_muon_multiplicity_->accumulate(0.0, 1.0);
           break;
+        }
         case 333: // Phi(1020)
+        {
           generated_phi_multiplicity_->accumulate(0.0, 1.0);
           int number_of_daughters =
               generated_particle.daLast() - generated_particle.daFirst() + 1;
@@ -339,9 +346,11 @@ Adcab::event(BelleEvent* evptr, int* status)
             }
           }
           break;
+        }
         default:
+        {
           // Do nothing.
-          break;
+        }
       }
     }
   }
@@ -559,7 +568,6 @@ Adcab::event(BelleEvent* evptr, int* status)
     }
 
     // If track is a generated FSP, follow how the cuts affect the track's acceptance.
-    int signal_component = 0;
     if (flag_mc_) {
       // Get the generator info.
       const Gen_hepevt& generated_particle(get_hepevt(charged_particle));
@@ -718,11 +726,11 @@ Adcab::event(BelleEvent* evptr, int* status)
       nTuple_charged_->column("good_k"  , good_kaon);
       nTuple_charged_->column("prmpt_mu", prompt_muon);
       nTuple_charged_->column("prmpt_el", prompt_electron);
-      nTuple_charged_->column("muid_prb", info.muonLikelihood());
-      nTuple_charged_->column("eid_prob", info.electronLikelihood());
-      nTuple_charged_->column("pid_k_pi", info.kaonToPionLikelihood());
-      nTuple_charged_->column("pid_k_pr", info.kaonToProtonLikelihood());
-      nTuple_charged_->column("muid_rto", info.klmSignature());
+      nTuple_charged_->column("muid_prb", pid_info.muonLikelihood());
+      nTuple_charged_->column("eid_prob", pid_info.electronLikelihood());
+      nTuple_charged_->column("pid_k_pi", pid_info.kaonToPionLikelihood());
+      nTuple_charged_->column("pid_k_pr", pid_info.kaonToProtonLikelihood());
+      nTuple_charged_->column("muid_rto", pid_info.klmSignature());
       nTuple_charged_->column("mu_svd_r", muon_info.svdRHits());
       nTuple_charged_->column("mu_svd_z", muon_info.svdZHits());
       nTuple_charged_->column("el_svd_r", electron_info.svdRHits());
@@ -849,8 +857,8 @@ Adcab::event(BelleEvent* evptr, int* status)
       int phi_candidates_in_mass_range = 0;
       for (ParticleIterator phi_candidate = phi_candidates.begin();
           phi_candidate != phi_candidates.end(); ++phi_candidate) {
-        int kaon_minus_id(phi_candidate.relation().child(0).mdstCharged().get_ID());
-        int kaon_plus_id(phi_candidate.relation().child(1).mdstCharged().get_ID());
+        int kaon_minus_id(phi_candidate->relation().child(0).mdstCharged().get_ID());
+        int kaon_plus_id(phi_candidate->relation().child(1).mdstCharged().get_ID());
         if (kaon_minus_id == l0_id ||
             kaon_minus_id == l1_id ||
             kaon_plus_id == l0_id ||
@@ -1086,7 +1094,7 @@ Adcab::hist_def()
   electron_accepted_multiplicities_ = tm->histogram("el accept num", 4, 0, 4);
 
   generated_phi_multiplicity_ = tm->histogram("gen phi num.", 1, 0, 1);
-  generated_phi_to_dikaon_multiplicity_ = tm->histogram("gen phi2KK num", 1, 0, 1,);
+  generated_phi_to_dikaon_multiplicity_ = tm->histogram("gen phi2KK num", 1, 0, 1);
   return;
 }
 
