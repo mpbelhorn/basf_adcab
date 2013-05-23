@@ -331,9 +331,9 @@ Adcab::event(BelleEvent* evptr, int* status)
               generated_particle.daLast() - generated_particle.daFirst() + 1;
           if (number_of_daughters == 2) {
             const Gen_hepevt& child1 = generated_particles(
-                Panther_ID(generated_particle.daFist()));
+                Panther_ID(generated_particle.daFirst()));
             const Gen_hepevt& child2 = generated_particles(
-                Panther_ID(generated_particle.daLastt()));
+                Panther_ID(generated_particle.daLast()));
             if (abs(child1.idhep()) == 321 && abs(child2.idhep()) == 321) {
               generated_phi_to_dikaon_multiplicity_->accumulate(0.0, 1.0);
             }
@@ -341,6 +341,7 @@ Adcab::event(BelleEvent* evptr, int* status)
           break;
         default:
           // Do nothing.
+          break;
       }
     }
   }
@@ -452,17 +453,19 @@ Adcab::event(BelleEvent* evptr, int* status)
       // Set scaled P(CM) in particle info.
       // TODO - Possibly change lab momentum in particle instance.
       double muon_scale_factor(1.03291);
-      HepLorentzVector scaled_muon_p(muon_candidate.p());
-      scaled_muon_p *= muon_scale_factor;
+      HepLorentzVector scaled_muon_p(
+          muon_candidate.p().vect() * muon_scale_factor,
+          muon_candidate.p().t() * muon_scale_factor);
       muon_info.pCm(scaled_muon_p, cm_boost_);
 
       double electron_scale_factor(1.03290);
-      HepLorentzVector scaled_electron_p(electron_candidate.p());
-      scaled_electron_p *= electron_scale_factor;
+      HepLorentzVector scaled_electron_p(
+          electron_candidate.p().vect() * electron_scale_factor,
+          electron_candidate.p().t() * electron_scale_factor);
       electron_info.pCm(scaled_electron_p, cm_boost_);
     } else {
       muon_info.pCm(muon_candidate.p(), cm_boost_);
-      electon_info.pCm(electron_candidate.p(), cm_boost_);
+      electron_info.pCm(electron_candidate.p(), cm_boost_);
     }
 
     // All leptons are considered prompt signal candidates unless shown to
@@ -496,8 +499,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     bool pair_electron = false;
     bool jpsi_electron = false;
     for (MdstChargedIterator mdst_charged_iterator = first_mdst_charged;
-        prompt_candidate && (mdst_charged_iterator != last_mdst_charged);
-        ++mdst_charged_iterator) {
+        mdst_charged_iterator != last_mdst_charged; ++mdst_charged_iterator) {
       const Mdst_charged &sister_mdst = *mdst_charged_iterator;
 
       // Reject case where pointers point to same object.
@@ -553,7 +555,7 @@ Adcab::event(BelleEvent* evptr, int* status)
     // Regardless if the particle makes a good lepton candidate, if it is a
     // good K candidate, add it to the list of kaons.
     if (good_kaon) {
-      kaon_candidates.push_back(particle);
+      kaon_candidates.push_back(kaon_candidate);
     }
 
     // If track is a generated FSP, follow how the cuts affect the track's acceptance.
@@ -592,7 +594,7 @@ Adcab::event(BelleEvent* evptr, int* status)
             electron_polar_angle_cosine_histograms_[component_type]->accumulate(
                 electron_polar_angle_cosine, 1.0);
             electron_cm_momentum_histograms_[component_type]->accumulate(
-                electron_info.pCm(), 1.0);
+                electron_info.pCm().rho(), 1.0);
             if (good_electron_likelihood) {
               electron_eid_multiplicity_->
                   accumulate(0.0, 1.0);
@@ -635,6 +637,14 @@ Adcab::event(BelleEvent* evptr, int* status)
             muon_svd_r_histogram_->accumulate(pid_info.svdRHits(1), 1.0);
             muon_svd_z_histogram_->accumulate(pid_info.svdZHits(1), 1.0);
             muon_klm_signature_histogram_->accumulate(pid_info.klmSignature(), 1.0);
+            muon_ip_dr_histograms_[component_type]->accumulate(
+                muon_info.ipDeltaR(), 1.0);
+            muon_ip_dz_histograms_[component_type]->accumulate(
+                muon_info.ipDeltaZ(), 1.0);
+            muon_polar_angle_cosine_histograms_[component_type]->accumulate(
+                muon_polar_angle_cosine, 1.0);
+            muon_cm_momentum_histograms_[component_type]->accumulate(
+                muon_info.pCm().rho(), 1.0);
             if (good_muon_likelihood) {
               muon_muid_multiplicity_->accumulate(0.0, 1.0);
               if (good_svd_r_muon) {
@@ -667,14 +677,6 @@ Adcab::event(BelleEvent* evptr, int* status)
                 }
               }
             }
-            muon_ip_dr_histograms_[component_type]->accumulate(
-                muon_info.ipDeltaR(), 1.0);
-            muon_ip_dz_histograms_[component_type]->accumulate(
-                muon_info.ipDeltaZ(), 1.0);
-            muon_polar_angle_cosine_histograms_[component_type]->accumulate(
-                muon_polar_angle_cosine, 1.0);
-            muon_cm_momentum_histograms_[component_type]->accumulate(
-                muon_info.pCm(), 1.0);
             break;
           default:
             // Do nothing.
