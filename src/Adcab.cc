@@ -688,6 +688,7 @@ Adcab::event(BelleEvent* evptr, int* status)
             break;
           default:
             // Do nothing.
+            break;
         }
       }
     }
