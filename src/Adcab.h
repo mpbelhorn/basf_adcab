@@ -176,7 +176,6 @@ Adcab : public Module
   // Phi cuts.
   BelleHistogram* generated_phi_multiplicity_;
   BelleHistogram* generated_phi_to_dikaon_multiplicity_;
-  std::vector<BelleHistogram*> phi_mass_histograms_;
 
 };
 
