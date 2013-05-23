@@ -2,61 +2,13 @@
 # or 2 kaons. Phi's explicitly decay via kaons.
 # Author: M. Belhorn
 # Date: 2013.04.09
-# Notes: Modified from a decay table originally by R. Louvot (2010.03.31).
 #
-# WARNING: The relative populations of the final decay products listed here
-#   WILL BE WRONG! This file serves as a place to collect the larger picture
-#   of mixed BB semileptonic decay paths but is not intended to be used to
-#   generate anything other than incorrect test MC. That is to say that to
-#   generate usable signal MC, this file needs to be split over the final decay
-#   products B_s0, B0, and B+ (and their respective charge conjugates) and run
-#   such that the relative numbres of semileptonic decays are correct.
-#
-# Data for the Y(5S) decays are taken from the 2009 PDG and other (cited) works:
-# fs=19.3%
-#
-# Belle Bs->Ds pi (PRL 102,021801)
-# N_Bs*Bs*/N_Bs(*)Bs(*)=90.1%
-# N_Bs*Bs/N_Bs(*)Bs(*)=7.3%
-# N_BsBs/N_Bs(*)Bs(*)=2.6%
-#
-# Belle Y(5S)->B+/B0 (1003.5885)
-# f(B*B*)=37.5%
-# f(B*B)=13.7%
-# f(BB)=5.5%
-# f(B*B*pi)=1.0%
-# f(B*Bpi)=7.3%
-# f(BBpi)=0.0%
-# f(B(*)B(*)pi(pi))=17.5% --> f(residual)=9.2%
-# -> rescalled to
-# f(B(*)B(*)(X)) = 100 - f_s - BR(Y(5S)->Y(nS)hh)=77.9%
-#
-# Belle Y(5S)->Y(nS)pipi (PRL 100,112001)
-# BR(Y(5S)->Y(1S)pi+pi-)=0.53
-# BBR(Y(5S)->Y(1S)K+K-)=0.06
-# BR(Y(5S)->Y(2S)pi+pi-)=0.78
-# BR(Y(5S)->Y(3S)pi+pi-)=0.48
-#
-# Isospin conservation:
-# BR(Y(5S)->Y(nS)pi0pi0)=0.5 BR(Y(5S)->Y(nS)pi+pi-)
-# BR(Y(5S)->Y(nS)K0 K0b)=BR(Y(5S)->Y(nS)K+K-)
-#
-# f(B*B*pi)= 1/3 f(B+ B0b pi-) + 1/3 f(B0 B- pi+) + 1/6 f(B+ B- pi0) + 1/6 f(B0 B0b pi0) (same for f(BBpi))
-# f(B*Bpi)= 1/3 (1/2 f(B*+ B0b pi-) + 1/2 f(B+ B0*b pi-)) + 1/3 etc...
-#
-# Assumption:
-# residual -> ISR Y(5S)->Y(4S) gamma
-#
-
 #_______________________________________________________________________________
 # Define the mixing parameters.
-Define dm_B0 0.508e12
 Define dm_Bs 17.77e12
 
 #_______________________________________________________________________________
 # Define custom particles.
-Alias my-Upsilon(4S) Upsilon(4S)
-
 Alias  my-B_s0heavy       B_s0heavy
 Alias  my-anti-B_s0heavy  anti-B_s0heavy
 ChargeConj  my-B_s0heavy  my-anti-B_s0heavy
@@ -69,30 +21,6 @@ Alias  my-B_s0            B_s0
 Alias  my-anti-B_s0       anti-B_s0
 ChargeConj  my-B_s0  my-anti-B_s0
 
-Alias  my-B0heavy       B0heavy
-Alias  my-anti-B0heavy  anti-B0heavy
-ChargeConj  my-B0heavy  my-anti-B0heavy
-
-Alias  my-B0long        B0long
-Alias  my-anti-B0long   anti-B0long
-ChargeConj  my-B0long  my-anti-B0long
-
-Alias  my-B0            B0
-Alias  my-anti-B0       anti-B0
-ChargeConj  my-B0  my-anti-B0
-
-Alias  my-B+   B+
-Alias  my-B-   B-
-ChargeConj  my-B+  my-B-
-
-Alias  my-B*+  B*+
-Alias  my-B*-  B*-
-ChargeConj  my-B*+  my-B*-
-
-Alias  my-B*+nospin B*+nospin
-Alias  my-B*-nospin B*-nospin
-ChargeConj  my-B*+nospin  my-B*-nospin
-
 Alias my-D_s+ D_s+
 Alias my-D_s- D_s-
 ChargeConj my-D_s+ my-D_s-
@@ -100,10 +28,6 @@ ChargeConj my-D_s+ my-D_s-
 Alias my-D_s*+ D_s*+
 Alias my-D_s*- D_s*-
 ChargeConj my-D_s*+ my-D_s*-
-
-#Alias my-D_s1+ D_s1+
-#Alias my-D_s1- D_s1-
-#ChargeConj my-D_s1+ my-D_s1-
 
 Alias my-D_s0*+ D_s0*+
 Alias my-D_s0*- D_s0*-
@@ -114,20 +38,8 @@ Alias my-D'_s1- D'_s1-
 ChargeConj my-D'_s1+ my-D'_s1-
 
 Alias my-phi phi
+ChargeConj my-phi my-phi
 
-#_______________________________________________________________________________
-# Decays of special particles for use with the mixing model.
-# (2011.06.29) - I disagree that the "heavy" particles should decay by PHSP.
-#   Heavy particle spin must be implemented so we can use VSP_PWAVE.
-Decay my-B_s0heavy
-1.00000  my-B_s0 gamma PHSP;
-Enddecay
-CDecay my-anti-B_s0heavy
-
-Decay my-B_s0long
-1.00000  my-B_s0 PHSP;
-Enddecay
-CDecay my-anti-B_s0long
 
 #_______________________________________________________________________________
 # Define the primary decay paths.
@@ -141,127 +53,77 @@ Decay Upsilon(5S)
 Enddecay
 
 #_______________________________________________________________________________
+# Decays of special particles for use with the mixing model.
+Decay my-B_s0heavy
+1.00000  my-B_s0 gamma PHSP;
+Enddecay
+CDecay my-anti-B_s0heavy
+
+Decay my-B_s0long
+1.00000  my-B_s0 PHSP;
+Enddecay
+CDecay my-anti-B_s0long
+
+#_______________________________________________________________________________
 # Semileptonic decays. Decays taken from BELLE 2007 master decay.dec.
 
 Decay my-B_s0
-# BR = 0.184
-0.0210   my-D_s-     e+     nu_e         PHOTOS  ISGW2;
-0.0490   my-D_s*-    e+     nu_e         PHOTOS  ISGW2;
-#0.0040   my-D_s1-    e+     nu_e         PHOTOS  ISGW2;
-0.0040   my-D_s0*-   e+     nu_e         PHOTOS  ISGW2;
-0.0070   my-D'_s1-   e+     nu_e         PHOTOS  ISGW2;
-0.0070   D_s2*-   e+     nu_e         PHOTOS  ISGW2;
+# Semileptonic decays with a phi downstream BR = 0.176
+0.0210   my-D_s-     e+     nu_e      PHOTOS  ISGW2;
+0.0490   my-D_s*-    e+     nu_e      PHOTOS  ISGW2;
+0.0040   my-D_s0*-   e+     nu_e      PHOTOS  ISGW2;
+0.0070   my-D'_s1-   e+     nu_e      PHOTOS  ISGW2;
+0.0070   D_s2*-      e+     nu_e      PHOTOS  ISGW2;
 #
-0.0210   my-D_s-     mu+    nu_mu        PHOTOS  ISGW2;
-0.0490   my-D_s*-    mu+    nu_mu        PHOTOS  ISGW2;
-#0.0040   my-D_s1-    mu+    nu_mu        PHOTOS  ISGW2;
-0.0040   my-D_s0*-   mu+    nu_mu        PHOTOS  ISGW2;
-0.0070   my-D'_s1-   mu+    nu_mu        PHOTOS  ISGW2;
-0.0070   D_s2*-   mu+    nu_mu        PHOTOS  ISGW2;
+0.0210   my-D_s-     mu+    nu_mu     PHOTOS  ISGW2;
+0.0490   my-D_s*-    mu+    nu_mu     PHOTOS  ISGW2;
+0.0040   my-D_s0*-   mu+    nu_mu     PHOTOS  ISGW2;
+0.0070   my-D'_s1-   mu+    nu_mu     PHOTOS  ISGW2;
+0.0070   D_s2*-      mu+    nu_mu     PHOTOS  ISGW2;
 Enddecay
 CDecay my-anti-B_s0
 
-Decay my-D_s+
-#
-# Pure leptonic: Sum=7.03%
-#
-#0.0063    mu+    nu_mu                   PHOTOS   SLN;
-#0.0640    tau+   nu_tau                  PHOTOS   SLN;
-#
-# Semileptonic: Sum=2*8.00%=16.00%
-#
-0.0197    my-phi     e+     nu_e            PHOTOS   ISGW2;
-#0.0254    eta     e+     nu_e            PHOTOS   ISGW2;
-#0.0088    eta'    e+     nu_e            PHOTOS   ISGW2;
-#0.0030    anti-K0   e+   nu_e            PHOTOS   ISGW2;
-#0.0011    anti-K*0  e+   nu_e            PHOTOS   ISGW2;
-#0.0111    K+  K-  e+     nu_e            PHOTOS   PYTHIA 42; #Decay vie Eta, etc. not modeled
-#0.0109    K0  anti-K0  e+  nu_e          PHOTOS   PYTHIA 42;
-0.0197    my-phi     mu+    nu_mu           PHOTOS   ISGW2;
-#0.0254    eta     mu+    nu_mu           PHOTOS   ISGW2;
-#0.0088    eta'    mu+    nu_mu           PHOTOS   ISGW2;
-#0.0030    anti-K0   mu+  nu_mu           PHOTOS   ISGW2;
-#0.0011    anti-K*0  mu+  nu_mu           PHOTOS   ISGW2;
-#0.0111    K+  K-  mu+    nu_mu           PHOTOS   PYTHIA 42;
-#0.0109    K0  anti-K0  mu+  nu_mu        PHOTOS   PYTHIA 42;
-#
-# Hadronic modes with KKbar pair (including from  a phi): Sum=42.15%
-#
-#0.0450    anti-K0     K+                 PHOTOS PHSP;
-#0.0003    K+     K+    pi-               PHOTOS PHSP;
-0.0450    my-phi    pi+                     PHOTOS SVS;
-#0.0376    anti-K*0    K+                 PHOTOS SVS;
-#0.0073    anti-K_0*0  K+                 PHOTOS PHSP;
-#0.0540    K*+    anti-K0                 PHOTOS SVS;
-#0.0320    K+     K-    pi+   pi0         PHOTOS PHSP;
-0.0120    my-phi    pi+   pi0               PHOTOS PHSP;
-0.0410    my-phi    rho+                    PHOTOS SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
-#0.0320    anti-K0     K+    pi+   pi-    PHOTOS PHSP;
-#0.0221    K0     K-   pi+   pi+          PHOTOS PHSP;
-#0.0720    anti-K*0    K*+                PHOTOS SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
-#0.0027    K+     K-   pi+   pi+   pi-    PHOTOS PHSP;
-0.0059    my-phi    pi+   pi+   pi-         PHOTOS PHSP;
-0.0063    my-phi    rho0  pi+		 PHOTOS PHSP;
-0.0063    my-phi    rho+  pi0		 PHOTOS PHSP;
-#
-# Hadronic modes without K:   Sum=33.85%
-#
-#0.0005    pi+    pi+   pi-               PHOTOS PHSP;
-#0.0105    f_0    pi+                     PHOTOS PHSP;
-#0.0242    f'_0   pi+                     PHOTOS PHSP;
-#0.0245    f_0(1500)   pi+                PHOTOS PHSP;
-#0.0021    f_2    pi+                     PHOTOS PHSP;
-#0.0005    rho(2S)0 pi+                   PHOTOS PHSP;
-#0.0216    eta    pi+                     PHOTOS PHSP;
-#0.0034    omega  pi+                     PHOTOS SVS;
-#0.0916    rho+   eta                     PHOTOS SVS;
-#0.0077    pi+   pi+   pi+   pi-   pi-    PHOTOS PHSP;
-#0.0199    pi+   pi+   pi+   pi-   pi-  pi0      PHOTOS PHSP;
-#0.0480    eta'   pi+                     PHOTOS PHSP;
-#0.0840    rho+   eta'                    PHOTOS SVS;
-#
-# Modes with one or three K's: Sum=0.97%
-#
-#0.0006    K+    pi+   pi-                PHOTOS PHSP;
-#0.0026    rho0 K+                        PHOTOS SVS;
-#0.0018    K+ rho(2S)0                    PHOTOS PHSP;
-#0.0023    K*0   pi+                      PHOTOS SVS;
-#0.0019    K_0*0 pi+                      PHOTOS PHSP;
-#0.0005    K+    K+    K-                 PHOTOS PHSP;
-Enddecay
-CDecay my-D_s-
-
-Decay my-D_s*+
-0.942   my-D_s+  gamma                       PHOTOS VSP_PWAVE;
-0.058   my-D_s+  pi0                        PHOTOS VSS;
-Enddecay
-CDecay my-D_s*-
-
 Decay my-D_s0*+
-0.9700   my-D_s+ pi0                            PHOTOS PHSP;
-0.0300   my-D_s*+ gamma                         PHOTOS SVP_HELAMP 1.0 0.0 1.0 0.0;
+0.9700   my-D_s+ pi0                  PHOTOS PHSP;
+0.0300   my-D_s*+ gamma               PHOTOS SVP_HELAMP 1.0 0.0 1.0 0.0;
 Enddecay
 CDecay my-D_s0*-
-#
-#Decay my-D_s1+
-#0.5000   D*+ K0                            PHOTOS VVS_PWAVE  0.0 0.0 0.0 0.0 1.0 0.0;
-#0.5000   D*0 K+                            PHOTOS VVS_PWAVE  0.0 0.0 0.0 0.0 1.0 0.0;
-#0.0000   gamma my-D_s*+                       PHOTOS PHSP;
-#0.0000   gamma my-D_s+                        PHOTOS PHSP;
-#Enddecay
-#CDecay my-D_s1-
-#
+
 Decay my-D'_s1+
-0.5800   my-D_s*+ pi0                         PHOTOS VVS_PWAVE  0.0 0.0 0.0 0.0 1.0 0.0;
-0.2500   my-D_s+ gamma                        PHOTOS VSP_PWAVE;
-0.0500   my-D_s*+ gamma                       PHOTOS VVP 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0;
-0.0800   my-D_s+ pi+ pi-                      PHOTOS PHSP;
-0.0400   my-D_s+ pi0 pi0                      PHOTOS PHSP;
+0.5800   my-D_s*+ pi0                 PHOTOS VVS_PWAVE  0.0 0.0 0.0 0.0 1.0 0.0;
+0.2500   my-D_s+ gamma                PHOTOS VSP_PWAVE;
+0.0500   my-D_s*+ gamma               PHOTOS VVP 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0;
+0.0800   my-D_s+ pi+ pi-              PHOTOS PHSP;
+0.0400   my-D_s+ pi0 pi0              PHOTOS PHSP;
 Enddecay
 CDecay my-D'_s1-
 
+Decay my-D_s*+
+0.942   my-D_s+  gamma                PHOTOS VSP_PWAVE;
+0.058   my-D_s+  pi0                  PHOTOS VSS;
+Enddecay
+CDecay my-D_s*-
+
+Decay my-D_s+
+#
+# Semileptonic with a phi: Sum=2*1.97%=3.94%
+#
+0.0197    my-phi     e+     nu_e      PHOTOS   ISGW2;
+0.0197    my-phi     mu+    nu_mu     PHOTOS   ISGW2;
+#
+# Hadronic modes with a phi: Sum=11.65%
+#
+0.0450    my-phi    pi+               PHOTOS SVS;
+0.0120    my-phi    pi+   pi0         PHOTOS PHSP;
+0.0410    my-phi    rho+              PHOTOS SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.0059    my-phi    pi+   pi+   pi-   PHOTOS PHSP;
+0.0063    my-phi    rho0  pi+	      PHOTOS PHSP;
+0.0063    my-phi    rho+  pi0	      PHOTOS PHSP;
+Enddecay
+CDecay my-D_s-
+
 Decay my-phi
-0.492076  K+   K-                         PHOTOS VSS;
+1.0000  K+   K-                     PHOTOS VSS;
 Enddecay
 
 End
